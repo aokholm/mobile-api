@@ -1,12 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
   <display-name>mobile-api</display-name>
-  <welcome-file-list>
-    <welcome-file>index.html</welcome-file>
-    <welcome-file>index.htm</welcome-file>
-    <welcome-file>index.jsp</welcome-file>
-    <welcome-file>default.html</welcome-file>
-    <welcome-file>default.htm</welcome-file>
-    <welcome-file>default.jsp</welcome-file>
-  </welcome-file-list>
+
+  <!-- Mobile API Servlets -->
+  
+  <servlet>
+    <servlet-name>MeasureService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.MeasureService</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>RegisterDeviceService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.RegisterDeviceService</servlet-class>
+  </servlet>
+  
+  <!-- Ping API Servlets -->
+  
+  <servlet>
+    <servlet-name>DatabasePingService</servlet-name>
+    <servlet-class>com.vaavud.server.api.ping.DatabasePingService</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>JVMPingService</servlet-name>
+    <servlet-class>com.vaavud.server.api.ping.JVMPingService</servlet-class>
+  </servlet>
+  
+  <!-- Web Servlets -->
+  
+  <servlet>
+    <servlet-name>MapServlet</servlet-name>
+    <servlet-class>com.vaavud.server.web.map.MapServlet</servlet-class>
+  </servlet>
+  
+  <!-- Mobile API Mappings -->
+  
+  <servlet-mapping>
+    <servlet-name>MeasureService</servlet-name>
+    <url-pattern>/api/measure</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>RegisterDeviceService</servlet-name>
+    <url-pattern>/api/device/register</url-pattern>
+  </servlet-mapping>
+  
+  <!-- Ping API Mappings -->
+  
+  <servlet-mapping>
+    <servlet-name>DatabasePingService</servlet-name>
+    <url-pattern>/ping/database</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>JVMPingService</servlet-name>
+    <url-pattern>/ping/jvm</url-pattern>
+  </servlet-mapping>
+  
+  <!-- Web Mappings -->
+  
+  <servlet-mapping>
+    <servlet-name>MapServlet</servlet-name>
+    <url-pattern>/map</url-pattern>
+  </servlet-mapping>
+
 </web-app>
