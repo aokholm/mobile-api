@@ -9,6 +9,10 @@
     <servlet-class>com.vaavud.server.api.mobile.MeasureService</servlet-class>
   </servlet>
   <servlet>
+    <servlet-name>MagneticMeasureService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.MagneticMeasureService</servlet-class>
+  </servlet>
+  <servlet>
     <servlet-name>RegisterDeviceService</servlet-name>
     <servlet-class>com.vaavud.server.api.mobile.RegisterDeviceService</servlet-class>
   </servlet>
@@ -36,6 +40,10 @@
   <servlet-mapping>
     <servlet-name>MeasureService</servlet-name>
     <url-pattern>/api/measure</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>MagneticMeasureService</servlet-name>
+    <url-pattern>/api/magnetic/measure</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>RegisterDeviceService</servlet-name>

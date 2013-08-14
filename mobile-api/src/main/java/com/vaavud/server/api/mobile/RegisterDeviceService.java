@@ -1,6 +1,5 @@
 package com.vaavud.server.api.mobile;
 
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,6 +58,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			
 			hibernateSession.beginTransaction();
 
+			final Device device;
 			Device storedDevice = (Device) hibernateSession
 					.createQuery("from Device where uuid=:uuid")
 					.setString("uuid", object.getUuid())
@@ -68,9 +68,12 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 				logger.info("Registering new Device");
 				authToken = UUIDUtil.generateUUID();
 				object.setAuthToken(authToken);
+				object.setUploadMagneticData(null);
 				
 				hibernateSession.save(object);
 				hibernateSession.getTransaction().commit();
+				
+				device = object;
 			}
 			else {
 				authToken = storedDevice.getAuthToken();
@@ -83,6 +86,8 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 				else {
 					logger.info("Received Device already stored and no changes in values");
 				}
+				
+				device = storedDevice;
 			}
 			
 			if (authToken == null || authToken.trim().isEmpty()) {
@@ -91,6 +96,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			
 			Map<String,String> json = new HashMap<String,String>();
 			json.put("authToken", authToken);
+			json.put("uploadMagneticData", Boolean.toString(Boolean.TRUE.equals(device.getUploadMagneticData())));
 			writeJSONResponse(resp, mapper, json);
 		}
 	}

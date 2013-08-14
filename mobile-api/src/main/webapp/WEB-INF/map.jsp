@@ -44,7 +44,8 @@
       function addMarker(measurement, map) {
           var marker = new google.maps.Marker({
               position: new google.maps.LatLng(measurement.position.latitude,measurement.position.longitude),
-              map: map
+              map: map,
+              icon: "/gfx/WindMarker.png"
           });
           var infowindow = new google.maps.InfoWindow({
               content: "Start Time: " + (new Date(measurement.startTime)) + "<br/>" +
@@ -55,7 +56,7 @@
           });
           google.maps.event.addListener(marker, 'click', function() {
                 infowindow.open(map,marker);
-                map.setZoom(13);
+                map.setZoom(16);
                 map.setCenter(marker.getPosition());
               });
       }

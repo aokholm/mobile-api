@@ -30,10 +30,12 @@ public abstract class AbstractJSONService<E> extends AbstractHibernateService {
 				getLogger().info("Got JSON:\n" + body);
 			}
 			catch (RuntimeException e) {
-				getLogger().error("Error processing JSON:\n" + body, e);
+				getLogger().error("Error processing JSON:\n" + body);
+				throw e;
 			}
 			catch (IOException e) {
-				getLogger().error("Error processing JSON:\n" + body, e);
+				getLogger().error("Error processing JSON:\n" + body);
+				throw e;
 			}
 		}
 
