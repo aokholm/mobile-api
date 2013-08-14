@@ -276,4 +276,17 @@ public class Device extends IdEntity {
 		}
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "Device [id=" + id + ", uuid=" + uuid + ", authToken="
+				+ authToken + ", creationTime=" + creationTime + ", vendor="
+				+ vendor + ", model=" + model + ", os=" + os + ", osVersion="
+				+ osVersion + ", app=" + app + ", appVersion=" + appVersion
+				+ ", country=" + country + ", language=" + language
+				+ ", timezoneOffset=" + timezoneOffset + ", windSpeedUnit="
+				+ windSpeedUnit + ", magneticFieldSensor="
+				+ magneticFieldSensor + ", uploadMagneticData="
+				+ uploadMagneticData + "]";
+	}
 }

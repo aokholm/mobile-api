@@ -27,7 +27,7 @@ public abstract class AbstractJSONService<E> extends AbstractHibernateService {
 		if (body != null && body.trim().length() > 0) {
 			try {
 				object = mapper.readValue(body, type());
-				getLogger().info("Got JSON:\n" + body);
+				//getLogger().info("Got JSON:\n" + body);
 			}
 			catch (RuntimeException e) {
 				getLogger().error("Error processing JSON:\n" + body);
