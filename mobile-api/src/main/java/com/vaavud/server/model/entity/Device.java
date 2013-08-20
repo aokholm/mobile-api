@@ -45,6 +45,7 @@ public class Device extends IdEntity {
 		setTimezoneOffset(other.getTimezoneOffset());
 		setWindSpeedUnit(other.getWindSpeedUnit());
 		setMagneticFieldSensor(other.getMagneticFieldSensor());
+		// note: explicitly do not copy uploadMagneticData property to make sure it is only set from server
 	}
 
 	@Id

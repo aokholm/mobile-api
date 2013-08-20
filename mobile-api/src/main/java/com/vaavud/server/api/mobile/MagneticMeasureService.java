@@ -56,6 +56,8 @@ public class MagneticMeasureService extends AbstractJSONService<MagneticSession>
 				throw new ProtocolException("Received MagneticSession with no uuid");
 			}
 			
+			long dbStartTimeNanos = System.nanoTime();
+			
 			hibernateSession.beginTransaction();
 
 			MagneticSession storedMagneticSession = (MagneticSession) hibernateSession
@@ -77,7 +79,7 @@ public class MagneticMeasureService extends AbstractJSONService<MagneticSession>
 			else {
 				// we've already got this magnetic session
 				if (storedMagneticSession.getEndIndex() < object.getEndIndex()) {
-					logger.info("Received MagneticSession already stored but new end index is greater so replacing: stored=" + storedMagneticSession.getEndIndex() + ", received=" + object.getEndIndex());
+					logger.info("Received MagneticSession already stored but new end index is greater so appending: stored=" + storedMagneticSession.getEndIndex() + ", received=" + object.getEndIndex());
 					
 					int num = object.getStartIndex();
 					for (Float[] point : object.getPoints()) {
@@ -103,6 +105,8 @@ public class MagneticMeasureService extends AbstractJSONService<MagneticSession>
 				}
 			}
 
+			String dbTime = Double.toString(Math.round(((System.nanoTime() - dbStartTimeNanos) / 1000000000D) * 10D) / 10D);
+			logger.info("Database time: " + dbTime);
 		}
 	}
 	
