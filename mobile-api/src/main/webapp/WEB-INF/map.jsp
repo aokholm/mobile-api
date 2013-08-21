@@ -45,7 +45,7 @@
           var marker = new google.maps.Marker({
               position: new google.maps.LatLng(measurement.position.latitude,measurement.position.longitude),
               map: map,
-              icon: "/gfx/WindMarker.png"
+              icon: (measurement.iconNum == 0) ? "/gfx/WindMarker.png" : "/gfx/WindMarker2.png"
           });
           var infowindow = new google.maps.InfoWindow({
               content: "Start Time: " + (new Date(measurement.startTime)) + "<br/>" +

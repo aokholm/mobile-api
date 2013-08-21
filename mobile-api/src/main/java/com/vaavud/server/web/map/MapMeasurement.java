@@ -27,6 +27,7 @@ public class MapMeasurement implements Serializable {
 		mapMeasurement.windSpeedAvg = measurementSession.getWindSpeedAvg();
 		mapMeasurement.windSpeedMax = measurementSession.getWindSpeedMax();
 		mapMeasurement.windDirection = measurementSession.getWindDirection();
+		mapMeasurement.iconNum = "Android".equalsIgnoreCase(measurementSession.getDevice().getOs()) ? 1 : 0;
 		return mapMeasurement;
 	}
 	
@@ -37,6 +38,7 @@ public class MapMeasurement implements Serializable {
     private Float windSpeedAvg;
     private Float windSpeedMax;
     private Float windDirection;
+    private int iconNum;
 	
     public Long getId() {
 		return id;
@@ -92,5 +94,13 @@ public class MapMeasurement implements Serializable {
 
 	public void setWindDirection(Float windDirection) {
 		this.windDirection = windDirection;
+	}
+
+	public int getIconNum() {
+		return iconNum;
+	}
+
+	public void setIconNum(int iconNum) {
+		this.iconNum = iconNum;
 	}
 }
