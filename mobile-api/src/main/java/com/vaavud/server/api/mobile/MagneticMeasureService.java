@@ -79,7 +79,7 @@ public class MagneticMeasureService extends AbstractJSONService<MagneticSession>
 			else {
 				// we've already got this magnetic session
 				if (storedMagneticSession.getEndIndex() < object.getEndIndex()) {
-					logger.info("Received MagneticSession already stored but new end index is greater so appending: stored=" + storedMagneticSession.getEndIndex() + ", received=" + object.getEndIndex());
+					logger.info("Received MagneticSession already stored and new end index is greater so appending: stored=" + storedMagneticSession.getEndIndex() + ", received=" + object.getEndIndex());
 					
 					int num = object.getStartIndex();
 					for (Float[] point : object.getPoints()) {

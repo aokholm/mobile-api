@@ -34,6 +34,8 @@ public class MeasurementSession extends IdEntity {
     private Date creationTime = new Date();
     private boolean measuring = false;
     private boolean uploaded = false;
+    private int startIndex = 0;
+    private int endIndex = 0;
     private Long timezoneOffset;
     private Date startTime;
     private Date endTime;
@@ -46,6 +48,7 @@ public class MeasurementSession extends IdEntity {
     public void setFrom(MeasurementSession other) {
     	setMeasuring(other.isMeasuring());
     	setUploaded(other.isUploaded());
+    	setEndIndex(other.getEndIndex());
     	setTimezoneOffset(other.getTimezoneOffset());
     	setStartTime(other.getStartTime());
     	setEndTime(other.getEndTime());
@@ -103,6 +106,24 @@ public class MeasurementSession extends IdEntity {
 
 	public void setUploaded(boolean uploaded) {
 		this.uploaded = uploaded;
+	}
+
+	@Column(nullable = false)
+	public int getStartIndex() {
+		return startIndex;
+	}
+
+	public void setStartIndex(int startIndex) {
+		this.startIndex = startIndex;
+	}
+
+	@Column(nullable = false)
+	public int getEndIndex() {
+		return endIndex;
+	}
+
+	public void setEndIndex(int endIndex) {
+		this.endIndex = endIndex;
 	}
 
 	@Column(nullable = false)

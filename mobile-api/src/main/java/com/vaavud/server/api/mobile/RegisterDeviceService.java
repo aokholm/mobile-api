@@ -97,6 +97,8 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			Map<String,String> json = new HashMap<String,String>();
 			json.put("authToken", authToken);
 			json.put("uploadMagneticData", device.getUploadMagneticData() == null ? "true" : (device.getUploadMagneticData() ? "true" : "false"));
+			json.put("frequencyStart", Double.toString(AlgorithmConstantsUtil.getFrequencyStart(device.getModel())));
+			json.put("frequencyFactor", Double.toString(AlgorithmConstantsUtil.getFrequencyFactor(device.getModel())));
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
