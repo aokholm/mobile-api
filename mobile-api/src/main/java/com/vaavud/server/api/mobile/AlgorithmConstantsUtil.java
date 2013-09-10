@@ -6,9 +6,11 @@ public final class AlgorithmConstantsUtil {
 
 	private static enum PhoneModel {
 
-		GS4(1.04D, new String[] {"GT-I9500", "SHV-E300", "GT-I9505", "SGH-I337", 
+		GS4(1.09D, new String[] {"GT-I9500", "SHV-E300", "GT-I9505", "SGH-I337", 
 				"SGH-M919", "SCH-I545", "SPH-L720", "SCH-R970", "GT-I9508", "SCH-I959", "GT-I9502", 
 				"SGH-N045"}),
+				
+		GS4MINI(1.09D, new String[] {"GT-I919"}),
 				
 		GS3(1.09D, new String[] {"GT-I9300", "GT-I9305", "SHV-E210", "SGH-T999", 
 				"SGH-I747", "SGH-N064", "SGH-N035", "SCH-J021", "SCH-R530", 
