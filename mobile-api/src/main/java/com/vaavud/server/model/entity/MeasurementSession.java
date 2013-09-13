@@ -32,6 +32,7 @@ public class MeasurementSession extends IdEntity {
 	private String uuid;
 	private Device device;
     private Date creationTime = new Date();
+	private String source;
     private boolean measuring = false;
     private boolean uploaded = false;
     private int startIndex = 0;
@@ -46,6 +47,7 @@ public class MeasurementSession extends IdEntity {
     private List<MeasurementPoint> points = new ArrayList<MeasurementPoint>();
 	
     public void setFrom(MeasurementSession other) {
+    	setSource(other.getSource());
     	setMeasuring(other.isMeasuring());
     	setUploaded(other.isUploaded());
     	setEndIndex(other.getEndIndex());
@@ -88,6 +90,15 @@ public class MeasurementSession extends IdEntity {
 
 	public void setDevice(Device device) {
 		this.device = device;
+	}
+
+	public String getSource() {
+		return source;
+	}
+
+	@Basic
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 	@Column(columnDefinition = "bit", length = 1)
