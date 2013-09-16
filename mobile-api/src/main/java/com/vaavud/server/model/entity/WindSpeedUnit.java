@@ -5,5 +5,6 @@ public enum WindSpeedUnit {
     KMH,
     MS,
     MPH,
-    KN
+    KN,
+    BFT
 }
