@@ -49,7 +49,7 @@ public abstract class AbstractJSONService<E> extends AbstractHibernateService {
 	}
 	
 	protected void writeJSONResponse(HttpServletResponse resp, ObjectMapper mapper, Map<String,?> json) throws IOException {
-		String responseBody = mapper.writeValueAsString(json);
+		String responseBody = (json == null || json.isEmpty()) ? "" : mapper.writeValueAsString(json);
 		ServiceUtil.writeResponse(resp, responseBody, ServiceUtil.JSON_MIME_TYPE);
 	}
 	

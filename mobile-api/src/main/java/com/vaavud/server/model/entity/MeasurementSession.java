@@ -230,6 +230,7 @@ public class MeasurementSession extends IdEntity {
 	public String toString() {
 		return "MeasurementSession [id=" + id + ", uuid=" + uuid
 				+ ", measuring=" + measuring + ", uploaded=" + uploaded
+				+ ", startIndex=" + startIndex + ", endIndex=" + endIndex
 				+ ", creationTime=" + creationTime + ", startTime=" + startTime
 				+ ", endTime=" + endTime + ", position=" + position
 				+ ", windSpeedAvg=" + windSpeedAvg + ", windSpeedMax="

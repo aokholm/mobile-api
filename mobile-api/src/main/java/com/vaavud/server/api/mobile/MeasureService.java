@@ -67,6 +67,7 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 			else {
 				processFullMeasurementSession(hibernateSession, object);
 			}
+			writeJSONResponse(resp, mapper, null);
 		}
 	}
 
