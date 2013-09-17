@@ -16,6 +16,7 @@ import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
 import com.vaavud.server.api.util.ServiceUtil;
 import com.vaavud.server.model.entity.Device;
+import com.vaavud.server.model.phone.PhoneModel;
 import com.vaavud.util.UUIDUtil;
 
 public class RegisterDeviceService extends AbstractJSONService<Device> {
@@ -94,11 +95,16 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 				logger.error("AuthToken not supposed to be null or empty here");
 			}
 			
+			PhoneModel phoneModel = PhoneModel.getPhoneModel(device.getOs(), device.getModel());
+			
 			Map<String,String> json = new HashMap<String,String>();
 			json.put("authToken", authToken);
 			json.put("uploadMagneticData", device.getUploadMagneticData() == null ? "true" : (device.getUploadMagneticData() ? "true" : "false"));
-			json.put("frequencyStart", Double.toString(AlgorithmConstantsUtil.getFrequencyStart(device.getModel())));
-			json.put("frequencyFactor", Double.toString(AlgorithmConstantsUtil.getFrequencyFactor(device.getModel())));
+			json.put("algorithm", phoneModel.getAlgorithm().name());
+			json.put("frequencyStart", Double.toString(phoneModel.getFrequencyStart()));
+			json.put("frequencyFactor", Double.toString(phoneModel.getFrequencyFactor()));
+			json.put("fftLength", Integer.toString(phoneModel.getFFTLength(device.getOsVersion())));
+			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
