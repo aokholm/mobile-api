@@ -1,13 +1,27 @@
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
          import="java.util.*,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.fasterxml.jackson.databind.*"%><%
 
+    Long hours = null;
+    
+    if (request.getParameter("hours") != null) {
+    	try {
+    		hours = Long.parseLong(request.getParameter("hours"));
+    	}
+    	catch (RuntimeException e) {
+    		hours = null;
+    	}
+    }
+        
     List<MapMeasurement> mapMeasurements = Collections.emptyList();
     
     // fetch all measurement sessions
     
     Session hibernateSession = Model.get().getSessionFactory().openSession();
     try {
-    	List<MeasurementSession> measurements = hibernateSession.createQuery("from MeasurementSession s where s.position!=null and s.position.latitude!=null and s.position.longitude!=null").list();
+    	List<MeasurementSession> measurements = hibernateSession.createQuery(
+    			"from MeasurementSession s where s.position!=null and s.position.latitude!=null and s.position.longitude!=null"
+    		    + (hours == null ? "" : " and s.startTime>" + (System.currentTimeMillis() - hours * 3600000))
+    			).list();
         mapMeasurements = MapMeasurement.fromMeasurementSessions(measurements);
     }
     catch (RuntimeException e) {
