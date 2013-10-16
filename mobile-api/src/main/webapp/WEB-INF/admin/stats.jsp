@@ -1,6 +1,11 @@
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
-         import="java.util.*,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.fasterxml.jackson.databind.*"%><%
+         import="java.util.*,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
 
+    if (!"2gh7yJfJ6H".equals(request.getParameter("pass"))) {
+        ServiceUtil.sendUnauthorizedErrorResponse(response);
+        return;
+    }
+         
     Session hibernateSession = Model.get().getSessionFactory().openSession();
          
     Number allTimeAvgMeasurementsPerDay = (Number) hibernateSession.createSQLQuery(
