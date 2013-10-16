@@ -5,12 +5,16 @@
   <!-- Mobile API Servlets -->
   
   <servlet>
+    <servlet-name>MagneticMeasureService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.MagneticMeasureService</servlet-class>
+  </servlet>
+  <servlet>
     <servlet-name>MeasureService</servlet-name>
     <servlet-class>com.vaavud.server.api.mobile.MeasureService</servlet-class>
   </servlet>
   <servlet>
-    <servlet-name>MagneticMeasureService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.MagneticMeasureService</servlet-class>
+    <servlet-name>MeasurementsService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.MeasurementsService</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>RegisterDeviceService</servlet-name>
@@ -34,16 +38,24 @@
     <servlet-name>MapServlet</servlet-name>
     <servlet-class>com.vaavud.server.web.map.MapServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>StatsServlet</servlet-name>
+    <servlet-class>com.vaavud.server.web.admin.StatsServlet</servlet-class>
+  </servlet>
   
   <!-- Mobile API Mappings -->
   
+  <servlet-mapping>
+    <servlet-name>MagneticMeasureService</servlet-name>
+    <url-pattern>/api/magnetic/measure</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>MeasureService</servlet-name>
     <url-pattern>/api/measure</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>MagneticMeasureService</servlet-name>
-    <url-pattern>/api/magnetic/measure</url-pattern>
+    <servlet-name>MeasurementsService</servlet-name>
+    <url-pattern>/api/measurements</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>RegisterDeviceService</servlet-name>
@@ -66,6 +78,10 @@
   <servlet-mapping>
     <servlet-name>MapServlet</servlet-name>
     <url-pattern>/map</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>StatsServlet</servlet-name>
+    <url-pattern>/admin/stats</url-pattern>
   </servlet-mapping>
 
 </web-app>
