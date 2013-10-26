@@ -35,6 +35,11 @@
     <servlet-class>com.vaavud.server.web.map.MapServlet</servlet-class>
   </servlet>
   
+  <servlet>
+  	<servlet-name>HelloServlet</servlet-name>
+  	<servlet-class>com.vaavud.server.web.hello.HelloServlet</servlet-class>
+  </servlet>
+  
   <!-- Mobile API Mappings -->
   
   <servlet-mapping>
@@ -66,6 +71,11 @@
   <servlet-mapping>
     <servlet-name>MapServlet</servlet-name>
     <url-pattern>/map</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>HelloServlet</servlet-name>
+    <url-pattern>/hello</url-pattern>
   </servlet-mapping>
 
 </web-app>
