@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
-         import="java.util.*,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
+         import="java.util.*,java.text.DecimalFormat,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
 
     String pass = "2gh7yJfJ6H";     
     
@@ -48,6 +48,9 @@
     	"LIMIT 0 , " + limit;                                                                
 
     List<Object[]> session_ids = hibernateSession.createSQLQuery(sql).list();
+    
+    DecimalFormat dfd = new DecimalFormat("0.00");
+    DecimalFormat dfs = new DecimalFormat("0.0");
 
 
 %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -97,17 +100,17 @@
     <%
     for (Object[] values : session_ids) {
         %><tr>
-        	<td class="left"><a href='/analysis/measurement.jsp?pass=<%=pass%>&session_id=<%=values[0]%>'><%=values[0]%></a></td>
-        	<td class="left"><%=values[1]%></td>
-        	<td class="left"><%=values[2]%></td>
+        	<td class="right"><a href='/analysis/measurement.jsp?pass=<%=pass%>&session_id=<%=values[0]%>'><%=values[0]%></a></td>
+        	<td class="right"><%=values[1]%></td>
+        	<td class="right"><%=values[2]%></td>
         	<td class="left"><%=values[3]%></td>
         	<td class="left"><%=values[4]%></td>
         	<td class="left"><%=values[5]%></td>
-        	<td class="left"><%=values[6]%></td>
-        	<td class="left"><%=values[7]%></td>
-        	<td class="left"><%=values[8]%></td>
-        	<td class="left"><%=values[9]%></td>
-        	<td class="left"><%=values[10]%></td>
+        	<td class="right"><%=dfs.format(values[6])%></td>
+        	<td class="right"><%=dfs.format(values[7])%></td>
+        	<td class="right"><%=values[8]%></td>
+        	<td class="right"><%=dfs.format(values[9])%></td>
+        	<td class="right"><%=dfd.format(values[10])%></td>
         </tr><%
     }
     %>
