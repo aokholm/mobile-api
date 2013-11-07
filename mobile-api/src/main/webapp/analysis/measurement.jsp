@@ -21,7 +21,29 @@
     } else {
     	session_id = request.getParameter("session_id");
     }
-        	
+    
+    String sql =
+    	"SELECT                                                                " +
+    	"   D.id AS device_id,                                                 " +
+    	"	MagS.id AS magneticSession_id                                      " +
+    	"FROM                                                                  " +
+    	"    MeasurementSession AS MS                                          " +
+    	"		INNER JOIN                                                     " +
+    	"	Device AS D ON D.id = MS.device_id                                 " +
+    	"		LEFT JOIN                                                      " +
+    	"    MagneticSession AS MagS ON MS.uuid = MagS.measurementSessionUuid  " +
+    	"where                                                                 " +
+    	"    MS.id = :session_id                                               " +
+    	"LIMIT 0 , 1                                                           ";
+   	
+    String sessison_id;
+    
+	SQLQuery query = hibernateSession.createSQLQuery(sql);		
+	query.setInteger("session_id", Integer.parseInt(session_id));
+    
+    List<Object[]> IDs = query.list();
+    
+    	
 
 %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -41,6 +63,20 @@
   <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 </head>
 <body>
+	<table>
+		<tr>
+			<th>device_id</th><th>session_id</th><th>magneticSession_id</th>
+		</tr>
+		<tr>
+	<%for (Object[] id :  IDs ) {
+		%><td><%=session_id%></td><td><%=id[0]%></td><td><%=id[1]%></td><% 	
+	}%>
+		</tr>
+	</table>
+	
+	<br />
+	<br />
+	
 	<div id="chart_div"></div>
 
 <script type="text/javascript">
