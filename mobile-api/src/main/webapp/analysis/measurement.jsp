@@ -47,32 +47,21 @@
   <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 </head>
 <body>
-	<table>
-		<tr>
-			<th>session_id</th><th>device_id</th><th>magneticSession_id</th>
-		</tr>
-		<tr>
-			<td><%=measurementSession.getId()%></td><td><%=device.getId()%></td><td><%=magneticSession.getId()%></td>
-		</tr>
-	</table>
-	
-	<br />
-	
 	<div id="chart_div"></div>
 	
 	<br />
-	
+	<h2>Device</h2>
 	<table>	
 			<%
 			for (Field field : device.getClass().getDeclaredFields()) {
 			    field.setAccessible(true);
 			    String name = field.getName();
 			    Object value = field.get(device);
-			    %><tr><td><%=name%></td><td><%=value%></td></tr><%
+			    %><tr><td><%=name%></td><td><%=value%></td></tr><%  
 			}
 			%>
 	</table>
-	
+	<h2>Measurement Session</h2>
 	<table>	
 			<%
 			if (measurementSession != null) {
@@ -80,12 +69,20 @@
 				    field.setAccessible(true);
 				    String name = field.getName();
 				    Object value = field.get(measurementSession);
-				    %><tr><td><%=name%></td><td><%=value%></td></tr><%
+				    if (name == "device") {
+				    	%><tr><td>device</td><td>...</td></tr><%
+				    }
+				    else if (name == "points") {
+				    	%><tr><td>points</td><td>...</td></tr><%
+				    }
+				    else {
+				    	%><tr><td><%=name%></td><td><%=value%></td></tr><%
+				    }   
 				}
 			}
 			%>
 	</table>
-	
+	<h2>Magnetic Session</h2>
 	<table>	
 			<%
 			if (magneticSession != null) {
@@ -93,7 +90,12 @@
 				    field.setAccessible(true);
 				    String name = field.getName();
 				    Object value = field.get(magneticSession);
-				    %><tr><td><%=name%></td><td><%=value%></td></tr><%
+				    if (name == "magneticPoints") {
+				    	%><tr><td>magneticPoints</td><td>...</td></tr><%
+				    }
+				    else {
+				    	%><tr><td><%=name%></td><td><%=value%></td></tr><%
+				    }  
 				}
 			}
 			%>
