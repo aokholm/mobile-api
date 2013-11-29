@@ -72,4 +72,11 @@ public class MeasurementPoint extends IdEntity {
 	public void setWindDirection(Float windDirection) {
 		this.windDirection = windDirection;
 	}
+	
+	@Override
+	public String toString() {
+		return "MeasurementPoint [id=" + id + ", measurementSession_id=" + session.getId() + ", time="
+				+ time + ", windSpeed=" + windSpeed + ", windDirection="
+				+ windDirection + "]";
+	}
 }

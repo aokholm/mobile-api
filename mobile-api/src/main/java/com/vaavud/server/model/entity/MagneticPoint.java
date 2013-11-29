@@ -98,4 +98,10 @@ public class MagneticPoint extends IdEntity {
 	public void setZ(Float z) {
 		this.z = z;
 	}
+	
+	@Override
+	public String toString() {
+		return "MagneticPoint [id=" + id + ", magneticSession_id=" + magneticSession.getId() + ", num =" +
+				num + ", time=" + time + ", x=" + x + ", y=" + y + ", z=" + z +"]";
+	}
 }
