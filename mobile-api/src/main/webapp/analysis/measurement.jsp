@@ -1,6 +1,8 @@
+<%@page import="org.hibernate.type.IntegerType"%>
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
-         import="java.util.*,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
+         import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
 	
+    // Check password     
     String pass = "2gh7yJfJ6H";     
          
     if (!pass.equals(request.getParameter("pass"))) {
@@ -8,43 +10,25 @@
         return;
     }
     
+    // Start hibernate Session
     Session hibernateSession = Model.get().getSessionFactory().openSession();
     
-    String measurementPointsSQLend;
-    String session_id;
+    MeasurementSession measurementSession;
+	Device device;
+	MagneticSession magneticSession;
+    
     if (request.getParameter("session_id") == null) {
-    	Number latestSessionId = (Number) hibernateSession.createSQLQuery(
-        		"select id " +
-        		"from MeasurementSession " +
-        		"ORDER BY id DESC limit 0,1").uniqueResult();
-    	session_id = latestSessionId.toString();
+    	measurementSession = (MeasurementSession) hibernateSession.createQuery("from MeasurementSession order by id DESC LIMIT 1").uniqueResult();
+//     	setMaxResults(1)
     } else {
-    	session_id = request.getParameter("session_id");
+    	measurementSession = (MeasurementSession) hibernateSession.get(MeasurementSession.class, Long.parseLong(request.getParameter("session_id")));
     }
     
-    String sql =
-    	"SELECT                                                                " +
-    	"   D.id AS device_id,                                                 " +
-    	"	MagS.id AS magneticSession_id                                      " +
-    	"FROM                                                                  " +
-    	"    MeasurementSession AS MS                                          " +
-    	"		INNER JOIN                                                     " +
-    	"	Device AS D ON D.id = MS.device_id                                 " +
-    	"		LEFT JOIN                                                      " +
-    	"    MagneticSession AS MagS ON MS.uuid = MagS.measurementSessionUuid  " +
-    	"where                                                                 " +
-    	"    MS.id = :session_id                                               " +
-    	"LIMIT 0 , 1                                                           ";
-   	
-    String sessison_id;
-    
-	SQLQuery query = hibernateSession.createSQLQuery(sql);		
-	query.setInteger("session_id", Integer.parseInt(session_id));
-    
-    List<Object[]> IDs = query.list();
-    
-    	
-
+    device = measurementSession.getDevice();
+    Query query = hibernateSession.createQuery("from MagneticSession where measurementSessionUuid = :measurementSessionUuid");
+   	query = query.setParameter("measurementSessionUuid", measurementSession.getUuid());
+    magneticSession = (MagneticSession) query.uniqueResult();
+        
 %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -65,19 +49,56 @@
 <body>
 	<table>
 		<tr>
-			<th>device_id</th><th>session_id</th><th>magneticSession_id</th>
+			<th>session_id</th><th>device_id</th><th>magneticSession_id</th>
 		</tr>
 		<tr>
-	<%for (Object[] id :  IDs ) {
-		%><td><%=session_id%></td><td><%=id[0]%></td><td><%=id[1]%></td><% 	
-	}%>
+			<td><%=measurementSession.getId()%></td><td><%=device.getId()%></td><td><%=magneticSession.getId()%></td>
 		</tr>
 	</table>
 	
 	<br />
-	<br />
 	
 	<div id="chart_div"></div>
+	
+	<br />
+	
+	<table>	
+			<%
+			for (Field field : device.getClass().getDeclaredFields()) {
+			    field.setAccessible(true);
+			    String name = field.getName();
+			    Object value = field.get(device);
+			    %><tr><td><%=name%></td><td><%=value%></td></tr><%
+			}
+			%>
+	</table>
+	
+	<table>	
+			<%
+			if (measurementSession != null) {
+				for (Field field : measurementSession.getClass().getDeclaredFields()) {
+				    field.setAccessible(true);
+				    String name = field.getName();
+				    Object value = field.get(measurementSession);
+				    %><tr><td><%=name%></td><td><%=value%></td></tr><%
+				}
+			}
+			%>
+	</table>
+	
+	<table>	
+			<%
+			if (magneticSession != null) {
+				for (Field field : magneticSession.getClass().getDeclaredFields()) {
+				    field.setAccessible(true);
+				    String name = field.getName();
+				    Object value = field.get(magneticSession);
+				    %><tr><td><%=name%></td><td><%=value%></td></tr><%
+				}
+			}
+			%>
+	</table>
+	
 
 <script type="text/javascript">
     // Load the Visualization API and the piechart package.
@@ -93,7 +114,7 @@
     	
     	var parameters = {
     		"pass" : "2gh7yJfJ6H", 
-    		"session_id" : "<%=session_id%>"
+    		"session_id" : "<%=measurementSession.getId()%>"
     	};
     	   	
     	var options = 
