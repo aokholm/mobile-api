@@ -21,7 +21,7 @@ public class FFTManager {
 		
 		List<CoreMeasurementPoint> measurementPoints = new ArrayList<CoreMeasurementPoint>(myDataManager.getNumberOfMeassurements());
 		
-		for(int i = 0; i < myDataManager.getNumberOfMeassurements(); i+=2) {
+		for(int i = 0; i < myDataManager.getNumberOfMeassurements(); i+=10) {
 			
 			CoreMeasurementPoint myCoreMeasurementPoint = getFreqAmp3DAtIndex(i);
 			

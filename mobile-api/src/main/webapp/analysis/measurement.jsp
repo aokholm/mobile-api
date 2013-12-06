@@ -119,7 +119,7 @@
 </head>
 <body>
 	<div id="chart_windspeed"></div>
-	<div id="chart_windspeed2"></div>
+	<div id="chart_frequency"></div>
 	<div id="chart_magneticField"></div>
 	<div id="map_canvas"></div>
 	
@@ -187,7 +187,7 @@
  	
     function drawCharts() {
     	drawWindspeedChart();
-    	drawWindspeedChart2();
+    	drawFrequencyChart();
     	drawMagneticFieldChart();
     }
     
@@ -240,14 +240,14 @@
     	
     }
  	
- 	function drawWindspeedChart2() {
+ 	function drawFrequencyChart() {
     	
     	var options = 
     	{
-    		title : "Wind speed",
-    		series : [{"lineWidth": 1, "pointSize": 2}],
+    		title : "Frequency",
+    		series : [{"lineWidth": 1, "pointSize": 0}],
     		vAxis: {
-    			title: "windspeed (m/s)"
+    			title: "Frequency (Hz)"
     		},
 	    	hAxis: { 
 	            title: "Time (s)", 
@@ -268,7 +268,7 @@
         %>  
         ]);
     	
-    	var chart = new google.visualization.LineChart(document.getElementById('chart_windspeed2'));
+    	var chart = new google.visualization.LineChart(document.getElementById('chart_frequency'));
         chart.draw(data, options);    	
     }
  	
