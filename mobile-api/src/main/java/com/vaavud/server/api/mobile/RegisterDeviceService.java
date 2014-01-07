@@ -22,6 +22,8 @@ import com.vaavud.util.UUIDUtil;
 public class RegisterDeviceService extends AbstractJSONService<Device> {
 
 	private static final Logger logger = Logger.getLogger(RegisterDeviceService.class);
+	private static final float[] HOUR_OPTIONS = new float[] {3F, 6F, 12F, 24F};
+	private static final int MAX_MAP_MARKERS = 500;
 			
 	@Override
 	protected Class<Device> type() {
@@ -97,7 +99,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			
 			PhoneModel phoneModel = PhoneModel.getPhoneModel(device.getOs(), device.getModel());
 			
-			Map<String,String> json = new HashMap<String,String>();
+			Map<String,Object> json = new HashMap<String,Object>();
 			json.put("authToken", authToken);
 			json.put("uploadMagneticData", device.getUploadMagneticData() == null ? "true" : (device.getUploadMagneticData() ? "true" : "false"));
 			json.put("algorithm", phoneModel.getAlgorithm().name());
@@ -105,6 +107,8 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			json.put("frequencyFactor", Double.toString(phoneModel.getFrequencyFactor()));
 			json.put("fftLength", Integer.toString(phoneModel.getFFTLength(device.getOsVersion())));
 			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
+			json.put("hourOptions", HOUR_OPTIONS);
+			json.put("maxMapMarkers", MAX_MAP_MARKERS);
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
