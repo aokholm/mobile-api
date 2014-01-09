@@ -23,7 +23,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 
 	private static final Logger logger = Logger.getLogger(RegisterDeviceService.class);
 	private static final float[] HOUR_OPTIONS = new float[] {3F, 6F, 12F, 24F};
-	private static final int MAX_MAP_MARKERS = 500;
+	private static final int MAX_MAP_MARKERS = 1000;
 			
 	@Override
 	protected Class<Device> type() {
@@ -108,7 +108,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			json.put("fftLength", Integer.toString(phoneModel.getFFTLength(device.getOsVersion())));
 			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
 			json.put("hourOptions", HOUR_OPTIONS);
-			json.put("maxMapMarkers", MAX_MAP_MARKERS);
+			//json.put("maxMapMarkers", MAX_MAP_MARKERS);
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
