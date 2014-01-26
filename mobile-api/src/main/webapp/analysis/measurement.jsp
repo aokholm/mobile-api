@@ -103,8 +103,15 @@ if (magPoints != null) {
   function initialize() {
     var mapCanvas = document.getElementById('map_canvas');
     
-    var measurementLatlng = new google.maps.LatLng(<%=measurementSession.getPosition().getLatitude()%>, <%=measurementSession.getPosition().getLongitude()%>);
+    <%
+    if (measurementSession.getPosition() != null) {
+      %>var measurementLatlng = new google.maps.LatLng(
+          <%=measurementSession.getPosition().getLatitude()%>, <%=measurementSession.getPosition().getLongitude()%>);<%
+    } else {
+      %>var measurementLatlng = new google.maps.LatLng(0, 0);<%
+    }
     
+    %>
     var mapOptions = {
       center: measurementLatlng,
       zoom: 11,
