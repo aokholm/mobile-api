@@ -23,5 +23,6 @@ Tester tester = (Tester) envCtx.lookup("bean/TesterFactory");
 </head>
 <body>
   <p>HelloTest</p>
+  <p>IsActive:<%=tester.active %></p>
 </body>
 </html>

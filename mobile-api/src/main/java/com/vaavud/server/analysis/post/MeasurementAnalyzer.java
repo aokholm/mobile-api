@@ -30,7 +30,11 @@ public class MeasurementAnalyzer implements SensorListener{
     
     sensorManager.addListener(this, new SensorType[]{SensorType.TYPE_FREQUENCY, SensorType.TYPE_MAGNETIC_FIELD});
     
-    sensorManager.start();
+    try {
+      sensorManager.start();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
   
   @Override

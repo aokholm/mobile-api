@@ -7,6 +7,9 @@ import com.vaavud.serial.SerialSensor;
 public class Tester implements SensorListener {
   private SensorManager sensorManager;
   
+  public boolean active;
+  
+  
   public Tester() {
       RevSensorConfig config = new RevSensorConfig();
       config.revSensorUpdateRateUs=100000; // once a second
@@ -16,7 +19,14 @@ public class Tester implements SensorListener {
       
       sensorManager.addListener(this, new SensorType[]{SensorType.TYPE_FREQUENCY});
       
-      sensorManager.start();
+      try {
+        sensorManager.start();
+        active = true;
+      } catch (Exception e) {
+        active = false;
+      }
+      
+      
   }
   
   @Override
