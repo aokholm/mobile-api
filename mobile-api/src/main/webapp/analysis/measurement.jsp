@@ -1,7 +1,5 @@
-<%@page import="com.vaavud.server.analysis.model.CoreMeasurementPoint"%>
-<%@page import="com.vaavud.server.analysis.magnetic.FFTManager"%>
-<%@page import="com.vaavud.server.analysis.model.CoreMagneticPoint"%>
-<%@page import="com.vaavud.server.analysis.magnetic.DataManager"%>
+<%@page import="com.vaavud.sensor.SensorEvent"%>
+<%@page import="com.vaavud.server.analysis.post.MeasurementAnalyzer"%>
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
          import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
 	
@@ -43,33 +41,23 @@ for (int i=0; i<mesPoints.size(); i++) {
 }
 
 
-List<MagneticPoint> magPoints = null;
-List<CoreMeasurementPoint> coreMeasurementPoints = null;
+List<SensorEvent> magEvents = null;
+List<SensorEvent> freqEvents = null;
 
 if (magneticSession != null){
 	
-	magPoints = magneticSession.getMagneticPoints();
-	
-	//********* GENERATE MAGANALYSIS *********//
-	DataManager dataManager = new DataManager();
-	List<CoreMagneticPoint> coreMagneticPoints = new ArrayList<CoreMagneticPoint>(magPoints.size());
-	
-	// generate list of coreMagneticPoints
-	for (int i = 0; i < magPoints.size(); i++) {
-		coreMagneticPoints.add( new CoreMagneticPoint( magPoints.get(i).getTime(), magPoints.get(i).getX(), magPoints.get(i).getY(), magPoints.get(i).getZ() ));
-	}
-	dataManager.addMagneticFieldReadings(coreMagneticPoints);
-	FFTManager fftManager = new FFTManager(dataManager);
-	coreMeasurementPoints = fftManager.getMeasurementPoints();
+  MeasurementAnalyzer analyzer = new MeasurementAnalyzer(magneticSession);
+  magEvents = analyzer.getMagEverts();
+  freqEvents = analyzer.getFreqEvents();
 }
 
 
 
 //End timestep shown
 double endTime = mpTime[mpTime.length-1];
-if (magPoints != null) {
-	if (magPoints.get(magPoints.size() -1).getTime() > endTime ) {
-		endTime = magPoints.get(magPoints.size() -1).getTime();
+if (magEvents != null) {
+	if (magEvents.get(magEvents.size() -1).timeUs/1000000f > endTime ) {
+		endTime = magEvents.get(magEvents.size() -1).timeUs/1000000f;
 	}
 }
 
@@ -295,14 +283,14 @@ if (magPoints != null) {
 			%>data.addRow([<%=mpTime[i]%>, <%=mesPoints.get(i).getWindSpeed()%>, null, null, null, null]);
 			<%
 		}
-		if (coreMeasurementPoints != null) {
-			for (int i = 0; i < coreMeasurementPoints.size() ; i++) {
-				%>data.addRow([<%=coreMeasurementPoints.get(i).getTime()%>, null, <%=coreMeasurementPoints.get(i).getFrequency()%>, null, null, null]);
+		if (freqEvents != null) {
+			for (int i = 0; i < freqEvents.size() ; i++) {
+				%>data.addRow([<%=freqEvents.get(i).getTime()%>, null, <%=freqEvents.get(i).values[0]%>, null, null, null]);
 				<%
 			}
 			
-			for (int i = 0; i < magPoints.size() ; i++) {
-				%>data.addRow([<%=magPoints.get(i).getTime()%>, null, null, <%=magPoints.get(i).getX()%>, <%=magPoints.get(i).getY()%>, <%=magPoints.get(i).getZ()%>]);
+			for (int i = 0; i < magEvents.size() ; i++) {
+				%>data.addRow([<%=magEvents.get(i).getTime()%>, null, null, <%=magEvents.get(i).values[0]%>, <%=magEvents.get(i).values[1]%>, <%=magEvents.get(i).values[2]%>]);
 				<%
 			}
 		}
