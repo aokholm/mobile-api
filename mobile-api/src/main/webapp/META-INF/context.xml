@@ -1,9 +1,4 @@
 <Context>
-  <Resource name="bean/MyBeanFactory" auth="Container"
-            type="com.vaavud.sensor.MyBean"
-            factory="org.apache.naming.factory.BeanFactory"
-            bar="22"/>
-   
   <Resource name="bean/TesterFactory" auth="Container"
             type="com.vaavud.sensor.Tester"
             factory="org.apache.naming.factory.BeanFactory"/>
