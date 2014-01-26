@@ -2,6 +2,12 @@
     <wb-module deploy-name="mobile-api">
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <dependent-module archiveName="SerialSensor.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/SerialSensor/SerialSensor">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="Sensor.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/Sensor/Sensor">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="java-output-path" value="/mobile-api/target/classes"/>
         <property name="context-root" value="mobile-api"/>
     </wb-module>
