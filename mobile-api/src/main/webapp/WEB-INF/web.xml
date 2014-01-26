@@ -104,10 +104,9 @@
     <url-pattern>/admin/stats</url-pattern>
   </servlet-mapping>
   
-  <!-- Listener Load -->
-  
-	<listener>
-	  <listener-class>com.vaavud.sensor.Serial</listener-class>
-	</listener>
+  <servlet-mapping>
+    <servlet-name>HelloServlet</servlet-name>
+    <url-pattern>/hello</url-pattern>
+  </servlet-mapping>
 
 </web-app>
