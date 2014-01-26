@@ -1,6 +1,9 @@
 package com.vaavud.server.analysis.post;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import javassist.expr.NewArray;
 
 import com.vaavud.sensor.SensorEvent;
 import com.vaavud.sensor.SensorListener;
@@ -12,9 +15,13 @@ import com.vaavud.server.model.entity.MagneticSession;
 
 public class MeasurementAnalyzer implements SensorListener{  
   private List<SensorEvent> freqEvents;
-  private List<SensorEvent> magEverts;
+  private List<SensorEvent> magEvents;
 
   public MeasurementAnalyzer (MagneticSession magneticSession) {
+    freqEvents = new ArrayList<SensorEvent>();
+    magEvents = new ArrayList<SensorEvent>();
+    
+    
     RevSensorConfig config = new RevSensorConfig();
     config.revSensorUpdateRateUs=100000; // 10 time a second
     SensorManager sensorManager = new SensorManager();
@@ -34,9 +41,10 @@ public class MeasurementAnalyzer implements SensorListener{
       freqEvents.add(event);
       break;
     case TYPE_MAGNETIC_FIELD:
-      magEverts.add(event);
+      magEvents.add(event);
+      break;
     default:
-      System.out.println("Unexpected sensor: " + event.sensor);
+      System.out.println("UneXpected sensor: " + event.sensor);
       break;
     }
   }
@@ -46,6 +54,6 @@ public class MeasurementAnalyzer implements SensorListener{
   }
 
   public List<SensorEvent> getMagEverts() {
-    return magEverts;
+    return magEvents;
   }
 }
