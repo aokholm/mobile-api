@@ -3,8 +3,6 @@ package com.vaavud.server.analysis.post;
 import java.util.ArrayList;
 import java.util.List;
 
-import javassist.expr.NewArray;
-
 import com.vaavud.sensor.SensorEvent;
 import com.vaavud.sensor.SensorListener;
 import com.vaavud.sensor.SensorManager;
@@ -27,7 +25,6 @@ public class MeasurementAnalyzer implements SensorListener{
     SensorManager sensorManager = new SensorManager();
     sensorManager.addSensor(new RevolutionSensor(config));
     sensorManager.addSensor(new DatabaseSensor(magneticSession));
-    
     sensorManager.addListener(this, new SensorType[]{SensorType.TYPE_FREQUENCY, SensorType.TYPE_MAGNETIC_FIELD});
     
     try {

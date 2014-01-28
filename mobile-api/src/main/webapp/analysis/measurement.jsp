@@ -56,8 +56,8 @@ if (magneticSession != null){
 //End timestep shown
 double endTime = mpTime[mpTime.length-1];
 if (magEvents != null) {
-	if (magEvents.get(magEvents.size() -1).timeUs/1000000f > endTime ) {
-		endTime = magEvents.get(magEvents.size() -1).timeUs/1000000f;
+	if (magEvents.get(magEvents.size() -1).getTime() > endTime ) {
+		endTime = magEvents.get(magEvents.size() -1).getTime();
 	}
 }
 
@@ -121,7 +121,9 @@ if (magEvents != null) {
 	<div id="dashboard">
 		<div id="chart1"></div>
 		<div id="chart2"></div>
+		<div id="chart3"></div>
 		<div id="control"></div>
+		<div id="chart4"></div>
 	</div>
 	<div id="map_canvas"></div>
 	
@@ -237,7 +239,8 @@ if (magEvents != null) {
 		  'options': {
 		    // Use the same chart area width as the control for axis alignment.
 		    'chartArea': {'left': chartAreaLeft,'height': chartAreaHeight, 'width': chartAreaWidth},
-		    'series' : [{"lineWidth": 1, "pointSize": 2}],
+		    'series' : [{"lineWidth": 1, "pointSize": 2},
+		                {"lineWidth": 1, "pointSize": 2}],
 		    'vAxis': {'title': "windspeed (m/s)"},
 		    //'legend': {'position': 'none'},
 		    'width': chartWidth,
@@ -265,32 +268,72 @@ if (magEvents != null) {
 			  },
 			  // Convert the first column from 'date' to 'string'.
 			  'view': {
-			    'columns': [0, 3,4,5]
+			    'columns': [0,5,6,7]
 			  }
 			});
+		
+	    var chart3 = new google.visualization.ChartWrapper({
+	        'chartType': 'LineChart',
+	        'containerId': 'chart3',
+	        'options': {
+	          // Use the same chart area width as the control for axis alignment.
+	          'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
+	          'series' : [{"lineWidth": 1, "pointSize": 1}],
+	          'vAxis': {'title': "SampleFrequency (Hz)"},
+	          //'legend': {'position': 'none'},
+	          'width': chartWidth,
+	          'height': chartHeight
+	        },
+	        // Convert the first column from 'date' to 'string'.
+	        'view': {
+	          'columns': [0,4]
+	        }
+	      });
+		
+	  var chart4 = new google.visualization.ChartWrapper({
+	        'chartType': 'ScatterChart',
+	        'containerId': 'chart4',
+	        'options': {
+	          // Use the same chart area width as the control for axis alignment.
+	          'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
+// 	          'series' : [{"lineWidth": 1, "pointSize": 0}, 
+// 	                    {"lineWidth": 1, "pointSize": 0}, 
+// 	                    {"lineWidth": 1, "pointSize": 0}],
+	          'vAxis': {'title': "Amplitude (mu-Tesla)"},
+	          //'legend': {'position': 'none'},
+	          'width': chartWidth,
+	          'height': chartHeight
+	        },
+	        // Convert the first column from 'date' to 'string'.
+	        'view': {
+	          'columns': [2,3]
+	        }
+	      });
 		
 		
 		var data = new google.visualization.DataTable();
 		data.addColumn('number', 'time');
 		data.addColumn('number', 'windspeed');
 		data.addColumn('number', 'frequency');
+		data.addColumn('number', 'amplitude');
+		data.addColumn('number', 'sf');
 		data.addColumn('number', 'x');
 		data.addColumn('number', 'y');
 		data.addColumn('number', 'z');
 		 
 		<% 
 		for (int i = 0; i < mesPoints.size() ; i++) {
-			%>data.addRow([<%=mpTime[i]%>, <%=mesPoints.get(i).getWindSpeed()%>, null, null, null, null]);
+			%>data.addRow([<%=mpTime[i]%>, <%=mesPoints.get(i).getWindSpeed()%>, null, null, null, null, null, null]);
 			<%
 		}
 		if (freqEvents != null) {
 			for (int i = 0; i < freqEvents.size() ; i++) {
-				%>data.addRow([<%=freqEvents.get(i).getTime()%>, null, <%=freqEvents.get(i).values[0]%>, null, null, null]);
+				%>data.addRow([<%=freqEvents.get(i).getTime()%>, null, <%=freqEvents.get(i).values[0]%>, <%=freqEvents.get(i).values[1]%>, <%=freqEvents.get(i).values[2]%>, null, null, null]);
 				<%
 			}
 			
 			for (int i = 0; i < magEvents.size() ; i++) {
-				%>data.addRow([<%=magEvents.get(i).getTime()%>, null, null, <%=magEvents.get(i).values[0]%>, <%=magEvents.get(i).values[1]%>, <%=magEvents.get(i).values[2]%>]);
+				%>data.addRow([<%=magEvents.get(i).getTime()%>, null, null, null, null, <%=magEvents.get(i).values[0]%>, <%=magEvents.get(i).values[1]%>, <%=magEvents.get(i).values[2]%>]);
 				<%
 			}
 		}
@@ -298,6 +341,8 @@ if (magEvents != null) {
 		
  		dashboard.bind(control, chart1);
  		dashboard.bind(control, chart2);
+ 		dashboard.bind(control, chart3);
+ 		dashboard.bind(control, chart4);
  		
 		dashboard.draw(data);
 		
