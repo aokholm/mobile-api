@@ -43,12 +43,14 @@ for (int i=0; i<mesPoints.size(); i++) {
 
 List<SensorEvent> magEvents = null;
 List<SensorEvent> freqEvents = null;
+List<SensorEvent> freqEventsRef = null;
 
 if (magneticSession != null){
 	
   MeasurementAnalyzer analyzer = new MeasurementAnalyzer(magneticSession);
   magEvents = analyzer.getMagEverts();
   freqEvents = analyzer.getFreqEvents();
+  freqEventsRef = analyzer.getFreqEventsRef();
 }
 
 
@@ -240,6 +242,7 @@ if (magEvents != null) {
 		    // Use the same chart area width as the control for axis alignment.
 		    'chartArea': {'left': chartAreaLeft,'height': chartAreaHeight, 'width': chartAreaWidth},
 		    'series' : [{"lineWidth": 1, "pointSize": 2},
+		                {"lineWidth": 1, "pointSize": 2},
 		                {"lineWidth": 1, "pointSize": 2}],
 		    'vAxis': {'title': "windspeed (m/s)"},
 		    //'legend': {'position': 'none'},
@@ -248,7 +251,7 @@ if (magEvents != null) {
 		  },
 		  // Convert the first column from 'date' to 'string'.
 		  'view': {
-		    'columns': [0, 1, 2]
+		    'columns': [0, 1, 2, 8]
 		  }
 		});
 		
@@ -286,7 +289,7 @@ if (magEvents != null) {
 	        },
 	        // Convert the first column from 'date' to 'string'.
 	        'view': {
-	          'columns': [0,4]
+	          'columns': [0,4, 10]
 	        }
 	      });
 		
@@ -296,9 +299,8 @@ if (magEvents != null) {
 	        'options': {
 	          // Use the same chart area width as the control for axis alignment.
 	          'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
-// 	          'series' : [{"lineWidth": 1, "pointSize": 0}, 
-// 	                    {"lineWidth": 1, "pointSize": 0}, 
-// 	                    {"lineWidth": 1, "pointSize": 0}],
+	          'series' : [{"lineWidth": 0, "pointSize": 1}, 
+	                    {"lineWidth": 0, "pointSize": 1}],
 	          'vAxis': {'title': "Amplitude (mu-Tesla)"},
 	          //'legend': {'position': 'none'},
 	          'width': chartWidth,
@@ -306,45 +308,62 @@ if (magEvents != null) {
 	        },
 	        // Convert the first column from 'date' to 'string'.
 	        'view': {
-	          'columns': [2,3]
+	          'columns': [11,3, 9]
 	        }
 	      });
 		
 		
-		var data = new google.visualization.DataTable();
-		data.addColumn('number', 'time');
-		data.addColumn('number', 'windspeed');
-		data.addColumn('number', 'frequency');
-		data.addColumn('number', 'amplitude');
-		data.addColumn('number', 'sf');
-		data.addColumn('number', 'x');
-		data.addColumn('number', 'y');
-		data.addColumn('number', 'z');
-		 
-		<% 
-		for (int i = 0; i < mesPoints.size() ; i++) {
-			%>data.addRow([<%=mpTime[i]%>, <%=mesPoints.get(i).getWindSpeed()%>, null, null, null, null, null, null]);
-			<%
-		}
-		if (freqEvents != null) {
-			for (int i = 0; i < freqEvents.size() ; i++) {
-				%>data.addRow([<%=freqEvents.get(i).getTime()%>, null, <%=freqEvents.get(i).values[0]%>, <%=freqEvents.get(i).values[1]%>, <%=freqEvents.get(i).values[2]%>, null, null, null]);
-				<%
-			}
-			
-			for (int i = 0; i < magEvents.size() ; i++) {
-				%>data.addRow([<%=magEvents.get(i).getTime()%>, null, null, null, null, <%=magEvents.get(i).values[0]%>, <%=magEvents.get(i).values[1]%>, <%=magEvents.get(i).values[2]%>]);
-				<%
-			}
-		}
-		%>
+	  var cols = [{id: 'time', label: 'time', type: 'number'},
+	              {id: 'windspeed', label: 'windspeed', type: 'number'},
+	              {id: 'frequencyRef', label: 'frequencyRef', type: 'number'},
+	              {id: 'amplitudeRef', label: 'amplitudeRef', type: 'number'},
+	              {id: 'sfRef', label: 'sfRef', type: 'number'},
+	              {id: 'magx', label: 'magx', type: 'number'},
+	              {id: 'magy', label: 'magy', type: 'number'},
+	              {id: 'magz', label: 'magz', type: 'number'},
+	              {id: 'frequency', label: 'frequency', type: 'number'},
+	              {id: 'amplitude', label: 'amplitude', type: 'number'},
+	              {id: 'SF', label: 'SF', type: 'number'},
+	              {id: 'freq', label: 'freq', type: 'number'},
+	              ];
+	  
+	  
+	  var rows = [
+<% 
+for (int i = 0; i < mesPoints.size() ; i++) {
+  %>{c:[{v:<%=mpTime[i]%>}, {v:<%=mesPoints.get(i).getWindSpeed()%>}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]},
+<%
+}
+if (freqEventsRef != null) {
+  for (int i = 0; i < freqEventsRef.size() ; i++) {
+   %>{c:[{v:<%=freqEventsRef.get(i).getTime()%>}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}, {v:<%=freqEventsRef.get(i).values[1]%>}, {v:<%=freqEventsRef.get(i).values[2]%>}, {}, {}, {}, {}, {}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}]},
+<%
+  }
+}
+if (freqEvents != null) {
+  for (int i = 0; i < freqEvents.size() ; i++) {
+    %>{c:[{v:<%=freqEvents.get(i).getTime()%>}, {}, {}, {}, {}, {}, {}, {}, {v:<%=freqEvents.get(i).values[0]%>}, {v:<%=freqEvents.get(i).values[1]%>}, {v:<%=freqEvents.get(i).values[2]%>}, {v:<%=freqEvents.get(i).values[0]%>}]},
+<%
+  }
+}
+if (magEvents != null) {
+  for (int i = 0; i < magEvents.size() ; i++) {
+    %>{c:[{v:<%=magEvents.get(i).getTime()%>}, {}, {}, {}, {}, {v:<%=magEvents.get(i).values[0]%>}, {v:<%=magEvents.get(i).values[1]%>}, {v:<%=magEvents.get(i).values[2]%>}, {}, {}, {}, {}]},
+<%
+  }
+}
+%>
+	              ];
+	  
+	  
+	  var dataTable = new google.visualization.DataTable({'cols': cols, 'rows': rows}, 0.6);	  
 		
  		dashboard.bind(control, chart1);
  		dashboard.bind(control, chart2);
  		dashboard.bind(control, chart3);
  		dashboard.bind(control, chart4);
  		
-		dashboard.draw(data);
+		dashboard.draw(dataTable);
 		
 	}	
  	

@@ -14,18 +14,22 @@ import com.vaavud.server.model.entity.MagneticSession;
 public class MeasurementAnalyzer implements SensorListener{  
   private List<SensorEvent> freqEvents;
   private List<SensorEvent> magEvents;
+  private List<SensorEvent> freqEventsRef;
 
   public MeasurementAnalyzer (MagneticSession magneticSession) {
     freqEvents = new ArrayList<SensorEvent>();
     magEvents = new ArrayList<SensorEvent>();
-    
+    freqEventsRef = new ArrayList<SensorEvent>();
     
     RevSensorConfig config = new RevSensorConfig();
     config.revSensorUpdateRateUs=100000; // 10 time a second
     SensorManager sensorManager = new SensorManager();
     sensorManager.addSensor(new RevolutionSensor(config));
     sensorManager.addSensor(new DatabaseSensor(magneticSession));
-    sensorManager.addListener(this, new SensorType[]{SensorType.TYPE_FREQUENCY, SensorType.TYPE_MAGNETIC_FIELD});
+    sensorManager.addListener(this, new SensorType[]{
+        SensorType.TYPE_FREQUENCY,
+        SensorType.TYPE_FREQUENCY_REF,
+        SensorType.TYPE_MAGNETIC_FIELD});
     
     try {
       sensorManager.start();
@@ -40,6 +44,9 @@ public class MeasurementAnalyzer implements SensorListener{
     switch (event.sensor) {
     case TYPE_FREQUENCY:
       freqEvents.add(event);
+      break;
+    case TYPE_FREQUENCY_REF:
+      freqEventsRef.add(event);
       break;
     case TYPE_MAGNETIC_FIELD:
       magEvents.add(event);
@@ -56,5 +63,9 @@ public class MeasurementAnalyzer implements SensorListener{
 
   public List<SensorEvent> getMagEverts() {
     return magEvents;
+  }
+  
+  public List<SensorEvent> getFreqEventsRef() {
+    return freqEventsRef;
   }
 }
