@@ -1,9 +1,11 @@
+<%@page import="com.vaavud.sensor.Sensor.Type"%>
 <%@page import="com.vaavud.sensor.SensorEvent"%>
 <%@page import="com.vaavud.server.analysis.post.MeasurementAnalyzer"%>
-<%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
-         import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
-	
-// Check password     
+<%@ page language="java" contentType="text/html;charset=UTF-8"
+	pageEncoding="UTF-8"
+	import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%>
+<%
+    // Check password     
 String pass = "2gh7yJfJ6H";     
 
 if (!pass.equals(request.getParameter("pass"))) {
@@ -17,7 +19,7 @@ Session hibernateSession = Model.get().getSessionFactory().openSession();
 MeasurementSession measurementSession;
 Device device;
 MagneticSession magneticSession;
-   
+
 if (request.getParameter("session_id") == null) {
 	measurementSession = (MeasurementSession) hibernateSession
 			.createQuery("from MeasurementSession order by id DESC LIMIT 1").uniqueResult();
@@ -40,7 +42,7 @@ for (int i=0; i<mesPoints.size(); i++) {
 	mpTime[i] = (mesPoints.get(i).getTime().getTime() - measurementSession.getStartTime().getTime())/1000d;
 }
 
-
+List<SensorEvent> events = null;
 List<SensorEvent> magEvents = null;
 List<SensorEvent> freqEvents = null;
 List<SensorEvent> freqEventsRef = null;
@@ -48,9 +50,26 @@ List<SensorEvent> freqEventsRef = null;
 if (magneticSession != null){
 	
   MeasurementAnalyzer analyzer = new MeasurementAnalyzer(magneticSession);
-  magEvents = analyzer.getMagEverts();
-  freqEvents = analyzer.getFreqEvents();
-  freqEventsRef = analyzer.getFreqEventsRef();
+  
+  events = analyzer.getEvents();
+  
+  magEvents = new ArrayList<SensorEvent>();
+  freqEvents = new ArrayList<SensorEvent>();
+  freqEventsRef = new ArrayList<SensorEvent>();
+  
+  for (SensorEvent event : events) {
+      if (event.sensor.getType() == Type.MAGNETIC_FIELD) {
+          magEvents.add(event);
+      }
+          
+      if (event.sensor.getName() == "Freq_1") {
+          freqEvents.add(event);
+      }
+      
+      if (event.sensor.getName() == "Freq_Reference") {
+          freqEventsRef.add(event);
+      }
+  }
 }
 
 
@@ -69,39 +88,51 @@ if (magEvents != null) {
 %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-  <title>Vaavud</title>
-  <style type="text/css">
-      html {height:100%}
-      body {height:100%; margin:0; padding:0}
-      table {min-width:400px;}
-      td {border:1px solid #000000;}
-      
-      .left {text-align:left;}
-      .right {text-align:right;}
-      #map_canvas {
-        width: 500px;
-        height: 400px;
-      }
-      
-      
-  </style>
-  <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-  <script>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>Vaavud</title>
+<style type="text/css">
+html {
+	height: 100%
+}
+
+body {
+	height: 100%;
+	margin: 0;
+	padding: 0
+}
+
+table {
+	min-width: 400px;
+}
+
+td {
+	border: 1px solid #000000;
+}
+
+.left {
+	text-align: left;
+}
+
+.right {
+	text-align: right;
+}
+
+#map_canvas {
+	width: 500px;
+	height: 400px;
+}
+</style>
+<script type="text/javascript"
+	src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript"
+	src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script>
   function initialize() {
     var mapCanvas = document.getElementById('map_canvas');
     
-    <%
-    if (measurementSession.getPosition() != null) {
-      %>var measurementLatlng = new google.maps.LatLng(
-          <%=measurementSession.getPosition().getLatitude()%>, <%=measurementSession.getPosition().getLongitude()%>);<%
-    } else {
-      %>var measurementLatlng = new google.maps.LatLng(0, 0);<%
-    }
-    
-    %>
+    <%if (measurementSession.getPosition() != null) {%>var measurementLatlng = new google.maps.LatLng(
+          <%=measurementSession.getPosition().getLatitude()%>, <%=measurementSession.getPosition().getLongitude()%>);<%} else {%>var measurementLatlng = new google.maps.LatLng(0, 0);<%}%>
     var mapOptions = {
       center: measurementLatlng,
       zoom: 11,
@@ -128,61 +159,85 @@ if (magEvents != null) {
 		<div id="chart4"></div>
 	</div>
 	<div id="map_canvas"></div>
-	
+
 	<br />
 	<h2>Device</h2>
-	<table>	
-			<%
-			for (Field field : device.getClass().getDeclaredFields()) {
-			    field.setAccessible(true);
-			    String name = field.getName();
-			    Object value = field.get(device);
-			    %><tr><td><%=name%></td><td><%=value%></td></tr><%  
-			}
-			%>
+	<table>
+		<%
+		    for (Field field : device.getClass().getDeclaredFields()) {
+					    field.setAccessible(true);
+					    String name = field.getName();
+					    Object value = field.get(device);
+		%><tr>
+			<td><%=name%></td>
+			<td><%=value%></td>
+		</tr>
+		<%
+		    }
+		%>
 	</table>
 	<h2>Measurement Session</h2>
-	<table>	
-			<%
-			if (measurementSession != null) {
-				for (Field field : measurementSession.getClass().getDeclaredFields()) {
-				    field.setAccessible(true);
-				    String name = field.getName();
-				    Object value = field.get(measurementSession);
-				    if (name == "device") {
-				    	%><tr><td>device</td><td>...</td></tr><%
-				    }
-				    else if (name == "points") {
-				    	%><tr><td>points</td><td>...</td></tr><%
-				    }
-				    else {
-				    	%><tr><td><%=name%></td><td><%=value%></td></tr><%
-				    }   
-				}
-			}
-			%>
+	<table>
+		<%
+		    if (measurementSession != null) {
+						for (Field field : measurementSession.getClass().getDeclaredFields()) {
+						    field.setAccessible(true);
+						    String name = field.getName();
+						    Object value = field.get(measurementSession);
+						    if (name == "device") {
+		%><tr>
+			<td>device</td>
+			<td>...</td>
+		</tr>
+		<%
+		    }
+						    else if (name == "points") {
+		%><tr>
+			<td>points</td>
+			<td>...</td>
+		</tr>
+		<%
+		    }
+						    else {
+		%><tr>
+			<td><%=name%></td>
+			<td><%=value%></td>
+		</tr>
+		<%
+		    }   
+						}
+					}
+		%>
 	</table>
 	<h2>Magnetic Session</h2>
-	<table>	
-			<%
-			if (magneticSession != null) {
-				for (Field field : magneticSession.getClass().getDeclaredFields()) {
-				    field.setAccessible(true);
-				    String name = field.getName();
-				    Object value = field.get(magneticSession);
-				    if (name == "magneticPoints") {
-				    	%><tr><td>magneticPoints</td><td>...</td></tr><%
-				    }
-				    else {
-				    	%><tr><td><%=name%></td><td><%=value%></td></tr><%
-				    }  
-				}
-			}
-			%>
+	<table>
+		<%
+		    if (magneticSession != null) {
+						for (Field field : magneticSession.getClass().getDeclaredFields()) {
+						    field.setAccessible(true);
+						    String name = field.getName();
+						    Object value = field.get(magneticSession);
+						    if (name == "magneticPoints") {
+		%><tr>
+			<td>magneticPoints</td>
+			<td>...</td>
+		</tr>
+		<%
+		    }
+						    else {
+		%><tr>
+			<td><%=name%></td>
+			<td><%=value%></td>
+		</tr>
+		<%
+		    }  
+						}
+					}
+		%>
 	</table>
-	
 
-<script type="text/javascript">
+
+	<script type="text/javascript">
     // Load the Visualization API and the piechart package.
     google.load('visualization', '1.1', {
         'packages' : [ 'corechart', 'controls' ]
@@ -226,7 +281,7 @@ if (magEvents != null) {
 		      // Display a single series that shows the closing value of the stock.
 		      // Thus, this view has two columns: the date (axis) and the stock value (line series).
 		      'chartView': {
-		        'columns': [0, 1, 2]
+		        'columns': [0, 1, 2, 8]
 		      },
 		      // 2 seconds
 		      'minRangeSize': 1
@@ -329,30 +384,20 @@ if (magEvents != null) {
 	  
 	  
 	  var rows = [
-<% 
-for (int i = 0; i < mesPoints.size() ; i++) {
-  %>{c:[{v:<%=mpTime[i]%>}, {v:<%=mesPoints.get(i).getWindSpeed()%>}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]},
-<%
-}
+<%for (int i = 0; i < mesPoints.size() ; i++) {%>{c:[{v:<%=mpTime[i]%>}, {v:<%=mesPoints.get(i).getWindSpeed()%>}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]},
+<%}
 if (freqEventsRef != null) {
-  for (int i = 0; i < freqEventsRef.size() ; i++) {
-   %>{c:[{v:<%=freqEventsRef.get(i).getTime()%>}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}, {v:<%=freqEventsRef.get(i).values[1]%>}, {v:<%=freqEventsRef.get(i).values[2]%>}, {}, {}, {}, {}, {}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}]},
-<%
-  }
+  for (int i = 0; i < freqEventsRef.size() ; i++) {%>{c:[{v:<%=freqEventsRef.get(i).getTime()%>}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}, {v:<%=freqEventsRef.get(i).values[1]%>}, {v:<%=freqEventsRef.get(i).values[2]%>}, {}, {}, {}, {}, {}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}]},
+<%}
 }
 if (freqEvents != null) {
-  for (int i = 0; i < freqEvents.size() ; i++) {
-    %>{c:[{v:<%=freqEvents.get(i).getTime()%>}, {}, {}, {}, {}, {}, {}, {}, {v:<%=freqEvents.get(i).values[0]%>}, {v:<%=freqEvents.get(i).values[1]%>}, {v:<%=freqEvents.get(i).values[2]%>}, {v:<%=freqEvents.get(i).values[0]%>}]},
-<%
-  }
+  for (int i = 0; i < freqEvents.size() ; i++) {%>{c:[{v:<%=freqEvents.get(i).getTime()%>}, {}, {}, {}, {}, {}, {}, {}, {v:<%=freqEvents.get(i).values[0]%>}, {v:<%=freqEvents.get(i).values[1]%>}, {v:<%=freqEvents.get(i).values[2]%>}, {v:<%=freqEvents.get(i).values[0]%>}]},
+<%}
 }
 if (magEvents != null) {
-  for (int i = 0; i < magEvents.size() ; i++) {
-    %>{c:[{v:<%=magEvents.get(i).getTime()%>}, {}, {}, {}, {}, {v:<%=magEvents.get(i).values[0]%>}, {v:<%=magEvents.get(i).values[1]%>}, {v:<%=magEvents.get(i).values[2]%>}, {}, {}, {}, {}]},
-<%
-  }
-}
-%>
+  for (int i = 0; i < magEvents.size() ; i++) {%>{c:[{v:<%=magEvents.get(i).getTime()%>}, {}, {}, {}, {}, {v:<%=magEvents.get(i).values[0]%>}, {v:<%=magEvents.get(i).values[1]%>}, {v:<%=magEvents.get(i).values[2]%>}, {}, {}, {}, {}]},
+<%}
+}%>
 	              ];
 	  
 	  
@@ -372,8 +417,9 @@ if (magEvents != null) {
 </body>
 </html>
 <%
-if (hibernateSession.getTransaction() != null && hibernateSession.getTransaction().isActive()) {
-    hibernateSession.getTransaction().rollback();
-}
-hibernateSession.close();
+    if (hibernateSession.getTransaction() != null
+            && hibernateSession.getTransaction().isActive()) {
+        hibernateSession.getTransaction().rollback();
+    }
+    hibernateSession.close();
 %>

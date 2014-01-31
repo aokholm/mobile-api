@@ -17,7 +17,7 @@ public class Tester implements SensorListener {
       sensorManager.addSensor(new RevolutionSensor(config));
       sensorManager.addSensor(new SerialSensor());
       
-      sensorManager.addListener(this, new SensorType[]{SensorType.TYPE_FREQUENCY});
+      sensorManager.addListener(this, new Sensor.Type[]{Sensor.Type.FREQUENCY});
       
       try {
         sensorManager.start();
@@ -32,7 +32,7 @@ public class Tester implements SensorListener {
   @Override
   public void newEvent(SensorEvent event) {
       
-      if (event.sensor == SensorType.TYPE_FREQUENCY) {
+      if (event.sensor.getType() == Sensor.Type.FREQUENCY) {
           System.out.println(event);
       }
       else {
