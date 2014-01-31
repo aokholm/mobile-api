@@ -6,85 +6,102 @@
 	import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%>
 <%
     // Check password     
-String pass = "2gh7yJfJ6H";     
+    String pass = "2gh7yJfJ6H";
 
-if (!pass.equals(request.getParameter("pass"))) {
-	ServiceUtil.sendUnauthorizedErrorResponse(response);
-	return;
-}
-   
-// Start hibernate Session
-Session hibernateSession = Model.get().getSessionFactory().openSession();
-   
-MeasurementSession measurementSession;
-Device device;
-MagneticSession magneticSession;
+    if (!pass.equals(request.getParameter("pass"))) {
+        ServiceUtil.sendUnauthorizedErrorResponse(response);
+        return;
+    }
 
-if (request.getParameter("session_id") == null) {
-	measurementSession = (MeasurementSession) hibernateSession
-			.createQuery("from MeasurementSession order by id DESC LIMIT 1").uniqueResult();
-} else {
-	measurementSession = (MeasurementSession) hibernateSession
-			.get(MeasurementSession.class, Long.parseLong(request.getParameter("session_id")));
-}
-   
-device = measurementSession.getDevice();
-Query query = hibernateSession.createQuery("from MagneticSession where measurementSessionUuid = :measurementSessionUuid");
-query = query.setParameter("measurementSessionUuid", measurementSession.getUuid());
-magneticSession = (MagneticSession) query.uniqueResult();
-   
-       
-// create wind time array // MP.time-MS.startTime)/1000
-List<MeasurementPoint> mesPoints = measurementSession.getPoints();
-double[] mpTime = new double[mesPoints.size()];
+    // Start hibernate Session
+    Session hibernateSession = Model.get().getSessionFactory()
+            .openSession();
 
-for (int i=0; i<mesPoints.size(); i++) {
-	mpTime[i] = (mesPoints.get(i).getTime().getTime() - measurementSession.getStartTime().getTime())/1000d;
-}
+    MeasurementSession measurementSession;
+    Device device;
+    MagneticSession magneticSession;
 
-List<SensorEvent> events = null;
-List<SensorEvent> magEvents = null;
-List<SensorEvent> freqEvents = null;
-List<SensorEvent> freqEventsRef = null;
+    if (request.getParameter("session_id") == null) {
+        measurementSession = (MeasurementSession) hibernateSession
+                .createQuery(
+                        "from MeasurementSession order by id DESC LIMIT 1")
+                .uniqueResult();
+    } else {
+        measurementSession = (MeasurementSession) hibernateSession.get(
+                MeasurementSession.class,
+                Long.parseLong(request.getParameter("session_id")));
+    }
 
-if (magneticSession != null){
-	
-  MeasurementAnalyzer analyzer = new MeasurementAnalyzer(magneticSession);
-  
-  events = analyzer.getEvents();
-  
-  magEvents = new ArrayList<SensorEvent>();
-  freqEvents = new ArrayList<SensorEvent>();
-  freqEventsRef = new ArrayList<SensorEvent>();
-  
-  for (SensorEvent event : events) {
-      if (event.sensor.getType() == Type.MAGNETIC_FIELD) {
-          magEvents.add(event);
-      }
-          
-      if (event.sensor.getName() == "Freq_1") {
-          freqEvents.add(event);
-      }
-      
-      if (event.sensor.getName() == "Freq_Reference") {
-          freqEventsRef.add(event);
-      }
-  }
-}
+    device = measurementSession.getDevice();
+    Query query = hibernateSession
+            .createQuery("from MagneticSession where measurementSessionUuid = :measurementSessionUuid");
+    query = query.setParameter("measurementSessionUuid",
+            measurementSession.getUuid());
+    magneticSession = (MagneticSession) query.uniqueResult();
 
+    // create wind time array // MP.time-MS.startTime)/1000
+    List<MeasurementPoint> mesPoints = measurementSession.getPoints();
+    double[] mpTime = new double[mesPoints.size()];
 
+    for (int i = 0; i < mesPoints.size(); i++) {
+        mpTime[i] = (mesPoints.get(i).getTime().getTime() - measurementSession
+                .getStartTime().getTime()) / 1000d;
+    }
 
-//End timestep shown
-double endTime = mpTime[mpTime.length-1];
-if (magEvents != null) {
-	if (magEvents.get(magEvents.size() -1).getTime() > endTime ) {
-		endTime = magEvents.get(magEvents.size() -1).getTime();
-	}
-}
+    List<SensorEvent> events = null;
+    List<SensorEvent> magEvents = null;
+    List<SensorEvent> freqEvents = null;
+    List<SensorEvent> freqEventsRef = null;
+    List<List<SensorEvent>> freqEventsLists = new ArrayList<List<SensorEvent>>();
+    List<String> sensorNames = new ArrayList<String>();
 
+    if (magneticSession != null) {
 
+        MeasurementAnalyzer analyzer = new MeasurementAnalyzer(
+                magneticSession);
 
-//************* START OF WEBPAGE ************/
+        events = analyzer.getEvents();
+
+        magEvents = new ArrayList<SensorEvent>();
+        freqEvents = new ArrayList<SensorEvent>();
+        freqEventsRef = new ArrayList<SensorEvent>();
+
+        for (SensorEvent event : events) {
+            if (event.sensor.getType() == Type.MAGNETIC_FIELD) {
+                magEvents.add(event);
+            }
+
+            if (event.sensor.getType() == Type.FREQUENCY) {
+                if (!sensorNames.contains(event.sensor.getName())) {
+                    sensorNames.add(event.sensor.getName());
+                    freqEventsLists.add(new ArrayList<SensorEvent>());
+                }
+
+                freqEventsLists.get(
+                        sensorNames.indexOf(event.sensor.getName()))
+                        .add(event);
+
+            }
+
+            if (event.sensor.getName() == "Freq_1") {
+                freqEvents.add(event);
+            }
+
+            if (event.sensor.getName() == "Freq_Reference") {
+                freqEventsRef.add(event);
+            }
+        }
+    }
+
+    //End timestep shown
+    double endTime = mpTime[mpTime.length - 1];
+    if (magEvents != null) {
+        if (magEvents.get(magEvents.size() - 1).getTime() > endTime) {
+            endTime = magEvents.get(magEvents.size() - 1).getTime();
+        }
+    }
+
+    //************* START OF WEBPAGE ************/
 %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -261,6 +278,21 @@ td {
 		var chartHeight = 300;
 		var controlChartHeight = 70;
 		
+	    var cols = [{id: 'time', label: 'time', type: 'number'},
+	                {id: 'windspeed', label: 'windspeed', type: 'number'},
+	                {id: 'frequencyRef', label: 'frequencyRef', type: 'number'},
+	                {id: 'amplitudeRef', label: 'amplitudeRef', type: 'number'},
+	                {id: 'sfRef', label: 'sfRef', type: 'number'},
+	                {id: 'magx', label: 'magx', type: 'number'},
+	                {id: 'magy', label: 'magy', type: 'number'},
+	                {id: 'magz', label: 'magz', type: 'number'},
+	                {id: 'frequency', label: 'frequency', type: 'number'},
+	                {id: 'amplitude', label: 'amplitude', type: 'number'},
+	                {id: 'SF', label: 'SF', type: 'number'},
+	                {id: 'freq', label: 'freq', type: 'number'},
+	                ];
+		
+		
 		var dashboard = new google.visualization.Dashboard(
 		     document.getElementById('dashboard'));
 		
@@ -367,23 +399,11 @@ td {
 	        }
 	      });
 		
-		
-	  var cols = [{id: 'time', label: 'time', type: 'number'},
-	              {id: 'windspeed', label: 'windspeed', type: 'number'},
-	              {id: 'frequencyRef', label: 'frequencyRef', type: 'number'},
-	              {id: 'amplitudeRef', label: 'amplitudeRef', type: 'number'},
-	              {id: 'sfRef', label: 'sfRef', type: 'number'},
-	              {id: 'magx', label: 'magx', type: 'number'},
-	              {id: 'magy', label: 'magy', type: 'number'},
-	              {id: 'magz', label: 'magz', type: 'number'},
-	              {id: 'frequency', label: 'frequency', type: 'number'},
-	              {id: 'amplitude', label: 'amplitude', type: 'number'},
-	              {id: 'SF', label: 'SF', type: 'number'},
-	              {id: 'freq', label: 'freq', type: 'number'},
-	              ];
-	  
 	  
 	  var rows = [
+	              
+	              
+	              
 <%for (int i = 0; i < mesPoints.size() ; i++) {%>{c:[{v:<%=mpTime[i]%>}, {v:<%=mesPoints.get(i).getWindSpeed()%>}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]},
 <%}
 if (freqEventsRef != null) {
