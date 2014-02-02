@@ -1,6 +1,8 @@
 <%@page import="com.vaavud.sensor.Sensor.Type"%>
 <%@page import="com.vaavud.sensor.SensorEvent"%>
 <%@page import="com.vaavud.server.analysis.post.MeasurementAnalyzer"%>
+<%@page import="com.vaavud.server.analysis.post.Plot" %>
+<%@page import="com.vaavud.server.analysis.post.ValueCols" %>
 <%@ page language="java" contentType="text/html;charset=UTF-8"
 	pageEncoding="UTF-8"
 	import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%>
@@ -402,10 +404,16 @@ td {
 	  
 	  var rows = [
 	              
-	              
-	              
-<%for (int i = 0; i < mesPoints.size() ; i++) {%>{c:[{v:<%=mpTime[i]%>}, {v:<%=mesPoints.get(i).getWindSpeed()%>}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]},
-<%}
+<%
+
+int NCol = 11;
+
+for (int i = 0; i < mesPoints.size() ; i++) {
+    %><%=Plot.getRow(NCol, new ValueCols[] {
+            new ValueCols(mpTime[i], new int[]{0}) ,
+            new ValueCols(mesPoints.get(i).getWindSpeed(), new int[]{1}),
+    } )%><%
+}
 if (freqEventsRef != null) {
   for (int i = 0; i < freqEventsRef.size() ; i++) {%>{c:[{v:<%=freqEventsRef.get(i).getTime()%>}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}, {v:<%=freqEventsRef.get(i).values[1]%>}, {v:<%=freqEventsRef.get(i).values[2]%>}, {}, {}, {}, {}, {}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}]},
 <%}

@@ -7,20 +7,20 @@ import java.util.List;
 
 public class Plot {
     
-    public class ValueCols {
-        double value;
-        int[] cols;
-        
-        public ValueCols(double value, int[] cols) {
-            this.value = value;
-            this.cols = cols;
-        }
+    private int nCol;
+    
+    public Plot(Integer nCol) {
+        this.nCol = nCol;
     }
     
     private final static DecimalFormat df = new DecimalFormat("#.###");
     
-    public static String getRow(Integer NCol, ValueCols[] valueColsList) {
-        List<Double> row = new ArrayList<Double>(NCol);
+    public String getRow(ValueCols[] valueColsList) {
+        List<Double> row = new ArrayList<Double>(nCol);
+        
+        for (int i = 1;i< nCol; i++) {
+            row.add(null);
+        }
         
         for (ValueCols valueCols: valueColsList) {
             for(int col : valueCols.cols) {
@@ -33,7 +33,7 @@ public class Plot {
     
     private static String formatedStringRow(List<Double> row) {
         
-        StringBuilder sb = new StringBuilder(50);
+        StringBuilder sb = new StringBuilder(100);
         sb.append("{c:[");
         for (Double value: row) {
             if (value == null) {
