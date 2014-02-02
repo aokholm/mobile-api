@@ -1,5 +1,7 @@
 <%@page import="com.vaavud.sensor.Sensor.Type"%>
 <%@page import="com.vaavud.sensor.SensorEvent"%>
+<%@page import="com.vaavud.sensor.SensorEvent3D"%>
+<%@page import="com.vaavud.sensor.SensorEventFreq"%>
 <%@page import="com.vaavud.server.analysis.post.MeasurementAnalyzer"%>
 <%@page import="com.vaavud.server.analysis.post.Plot" %>
 <%@page import="com.vaavud.server.analysis.post.ValueCols" %>
@@ -51,9 +53,9 @@
     }
 
     List<SensorEvent> events = null;
-    List<SensorEvent> magEvents = null;
-    List<SensorEvent> freqEvents = null;
-    List<SensorEvent> freqEventsRef = null;
+    List<SensorEvent3D> magEvents = null;
+    List<SensorEventFreq> freqEvents = null;
+    List<SensorEventFreq> freqEventsRef = null;
     List<List<SensorEvent>> freqEventsLists = new ArrayList<List<SensorEvent>>();
     List<String> sensorNames = new ArrayList<String>();
 
@@ -64,33 +66,33 @@
 
         events = analyzer.getEvents();
 
-        magEvents = new ArrayList<SensorEvent>();
-        freqEvents = new ArrayList<SensorEvent>();
-        freqEventsRef = new ArrayList<SensorEvent>();
+        magEvents = new ArrayList<SensorEvent3D>();
+        freqEvents = new ArrayList<SensorEventFreq>();
+        freqEventsRef = new ArrayList<SensorEventFreq>();
 
         for (SensorEvent event : events) {
-            if (event.sensor.getType() == Type.MAGNETIC_FIELD) {
-                magEvents.add(event);
+            if (event.getSensor().getType() == Type.MAGNETIC_FIELD) {
+                magEvents.add((SensorEvent3D) event);
             }
 
-            if (event.sensor.getType() == Type.FREQUENCY) {
-                if (!sensorNames.contains(event.sensor.getName())) {
-                    sensorNames.add(event.sensor.getName());
+            if (event.getSensor().getType() == Type.FREQUENCY) {
+                if (!sensorNames.contains(event.getSensor().getName())) {
+                    sensorNames.add(event.getSensor().getName());
                     freqEventsLists.add(new ArrayList<SensorEvent>());
                 }
 
                 freqEventsLists.get(
-                        sensorNames.indexOf(event.sensor.getName()))
+                        sensorNames.indexOf(event.getSensor().getName()))
                         .add(event);
 
             }
 
-            if (event.sensor.getName() == "Freq_1") {
-                freqEvents.add(event);
+            if (event.getSensor().getName() == "Freq_1") {
+                freqEvents.add((SensorEventFreq) event);
             }
 
-            if (event.sensor.getName() == "Freq_Reference") {
-                freqEventsRef.add(event);
+            if (event.getSensor().getName() == "Freq_Reference") {
+                freqEventsRef.add((SensorEventFreq) event);
             }
         }
     }
@@ -408,6 +410,9 @@ td {
 
 int NCol = 11;
 
+
+
+
 for (int i = 0; i < mesPoints.size() ; i++) {
     %><%=Plot.getRow(NCol, new ValueCols[] {
             new ValueCols(mpTime[i], new int[]{0}) ,
@@ -415,15 +420,15 @@ for (int i = 0; i < mesPoints.size() ; i++) {
     } )%><%
 }
 if (freqEventsRef != null) {
-  for (int i = 0; i < freqEventsRef.size() ; i++) {%>{c:[{v:<%=freqEventsRef.get(i).getTime()%>}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}, {v:<%=freqEventsRef.get(i).values[1]%>}, {v:<%=freqEventsRef.get(i).values[2]%>}, {}, {}, {}, {}, {}, {}, {v:<%=freqEventsRef.get(i).values[0]%>}]},
+  for (int i = 0; i < freqEventsRef.size() ; i++) {%>{c:[{v:<%=freqEventsRef.get(i).getTime()%>}, {}, {v:<%=freqEventsRef.get(i).getFreq()%>}, {v:<%=freqEventsRef.get(i).getAmp()%>}, {v:<%=freqEventsRef.get(i).getSf()%>}, {}, {}, {}, {}, {}, {}, {v:<%=freqEventsRef.get(i).getFreq()%>}]},
 <%}
 }
 if (freqEvents != null) {
-  for (int i = 0; i < freqEvents.size() ; i++) {%>{c:[{v:<%=freqEvents.get(i).getTime()%>}, {}, {}, {}, {}, {}, {}, {}, {v:<%=freqEvents.get(i).values[0]%>}, {v:<%=freqEvents.get(i).values[1]%>}, {v:<%=freqEvents.get(i).values[2]%>}, {v:<%=freqEvents.get(i).values[0]%>}]},
+  for (int i = 0; i < freqEvents.size() ; i++) {%>{c:[{v:<%=freqEvents.get(i).getTime()%>}, {}, {}, {}, {}, {}, {}, {}, {v:<%=freqEvents.get(i).getFreq()%>}, {v:<%=freqEvents.get(i).getAmp()%>}, {v:<%=freqEvents.get(i).getSf()%>}, {v:<%=freqEvents.get(i).getFreq()%>}]},
 <%}
 }
 if (magEvents != null) {
-  for (int i = 0; i < magEvents.size() ; i++) {%>{c:[{v:<%=magEvents.get(i).getTime()%>}, {}, {}, {}, {}, {v:<%=magEvents.get(i).values[0]%>}, {v:<%=magEvents.get(i).values[1]%>}, {v:<%=magEvents.get(i).values[2]%>}, {}, {}, {}, {}]},
+  for (int i = 0; i < magEvents.size() ; i++) {%>{c:[{v:<%=magEvents.get(i).getTime()%>}, {}, {}, {}, {}, {v:<%=magEvents.get(i).getX()%>}, {v:<%=magEvents.get(i).getY()%>}, {v:<%=magEvents.get(i).getZ()%>}, {}, {}, {}, {}]},
 <%}
 }%>
 	              ];

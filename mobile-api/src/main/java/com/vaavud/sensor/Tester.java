@@ -32,11 +32,11 @@ public class Tester implements SensorListener {
   @Override
   public void newEvent(SensorEvent event) {
       
-      if (event.sensor.getType() == Sensor.Type.FREQUENCY) {
+      if (event.getSensor().getType() == Sensor.Type.FREQUENCY) {
           System.out.println(event);
       }
       else {
-          System.out.println("Unexpected sensor: " + event.sensor);
+          System.out.println("Unexpected sensor: " + event.getSensor());
       }
   }
   

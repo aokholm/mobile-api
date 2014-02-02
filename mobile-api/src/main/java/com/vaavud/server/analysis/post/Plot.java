@@ -6,21 +6,15 @@ import java.util.List;
 
 
 public class Plot {
-    
-    public class ValueCols {
-        double value;
-        int[] cols;
-        
-        public ValueCols(double value, int[] cols) {
-            this.value = value;
-            this.cols = cols;
-        }
-    }
-    
+
     private final static DecimalFormat df = new DecimalFormat("#.###");
     
     public static String getRow(Integer NCol, ValueCols[] valueColsList) {
         List<Double> row = new ArrayList<Double>(NCol);
+        
+        for (int i = 0; i<NCol; i++) {
+            row.add(null);
+        }
         
         for (ValueCols valueCols: valueColsList) {
             for(int col : valueCols.cols) {
@@ -30,6 +24,7 @@ public class Plot {
         
         return formatedStringRow(row);
     }
+
     
     private static String formatedStringRow(List<Double> row) {
         

@@ -5,7 +5,7 @@ import java.util.List;
 import com.vaavud.sensor.BaseSensor;
 import com.vaavud.sensor.Sensor;
 import com.vaavud.sensor.Sensor.Type;
-import com.vaavud.sensor.SensorEvent;
+import com.vaavud.sensor.SensorEvent3D;
 import com.vaavud.sensor.SensorListener;
 import com.vaavud.server.model.entity.MagneticPoint;
 import com.vaavud.server.model.entity.MagneticSession;
@@ -33,7 +33,7 @@ public class DatabaseSensor extends BaseSensor {
     List<MagneticPoint>  magPoints = magneticSession.getMagneticPoints();  
     
     for (MagneticPoint magPoint : magPoints) {
-      SensorEvent event = new SensorEvent(sensor, (long) ( magPoint.getTime()*1000000 ), 
+      SensorEvent3D event = new SensorEvent3D(sensor, (long) ( magPoint.getTime()*1000000 ), 
           new double[] {magPoint.getX(), magPoint.getY(), magPoint.getZ()});
       listener.newEvent(event);
     }
