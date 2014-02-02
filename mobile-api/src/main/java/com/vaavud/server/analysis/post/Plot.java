@@ -7,20 +7,20 @@ import java.util.List;
 
 public class Plot {
     
-    private int nCol;
-    
-    public Plot(Integer nCol) {
-        this.nCol = nCol;
+    public class ValueCols {
+        double value;
+        int[] cols;
+        
+        public ValueCols(double value, int[] cols) {
+            this.value = value;
+            this.cols = cols;
+        }
     }
     
     private final static DecimalFormat df = new DecimalFormat("#.###");
     
-    public String getRow(ValueCols[] valueColsList) {
-        List<Double> row = new ArrayList<Double>(nCol);
-        
-        for (int i = 1;i< nCol; i++) {
-            row.add(null);
-        }
+    public static String getRow(Integer NCol, ValueCols[] valueColsList) {
+        List<Double> row = new ArrayList<Double>(NCol);
         
         for (ValueCols valueCols: valueColsList) {
             for(int col : valueCols.cols) {
