@@ -1,7 +1,5 @@
-<%@page import="com.vaavud.sensor.Sensor.Type"%>
-<%@page import="com.vaavud.sensor.SensorEvent"%>
-<%@page import="com.vaavud.sensor.SensorEvent3D"%>
-<%@page import="com.vaavud.sensor.SensorEventFreq"%>
+
+<%@page import="com.vaavud.server.analysis.post.MeasurementHelper"%>
 <%@page import="com.vaavud.server.analysis.post.MeasurementAnalyzer"%>
 <%@page import="com.vaavud.server.analysis.post.Plot" %>
 <%@page import="com.vaavud.server.analysis.post.ValueCols" %>
@@ -16,94 +14,11 @@
         ServiceUtil.sendUnauthorizedErrorResponse(response);
         return;
     }
-
-    // Start hibernate Session
-    Session hibernateSession = Model.get().getSessionFactory()
-            .openSession();
-
-    MeasurementSession measurementSession;
-    Device device;
-    MagneticSession magneticSession;
-
-    if (request.getParameter("session_id") == null) {
-        measurementSession = (MeasurementSession) hibernateSession
-                .createQuery(
-                        "from MeasurementSession order by id DESC LIMIT 1")
-                .uniqueResult();
-    } else {
-        measurementSession = (MeasurementSession) hibernateSession.get(
-                MeasurementSession.class,
-                Long.parseLong(request.getParameter("session_id")));
-    }
-
-    device = measurementSession.getDevice();
-    Query query = hibernateSession
-            .createQuery("from MagneticSession where measurementSessionUuid = :measurementSessionUuid");
-    query = query.setParameter("measurementSessionUuid",
-            measurementSession.getUuid());
-    magneticSession = (MagneticSession) query.uniqueResult();
-
-    // create wind time array // MP.time-MS.startTime)/1000
-    List<MeasurementPoint> mesPoints = measurementSession.getPoints();
-    double[] mpTime = new double[mesPoints.size()];
-
-    for (int i = 0; i < mesPoints.size(); i++) {
-        mpTime[i] = (mesPoints.get(i).getTime().getTime() - measurementSession
-                .getStartTime().getTime()) / 1000d;
-    }
-
-    List<SensorEvent> events = null;
-    List<SensorEvent3D> magEvents = null;
-    List<SensorEventFreq> freqEvents = null;
-    List<SensorEventFreq> freqEventsRef = null;
-    List<List<SensorEvent>> freqEventsLists = new ArrayList<List<SensorEvent>>();
-    List<String> sensorNames = new ArrayList<String>();
-
-    if (magneticSession != null) {
-
-        MeasurementAnalyzer analyzer = new MeasurementAnalyzer(
-                magneticSession);
-
-        events = analyzer.getEvents();
-
-        magEvents = new ArrayList<SensorEvent3D>();
-        freqEvents = new ArrayList<SensorEventFreq>();
-        freqEventsRef = new ArrayList<SensorEventFreq>();
-
-        for (SensorEvent event : events) {
-            if (event.getSensor().getType() == Type.MAGNETIC_FIELD) {
-                magEvents.add((SensorEvent3D) event);
-            }
-
-            if (event.getSensor().getType() == Type.FREQUENCY) {
-                if (!sensorNames.contains(event.getSensor().getName())) {
-                    sensorNames.add(event.getSensor().getName());
-                    freqEventsLists.add(new ArrayList<SensorEvent>());
-                }
-
-                freqEventsLists.get(
-                        sensorNames.indexOf(event.getSensor().getName()))
-                        .add(event);
-
-            }
-
-            if (event.getSensor().getName() == "Freq_1") {
-                freqEvents.add((SensorEventFreq) event);
-            }
-
-            if (event.getSensor().getName() == "Freq_Reference") {
-                freqEventsRef.add((SensorEventFreq) event);
-            }
-        }
-    }
-
-    //End timestep shown
-    double endTime = mpTime[mpTime.length - 1];
-    if (magEvents != null) {
-        if (magEvents.get(magEvents.size() - 1).getTime() > endTime) {
-            endTime = magEvents.get(magEvents.size() - 1).getTime();
-        }
-    }
+    
+    MeasurementHelper mHelper = new MeasurementHelper(request);
+    
+    
+    
 
     //************* START OF WEBPAGE ************/
 %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -152,8 +67,7 @@ td {
   function initialize() {
     var mapCanvas = document.getElementById('map_canvas');
     
-    <%if (measurementSession.getPosition() != null) {%>var measurementLatlng = new google.maps.LatLng(
-          <%=measurementSession.getPosition().getLatitude()%>, <%=measurementSession.getPosition().getLongitude()%>);<%} else {%>var measurementLatlng = new google.maps.LatLng(0, 0);<%}%>
+    var measurementLatlng = new google.maps.LatLng(<%=mHelper.getLatitude()%>, <%=mHelper.getLongitude()%>);
     var mapOptions = {
       center: measurementLatlng,
       zoom: 11,
@@ -182,86 +96,17 @@ td {
 	<div id="map_canvas"></div>
 
 	<br />
-	<h2>Device</h2>
-	<table>
-		<%
-		    for (Field field : device.getClass().getDeclaredFields()) {
-					    field.setAccessible(true);
-					    String name = field.getName();
-					    Object value = field.get(device);
-		%><tr>
-			<td><%=name%></td>
-			<td><%=value%></td>
-		</tr>
-		<%
-		    }
-		%>
-	</table>
-	<h2>Measurement Session</h2>
-	<table>
-		<%
-		    if (measurementSession != null) {
-						for (Field field : measurementSession.getClass().getDeclaredFields()) {
-						    field.setAccessible(true);
-						    String name = field.getName();
-						    Object value = field.get(measurementSession);
-						    if (name == "device") {
-		%><tr>
-			<td>device</td>
-			<td>...</td>
-		</tr>
-		<%
-		    }
-						    else if (name == "points") {
-		%><tr>
-			<td>points</td>
-			<td>...</td>
-		</tr>
-		<%
-		    }
-						    else {
-		%><tr>
-			<td><%=name%></td>
-			<td><%=value%></td>
-		</tr>
-		<%
-		    }   
-						}
-					}
-		%>
-	</table>
-	<h2>Magnetic Session</h2>
-	<table>
-		<%
-		    if (magneticSession != null) {
-						for (Field field : magneticSession.getClass().getDeclaredFields()) {
-						    field.setAccessible(true);
-						    String name = field.getName();
-						    Object value = field.get(magneticSession);
-						    if (name == "magneticPoints") {
-		%><tr>
-			<td>magneticPoints</td>
-			<td>...</td>
-		</tr>
-		<%
-		    }
-						    else {
-		%><tr>
-			<td><%=name%></td>
-			<td><%=value%></td>
-		</tr>
-		<%
-		    }  
-						}
-					}
-		%>
-	</table>
-
-
+	<%=mHelper.getTable("Device", mHelper.getDevice())%>
+	<%=mHelper.getTable("MeasurementSession", mHelper.getMeasurementSession())%>
+	<%=mHelper.getTable("MagneticSession", mHelper.getMagneticSession())%>
+  
+  
+  <div id="table"></div>
+  
 	<script type="text/javascript">
     // Load the Visualization API and the piechart package.
     google.load('visualization', '1.1', {
-        'packages' : [ 'corechart', 'controls' ]
+        'packages' : [ 'corechart', 'controls', 'table' ]
     });
  
     // Set a callback to run when the Google Visualization API is loaded.
@@ -282,20 +127,6 @@ td {
 		var chartHeight = 300;
 		var controlChartHeight = 70;
 		
-	    var cols = [{id: 'time', label: 'time', type: 'number'},
-	                {id: 'windspeed', label: 'windspeed', type: 'number'},
-	                {id: 'frequencyRef', label: 'frequencyRef', type: 'number'},
-	                {id: 'amplitudeRef', label: 'amplitudeRef', type: 'number'},
-	                {id: 'sfRef', label: 'sfRef', type: 'number'},
-	                {id: 'magx', label: 'magx', type: 'number'},
-	                {id: 'magy', label: 'magy', type: 'number'},
-	                {id: 'magz', label: 'magz', type: 'number'},
-	                {id: 'frequency', label: 'frequency', type: 'number'},
-	                {id: 'amplitude', label: 'amplitude', type: 'number'},
-	                {id: 'SF', label: 'SF', type: 'number'},
-	                {id: 'freq', label: 'freq', type: 'number'},
-	                ];
-		
 		
 		var dashboard = new google.visualization.Dashboard(
 		     document.getElementById('dashboard'));
@@ -310,14 +141,14 @@ td {
 		      'chartType': 'LineChart',
 		      'chartOptions': {
 		        'chartArea': {'left':chartAreaLeft, 'width': chartAreaWidth},
-		        'hAxis': {'baselineColor': 'none', 'minValue': 0, 'maxValue': <%=endTime%>},
+		        'hAxis': {'baselineColor': 'none', 'minValue': 0, 'maxValue': <%=mHelper.getEndTime()%>},
 			    'width': chartWidth,
 			    'height': controlChartHeight
 		      },
 		      // Display a single series that shows the closing value of the stock.
 		      // Thus, this view has two columns: the date (axis) and the stock value (line series).
 		      'chartView': {
-		        'columns': [0, 1, 2, 8]
+		        'columns': [0, 1]
 		      },
 		      // 2 seconds
 		      'minRangeSize': 1
@@ -327,7 +158,7 @@ td {
 		});
 		
 		var chart1 = new google.visualization.ChartWrapper({
-		  'chartType': 'LineChart',
+		  'chartType': 'ScatterChart',
 		  'containerId': 'chart1',
 		  'options': {
 		    // Use the same chart area width as the control for axis alignment.
@@ -340,14 +171,13 @@ td {
 		    'width': chartWidth,
 		    'height': chartHeight
 		  },
-		  // Convert the first column from 'date' to 'string'.
 		  'view': {
-		    'columns': [0, 1, 2, 8]
+		    'columns': [0, 1]
 		  }
 		});
 		
 		var chart2 = new google.visualization.ChartWrapper({
-			  'chartType': 'LineChart',
+			  'chartType': 'ScatterChart',
 			  'containerId': 'chart2',
 			  'options': {
 			    // Use the same chart area width as the control for axis alignment.
@@ -362,17 +192,18 @@ td {
 			  },
 			  // Convert the first column from 'date' to 'string'.
 			  'view': {
-			    'columns': [0,5,6,7]
+			    'columns': [0,2,3,4]
 			  }
 			});
 		
 	    var chart3 = new google.visualization.ChartWrapper({
-	        'chartType': 'LineChart',
+	        'chartType': 'ScatterChart',
 	        'containerId': 'chart3',
 	        'options': {
 	          // Use the same chart area width as the control for axis alignment.
 	          'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
-	          'series' : [{"lineWidth": 1, "pointSize": 1}],
+	          'series' : [{"lineWidth": 1, "pointSize": 1},
+	                      {"lineWidth": 1, "pointSize": 1}],
 	          'vAxis': {'title': "SampleFrequency (Hz)"},
 	          //'legend': {'position': 'none'},
 	          'width': chartWidth,
@@ -380,7 +211,7 @@ td {
 	        },
 	        // Convert the first column from 'date' to 'string'.
 	        'view': {
-	          'columns': [0,4, 10]
+	          'columns': [0,8, 11]
 	        }
 	      });
 		
@@ -399,42 +230,16 @@ td {
 	        },
 	        // Convert the first column from 'date' to 'string'.
 	        'view': {
-	          'columns': [11,3, 9]
+	          'columns': [5, 7, 10]
 	        }
 	      });
 		
 	  
-	  var rows = [
-	              
-<%
-
-int NCol = 11;
-
-
-
-
-for (int i = 0; i < mesPoints.size() ; i++) {
-    %><%=Plot.getRow(NCol, new ValueCols[] {
-            new ValueCols(mpTime[i], new int[]{0}) ,
-            new ValueCols(mesPoints.get(i).getWindSpeed(), new int[]{1}),
-    } )%><%
-}
-if (freqEventsRef != null) {
-  for (int i = 0; i < freqEventsRef.size() ; i++) {%>{c:[{v:<%=freqEventsRef.get(i).getTime()%>}, {}, {v:<%=freqEventsRef.get(i).getFreq()%>}, {v:<%=freqEventsRef.get(i).getAmp()%>}, {v:<%=freqEventsRef.get(i).getSf()%>}, {}, {}, {}, {}, {}, {}, {v:<%=freqEventsRef.get(i).getFreq()%>}]},
-<%}
-}
-if (freqEvents != null) {
-  for (int i = 0; i < freqEvents.size() ; i++) {%>{c:[{v:<%=freqEvents.get(i).getTime()%>}, {}, {}, {}, {}, {}, {}, {}, {v:<%=freqEvents.get(i).getFreq()%>}, {v:<%=freqEvents.get(i).getAmp()%>}, {v:<%=freqEvents.get(i).getSf()%>}, {v:<%=freqEvents.get(i).getFreq()%>}]},
-<%}
-}
-if (magEvents != null) {
-  for (int i = 0; i < magEvents.size() ; i++) {%>{c:[{v:<%=magEvents.get(i).getTime()%>}, {}, {}, {}, {}, {v:<%=magEvents.get(i).getX()%>}, {v:<%=magEvents.get(i).getY()%>}, {v:<%=magEvents.get(i).getZ()%>}, {}, {}, {}, {}]},
-<%}
-}%>
-	              ];
+	  
+	  var data = <%=mHelper.getDataTable()%>
 	  
 	  
-	  var dataTable = new google.visualization.DataTable({'cols': cols, 'rows': rows}, 0.6);	  
+	  var dataTable = new google.visualization.DataTable(data, 0.6);	  
 		
  		dashboard.bind(control, chart1);
  		dashboard.bind(control, chart2);
@@ -443,16 +248,12 @@ if (magEvents != null) {
  		
 		dashboard.draw(dataTable);
 		
+    var chart = new google.visualization.Table(document.getElementById('table'));
+    chart.draw(dataTable);
+		
 	}	
  	
 </script>
 
 </body>
 </html>
-<%
-    if (hibernateSession.getTransaction() != null
-            && hibernateSession.getTransaction().isActive()) {
-        hibernateSession.getTransaction().rollback();
-    }
-    hibernateSession.close();
-%>
