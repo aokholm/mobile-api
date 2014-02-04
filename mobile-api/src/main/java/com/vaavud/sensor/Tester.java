@@ -18,6 +18,18 @@ public class Tester implements SensorListener {
       sensorManager.addSensor(new SerialSensor());
       
       sensorManager.addListener(this, new Sensor.Type[]{Sensor.Type.FREQUENCY});
+  }
+  
+  public void toogleOnOff() {
+      if (active) {
+          stop();
+      }
+      else {
+          start();
+      }
+  }
+  
+  public void start() {
       
       try {
         sensorManager.start();
@@ -25,8 +37,15 @@ public class Tester implements SensorListener {
       } catch (Exception e) {
         active = false;
       }
-      
-      
+  }
+  
+  public void stop() {
+      try {
+          sensorManager.stop();
+      } catch (Exception e) {
+          
+      }
+      active = false;
   }
   
   @Override
