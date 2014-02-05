@@ -1,27 +1,6 @@
-
-<%@page import="com.vaavud.server.analysis.post.MeasurementHelper"%>
-<%@page import="com.vaavud.server.analysis.post.MeasurementAnalyzer"%>
-<%@page import="com.vaavud.server.analysis.post.Plot" %>
-<%@page import="com.vaavud.server.analysis.post.ValueCols" %>
-<%@ page language="java" contentType="text/html;charset=UTF-8"
-	pageEncoding="UTF-8"
-	import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%>
-<%
-    // Check password     
-    String pass = "2gh7yJfJ6H";
-
-    if (!pass.equals(request.getParameter("pass"))) {
-        ServiceUtil.sendUnauthorizedErrorResponse(response);
-        return;
-    }
-    
-    MeasurementHelper mHelper = new MeasurementHelper(request);
-    
-    
-    
-
-    //************* START OF WEBPAGE ************/
-%><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
@@ -67,7 +46,7 @@ td {
   function initialize() {
     var mapCanvas = document.getElementById('map_canvas');
     
-    var measurementLatlng = new google.maps.LatLng(<%=mHelper.getLatitude()%>, <%=mHelper.getLongitude()%>);
+    var measurementLatlng = new google.maps.LatLng(<c:out value="${latitude}"/>, <c:out value="${longitude}"/>);
     var mapOptions = {
       center: measurementLatlng,
       zoom: 11,
@@ -86,19 +65,21 @@ td {
 </script>
 </head>
 <body>
-	<div id="dashboard">
-		<div id="chart1"></div>
-		<div id="chart2"></div>
-		<div id="chart3"></div>
-		<div id="control"></div>
-		<div id="chart4"></div>
+  <div id="dashboard">
+   <c:forEach var="chart" items="${charts}" varStatus="theCount">
+    <div id="<c:out value="${chart.identifier}"/>"></div>
+      <c:if test="${theCount.count == 3}">
+      <div id="control"></div>
+      </c:if>
+   </c:forEach>
+
 	</div>
 	<div id="map_canvas"></div>
 
 	<br />
-	<%=mHelper.getTable("Device", mHelper.getDevice())%>
-	<%=mHelper.getTable("MeasurementSession", mHelper.getMeasurementSession())%>
-	<%=mHelper.getTable("MagneticSession", mHelper.getMagneticSession())%>
+<%-- 	<%=mHelper.getTable("Device", mHelper.getDevice())%> --%>
+<%-- 	<%=mHelper.getTable("MeasurementSession", mHelper.getMeasurementSession())%> --%>
+<%-- 	<%=mHelper.getTable("MagneticSession", mHelper.getMagneticSession())%> --%>
   
   
   <div id="table"></div>
@@ -141,7 +122,7 @@ td {
 		      'chartType': 'LineChart',
 		      'chartOptions': {
 		        'chartArea': {'left':chartAreaLeft, 'width': chartAreaWidth},
-		        'hAxis': {'baselineColor': 'none', 'minValue': 0, 'maxValue': <%=mHelper.getEndTime()%>},
+		        'hAxis': {'baselineColor': 'none', 'minValue': 0, 'maxValue': <%=request.getAttribute("endTime")%>},
 			    'width': chartWidth,
 			    'height': controlChartHeight
 		      },
@@ -157,94 +138,102 @@ td {
 		  'state': {'range': {'start': 0, 'end': 30}}
 		});
 		
-		var chart1 = new google.visualization.ChartWrapper({
-		  'chartType': 'ScatterChart',
-		  'containerId': 'chart1',
-		  'options': {
-		    // Use the same chart area width as the control for axis alignment.
-		    'chartArea': {'left': chartAreaLeft,'height': chartAreaHeight, 'width': chartAreaWidth},
-		    'series' : [{"lineWidth": 1, "pointSize": 2},
-		                {"lineWidth": 1, "pointSize": 2},
-		                {"lineWidth": 1, "pointSize": 2}],
-		    'vAxis': {'title': "windspeed (m/s)"},
-		    //'legend': {'position': 'none'},
-		    'width': chartWidth,
-		    'height': chartHeight
-		  },
-		  'view': {
-		    'columns': [0, 1]
-		  }
-		});
+// 		var chart1 = new google.visualization.ChartWrapper({
+// 		  'chartType': 'ScatterChart',
+// 		  'containerId': 'chart1',
+// 		  'options': {
+// 		    // Use the same chart area width as the control for axis alignment.
+// 		    'chartArea': {'left': chartAreaLeft,'height': chartAreaHeight, 'width': chartAreaWidth},
+// 		    'series' : [{"lineWidth": 1, "pointSize": 2},
+// 		                {"lineWidth": 1, "pointSize": 2},
+// 		                {"lineWidth": 1, "pointSize": 2}],
+// 		    'vAxis': {'title': "windspeed (m/s)"},
+// 		    //'legend': {'position': 'none'},
+// 		    'width': chartWidth,
+// 		    'height': chartHeight
+// 		  },
+// 		  'view': {
+// 		    'columns': [0, 1]
+// 		  }
+// 		});
 		
-		var chart2 = new google.visualization.ChartWrapper({
-			  'chartType': 'ScatterChart',
-			  'containerId': 'chart2',
-			  'options': {
-			    // Use the same chart area width as the control for axis alignment.
-			    'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
-			    'series' : [{"lineWidth": 1, "pointSize": 0}, 
-				            {"lineWidth": 1, "pointSize": 0}, 
-				            {"lineWidth": 1, "pointSize": 0}],
-			    'vAxis': {'title': "magneticField (mu-Tesla)"},
-			    //'legend': {'position': 'none'},
-			    'width': chartWidth,
-			    'height': chartHeight
-			  },
-			  // Convert the first column from 'date' to 'string'.
-			  'view': {
-			    'columns': [0,2,3,4]
-			  }
-			});
+// 		var chart2 = new google.visualization.ChartWrapper({
+// 			  'chartType': 'ScatterChart',
+// 			  'containerId': 'chart2',
+// 			  'options': {
+// 			    // Use the same chart area width as the control for axis alignment.
+// 			    'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
+// 			    'series' : [{"lineWidth": 1, "pointSize": 0}, 
+// 				            {"lineWidth": 1, "pointSize": 0}, 
+// 				            {"lineWidth": 1, "pointSize": 0}],
+// 			    'vAxis': {'title': "magneticField (mu-Tesla)"},
+// 			    //'legend': {'position': 'none'},
+// 			    'width': chartWidth,
+// 			    'height': chartHeight
+// 			  },
+// 			  // Convert the first column from 'date' to 'string'.
+// 			  'view': {
+// 			    'columns': [0,2,3,4]
+// 			  }
+// 			});
 		
-	    var chart3 = new google.visualization.ChartWrapper({
-	        'chartType': 'ScatterChart',
-	        'containerId': 'chart3',
-	        'options': {
-	          // Use the same chart area width as the control for axis alignment.
-	          'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
-	          'series' : [{"lineWidth": 1, "pointSize": 1},
-	                      {"lineWidth": 1, "pointSize": 1}],
-	          'vAxis': {'title': "SampleFrequency (Hz)"},
-	          //'legend': {'position': 'none'},
-	          'width': chartWidth,
-	          'height': chartHeight
-	        },
-	        // Convert the first column from 'date' to 'string'.
-	        'view': {
-	          'columns': [0,8, 11]
-	        }
-	      });
+// 	    var chart3 = new google.visualization.ChartWrapper({
+// 	        'chartType': 'ScatterChart',
+// 	        'containerId': 'chart3',
+// 	        'options': {
+// 	          // Use the same chart area width as the control for axis alignment.
+// 	          'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
+// 	          'series' : [{"lineWidth": 1, "pointSize": 1},
+// 	                      {"lineWidth": 1, "pointSize": 1}],
+// 	          'vAxis': {'title': "SampleFrequency (Hz)"},
+// 	          //'legend': {'position': 'none'},
+// 	          'width': chartWidth,
+// 	          'height': chartHeight
+// 	        },
+// 	        // Convert the first column from 'date' to 'string'.
+// 	        'view': {
+// 	          'columns': [0,8, 11]
+// 	        }
+// 	      });
 		
-	  var chart4 = new google.visualization.ChartWrapper({
-	        'chartType': 'ScatterChart',
-	        'containerId': 'chart4',
-	        'options': {
-	          // Use the same chart area width as the control for axis alignment.
-	          'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
-	          'series' : [{"lineWidth": 0, "pointSize": 1}, 
-	                    {"lineWidth": 0, "pointSize": 1}],
-	          'vAxis': {'title': "Amplitude (mu-Tesla)"},
-	          //'legend': {'position': 'none'},
-	          'width': chartWidth,
-	          'height': chartHeight
-	        },
-	        // Convert the first column from 'date' to 'string'.
-	        'view': {
-	          'columns': [5, 7, 10]
-	        }
-	      });
+// 	  var chart4 = new google.visualization.ChartWrapper({
+// 	        'chartType': 'ScatterChart',
+// 	        'containerId': 'chart4',
+// 	        'options': {
+// 	          // Use the same chart area width as the control for axis alignment.
+// 	          'series' : [{"lineWidth": 0, "pointSize": 1}, 
+// 	                    {"lineWidth": 0, "pointSize": 1}],
+// 	          'vAxis': {'title': "Amplitude (mu-Tesla)"}
+// 	        },
+// 	        'view': {
+// 	          'columns': [5, 7, 10]
+// 	        }
+// 	      });
 		
 	  
+	  <c:forEach var="chart" items="${charts}">
+	      var <c:out value="${chart.identifier}"/> = new google.visualization.ChartWrapper(
+	    		   <c:out value="${chart.chartJSON}" escapeXml="false"/>);
+	      <c:out value="${chart.identifier}"/>.setOption('chartArea', {
+	    	  'left': chartAreaLeft, 
+	    	  'height': chartAreaHeight, 
+	    	  'width': chartAreaWidth});
+	      <c:out value="${chart.identifier}"/>.setOption('width', chartWidth);
+	      <c:out value="${chart.identifier}"/>.setOption('height', chartHeight);
+	  </c:forEach>
 	  
-	  var data = <%=mHelper.getDataTable()%>
 	  
+	  
+	  
+	  
+ 	  var data = <c:out value="${dataTable}" escapeXml="false"/>;
 	  
 	  var dataTable = new google.visualization.DataTable(data, 0.6);	  
 		
- 		dashboard.bind(control, chart1);
- 		dashboard.bind(control, chart2);
- 		dashboard.bind(control, chart3);
- 		dashboard.bind(control, chart4);
+	  
+	  <c:forEach var="chart" items="${charts}">
+      dashboard.bind(control, <c:out value="${chart.identifier}"/>);
+    </c:forEach>
  		
 		dashboard.draw(dataTable);
 		

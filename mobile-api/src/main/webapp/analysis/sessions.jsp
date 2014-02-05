@@ -27,13 +27,13 @@
     	"    MagS.id as magneticSession_id,                                              " +
     	"    D.id as device_id,                                                          " +
     	"    D.vendor,                                                                   " +
-    	"	 D.appVersion,                                                               " +
+    	"	 D.appVersion,                                                                 " +
     	"    D.model,                                                                    " +
     	"    MS.windSpeedAvg,                                                            " +
     	"    MS.windSpeedMax,                                                            " +
     	"    count(MS.id) As measurementPoints,                                          " +
-    	"	(MS.endTime - MS.startTime ) / 1000 as measurementLength,                    " +
-    	"	count(MS.id) / ((MS.endTime - MS.startTime ) / 1000) as measurementFrequency " +
+    	"	(MS.endTime - MS.startTime ) / 1000 as measurementLength,                      " +
+    	"	count(MS.id) / ((MS.endTime - MS.startTime ) / 1000) as measurementFrequency   " +
     	"FROM                                                                            " +
     	"    Device AS D                                                                 " +
     	"        INNER JOIN                                                              " +
@@ -45,6 +45,7 @@
     	whereClause +                                                                    
     	"GROUP BY MS.id                                                                  " +
     	"order by MS.id                                                                  " +
+    	"DESC                                                                            " +
     	"LIMIT 0 , " + limit;                                                                
 
     List<Object[]> session_ids = hibernateSession.createSQLQuery(sql).list();
@@ -100,7 +101,7 @@
     <%
     for (Object[] values : session_ids) {
         %><tr>
-        	<td class="right"><a href='/analysis/measurement.jsp?pass=<%=pass%>&session_id=<%=values[0]%>'><%=values[0]%></a></td>
+        	<td class="right"><a href='/analysis/measurement?pass=<%=pass%>&session_id=<%=values[0]%>'><%=values[0]%></a></td>
         	<td class="right"><%=values[1]%></td>
         	<td class="right"><%=values[2]%></td>
         	<td class="left"><%=values[3]%></td>

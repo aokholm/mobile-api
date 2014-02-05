@@ -59,8 +59,8 @@
   </servlet>
   
   <servlet>
-  	<servlet-name>HelloServlet</servlet-name>
-  	<servlet-class>com.vaavud.server.web.hello.HelloServlet</servlet-class>
+  	<servlet-name>MeasurementServlet</servlet-name>
+  	<servlet-class>com.vaavud.server.web.analysis.MeasurementServlet</servlet-class>
   </servlet>
   
   <!-- Mobile API Mappings -->
@@ -102,5 +102,9 @@
   <servlet-mapping>
     <servlet-name>StatsServlet</servlet-name>
     <url-pattern>/admin/stats</url-pattern>
+  </servlet-mapping>
+    <servlet-mapping>
+    <servlet-name>MeasurementServlet</servlet-name>
+    <url-pattern>/analysis/measurement</url-pattern>
   </servlet-mapping>
 </web-app>

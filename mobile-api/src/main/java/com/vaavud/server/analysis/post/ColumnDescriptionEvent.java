@@ -9,7 +9,7 @@ public class ColumnDescriptionEvent extends ColumnDescription {
     private Sensor.Type sensorType;
     private EventField eventField;
     private String sensorName;
-    
+
     public ColumnDescriptionEvent(String label, Sensor.Type sensorType, EventField eventField, String sensorName) {
         // TODO Auto-generated constructor stub
         super(label, ValueType.NUMBER, label);
@@ -25,7 +25,7 @@ public class ColumnDescriptionEvent extends ColumnDescription {
     public EventField getEventField() {
         return eventField;
     }
-    
+
     public String getSensorName() {
         return sensorName;
     }
