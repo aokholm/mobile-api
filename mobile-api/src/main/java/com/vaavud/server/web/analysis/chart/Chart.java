@@ -15,7 +15,6 @@ import com.google.visualization.datasource.datatable.DataTable;
 import com.google.visualization.datasource.render.JsonRenderer;
 import com.vaavud.sensor.Sensor;
 import com.vaavud.sensor.SensorEvent;
-import com.vaavud.server.analysis.post.ColumnDescriptionEvent;
 
 public class Chart {
     private final List<ChartConfig> chartConfigs;

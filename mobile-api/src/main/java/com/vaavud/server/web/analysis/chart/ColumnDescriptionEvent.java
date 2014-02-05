@@ -1,8 +1,9 @@
-package com.vaavud.server.analysis.post;
+package com.vaavud.server.web.analysis.chart;
 
 import com.google.visualization.datasource.datatable.ColumnDescription;
 import com.google.visualization.datasource.datatable.value.ValueType;
 import com.vaavud.sensor.Sensor;
+import com.vaavud.server.analysis.post.EventField;
 
 public class ColumnDescriptionEvent extends ColumnDescription {
 
