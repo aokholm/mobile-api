@@ -1,4 +1,4 @@
-package com.vaavud.server.analysis.post;
+package com.vaavud.server.web.analysis.chart;
 
 import com.vaavud.sensor.SensorEvent;
 import com.vaavud.sensor.SensorEvent1D;
