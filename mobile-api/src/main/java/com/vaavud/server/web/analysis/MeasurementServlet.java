@@ -36,12 +36,6 @@ import com.vaavud.server.web.analysis.util.Event;
 public class MeasurementServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     
-	private static final List<ChartConfig> charts = charts();
-	
-	public MeasurementServlet() {
-	    System.out.println("AWESOME");
-	}
-	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 
@@ -57,14 +51,17 @@ public class MeasurementServlet extends HttpServlet {
 //	        request.getRequestDispatcher("/analysis/error.jsp").forward(request, response);
 //	        return;
 //	    }
-
-	    Measurement measurement = new Measurement(request.getParameter("session_id"), charts);
+	    
+	    Measurement measurement = new Measurement(request.getParameter("session_id"), charts());
         
         request.setAttribute("latitude", measurement.getLatitude());
         request.setAttribute("longitude",  measurement.getLongitude());
         request.setAttribute("endTime", "30");
         request.setAttribute("dataTable", measurement.getChart().dataTableJSON());
         request.setAttribute("charts", measurement.getChart().chartsWrapped());
+        request.setAttribute("deviceTable", measurement.getDeviceTableHTML());
+        request.setAttribute("measurementSessionTable", measurement.getMeasurementSessionTableHTML());
+        request.setAttribute("magneticSessionTable", measurement.getMagneticSessionHTML());
         
         request.getRequestDispatcher("/analysis/measurement.jsp").forward(request, response);
         
@@ -73,15 +70,14 @@ public class MeasurementServlet extends HttpServlet {
 	}
 	
 	private final static List<ChartConfig> charts() {
-	    System.out.println("Im called Once!");
-        
         List<ChartConfig> chartConfigs = new ArrayList<>();
         
         ChartConfig freqChart = new ChartConfig(
                 "Frequency",
                 new DataSet(null, EventField.TIME, false), 
-                new DataSet(Type.WINDSPEED, EventField.VALUE, true),
-                new DataSet(Type.FREQUENCY, EventField.FREQ, true));
+                new DataSet(Type.FREQUENCY, EventField.FREQ, true),
+                new DataSet(Type.WINDSPEED, EventField.VALUE, true));
+        freqChart.setvAxisTitle("Rotation Freq (Hz)/(m/s)");
         chartConfigs.add(freqChart);
         
         ChartConfig magChart = new ChartConfig(
@@ -90,18 +86,23 @@ public class MeasurementServlet extends HttpServlet {
                 new DataSet(Type.MAGNETIC_FIELD, EventField.X, true),
                 new DataSet(Type.MAGNETIC_FIELD, EventField.Y, true),
                 new DataSet(Type.MAGNETIC_FIELD, EventField.Z, true)); 
+        magChart.setPointSize(0);
+        magChart.setvAxisTitle("Magnetic Field (mu-Tesla)");
         chartConfigs.add(magChart);
         
         ChartConfig sfChart = new ChartConfig(
                 "SampleFrequency",
                 new DataSet(null,  EventField.TIME, false), 
                 new DataSet(Type.FREQUENCY, EventField.SF, true));
+        sfChart.setvAxisTitle("Sample Frequency (Hz)");
         chartConfigs.add(sfChart);
         
         ChartConfig freqAmp = new ChartConfig(
                 "FrequencyAmplitude",
                 new DataSet(Type.FREQUENCY, EventField.FREQ, false), 
                 new DataSet(Type.FREQUENCY, EventField.AMP, true));
+        freqAmp.setLineWidth(0);
+        freqAmp.setvAxisTitle("Amplitude (mu-Tesla)");
         chartConfigs.add(freqAmp);
         
         return chartConfigs;

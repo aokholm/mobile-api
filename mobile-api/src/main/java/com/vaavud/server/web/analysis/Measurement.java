@@ -8,7 +8,6 @@ import java.util.Map;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
-import com.google.visualization.datasource.render.JsonRenderer;
 import com.vaavud.sensor.Sensor;
 import com.vaavud.sensor.SensorEvent;
 import com.vaavud.server.analysis.post.MeasurementAnalyzer;
@@ -19,6 +18,7 @@ import com.vaavud.server.model.entity.MeasurementSession;
 import com.vaavud.server.web.analysis.chart.Chart;
 import com.vaavud.server.web.analysis.chart.ChartConfig;
 import com.vaavud.server.web.analysis.util.Event;
+import com.vaavud.server.web.analysis.util.render.Table;
 
 public class Measurement {
 
@@ -79,6 +79,19 @@ public class Measurement {
         }
 
     }
+    
+    public String getDeviceTableHTML() {
+        return Table.getTable("Device", device);   
+    }
+    
+    public String getMeasurementSessionTableHTML() {
+        return Table.getTable("MeasurementSession", measurementSession);   
+    }
+    
+    public String getMagneticSessionHTML() {
+        return Table.getTable("MagneticSession", magneticSession);   
+    }
+    
     
     
     private MeasurementSession getMeasurementSession(String session_idString) {

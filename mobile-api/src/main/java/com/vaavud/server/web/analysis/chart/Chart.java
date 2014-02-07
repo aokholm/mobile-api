@@ -17,7 +17,7 @@ import com.vaavud.sensor.Sensor;
 import com.vaavud.sensor.SensorEvent;
 
 public class Chart {
-    private final List<ChartConfig> chartConfigs;
+    private List<ChartConfig> chartConfigs;
     private final EnumMap<Sensor.Type, Map<String, List<SensorEvent>>> eventMap;
     private final List<SensorEvent> sortedEvents;
     
@@ -43,11 +43,11 @@ public class Chart {
             
             // options
             Map options = new HashMap<String, Object>();
-            options.put("lineWidth", 1);
-            options.put("pointSize", 1);
+            options.put("lineWidth", chartConfig.getLineWidth());
+            options.put("pointSize", chartConfig.getPointSize());
             
             Map vAxis = new HashMap<String, String>();
-            vAxis.put("title", chartConfig.getChartId());
+            vAxis.put("title", chartConfig.getvAxisTitle());
             options.put("vAxis", vAxis);
             chartMap.put("options", options);
             
