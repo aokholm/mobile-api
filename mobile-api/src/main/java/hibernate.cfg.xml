@@ -37,6 +37,7 @@
         <mapping class="com.vaavud.server.model.entity.MagneticSession" />
         <mapping class="com.vaavud.server.model.entity.MeasurementPoint" />
         <mapping class="com.vaavud.server.model.entity.MeasurementSession" />
+        <mapping class="com.vaavud.server.model.entity.User" />
 
     </session-factory>
 </hibernate-configuration>

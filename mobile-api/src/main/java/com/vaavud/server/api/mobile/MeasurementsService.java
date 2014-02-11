@@ -20,6 +20,7 @@ import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
 import com.vaavud.server.api.util.json.DeviceByUUIDModule;
 import com.vaavud.server.api.util.json.DirectLatLngModule;
+import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.LatLng;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
@@ -56,7 +57,7 @@ public class MeasurementsService extends AbstractJSONService<MeasurementsService
 	*/
 	
 	@Override
-	protected void process(HttpServletRequest req, HttpServletResponse resp, RequestParameters object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException {
+	protected void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, RequestParameters object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException {
 		// TODO: enable
 		if (object == null) {
 			logger.info("Process object (null)");

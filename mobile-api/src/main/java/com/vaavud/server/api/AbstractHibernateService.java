@@ -17,19 +17,21 @@ public abstract class AbstractHibernateService extends AbstractService {
 	protected final void process(HttpServletRequest req, HttpServletResponse resp) throws IOException { 
 		Session hibernateSession = Model.get().getSessionFactory().openSession();
 		try {
+			Device device = null;
+
 			if (requiresAuthentication()) {
 				String authToken = req.getHeader("authToken");
 				getLogger().info("Got authToken:" + authToken);
 				if (authToken == null || authToken.trim().isEmpty()) {
 					throw new UnauthorizedException();
 				}
-				Device device = (Device) hibernateSession.createQuery("from Device where authToken=:authToken").setString("authToken", authToken.trim()).uniqueResult();
+				device = (Device) hibernateSession.createQuery("from Device where authToken=:authToken").setString("authToken", authToken.trim()).uniqueResult();
 				if (device == null) {
 					throw new UnauthorizedException();
 				}
 			}
 			
-			process(req, resp, hibernateSession);
+			process(req, resp, device, hibernateSession);
 		}
 		catch (RuntimeException e) {
 			getLogger().error("Error processing service " + getClass().getName(), e);
@@ -55,5 +57,5 @@ public abstract class AbstractHibernateService extends AbstractService {
 		return true;
 	}
 	
-	protected abstract void process(HttpServletRequest req, HttpServletResponse resp, Session hibernateSession) throws UnauthorizedException, IOException;
+	protected abstract void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, Session hibernateSession) throws UnauthorizedException, IOException;
 }

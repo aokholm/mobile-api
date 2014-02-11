@@ -12,11 +12,12 @@ import org.hibernate.Session;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaavud.server.api.util.ServiceUtil;
+import com.vaavud.server.model.entity.Device;
 
 public abstract class AbstractJSONService<E> extends AbstractHibernateService {
 
 	@Override
-	protected final void process(HttpServletRequest req, HttpServletResponse resp, Session hibernateSession) throws UnauthorizedException, IOException {
+	protected final void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, Session hibernateSession) throws UnauthorizedException, IOException {
 
 		getLogger().info("Content-Type: " + req.getContentType() + ", Character-Encoding: " + req.getCharacterEncoding());
 		
@@ -41,7 +42,7 @@ public abstract class AbstractJSONService<E> extends AbstractHibernateService {
 		}
 
 		try {
-			process(req, resp, object, mapper, hibernateSession);
+			process(req, resp, authenticatedDevice, object, mapper, hibernateSession);
 		}
 		catch (ProtocolException e) {
 			getLogger().error("Sending protocol error due to: " + e.getLogMessage());
@@ -71,5 +72,5 @@ public abstract class AbstractJSONService<E> extends AbstractHibernateService {
 	
 	protected abstract Class<E> type();
 
-	protected abstract void process(HttpServletRequest req, HttpServletResponse resp, E object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException;	
+	protected abstract void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, E object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException;	
 }

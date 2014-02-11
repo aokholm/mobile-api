@@ -36,7 +36,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 	}
 	
 	@Override
-	protected void process(HttpServletRequest req, HttpServletResponse resp, Device object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException {
+	protected void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, Device object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException {
 		if (object == null) {
 			logger.info("Process object (null)");
 		}
@@ -79,8 +79,24 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 				device = object;
 			}
 			else {
+				
+				// existing device requires a matching authToken sent as HTTP header
+				// note: for backwards compatibility, we only require this if a user is
+				// associated with the device, since older apps won't be able to handle
+				// an unauthorized response here
+				
+				if (storedDevice.getUser() != null) {
+					String httpAuthToken = req.getHeader("authToken");
+					if (httpAuthToken == null || httpAuthToken.trim().isEmpty()) {
+						throw new UnauthorizedException();
+					}
+					if (!httpAuthToken.equals(storedDevice.getAuthToken())) {
+						throw new UnauthorizedException();
+					}
+				}
+				
 				authToken = storedDevice.getAuthToken();
-
+				
 				if (!storedDevice.equalValues(object)) {
 					logger.info("Received Device already stored and values have changed");
 					storedDevice.setFrom(object);

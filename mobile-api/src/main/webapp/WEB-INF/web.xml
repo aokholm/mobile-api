@@ -20,6 +20,10 @@
     <servlet-name>RegisterDeviceService</servlet-name>
     <servlet-class>com.vaavud.server.api.mobile.RegisterDeviceService</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>RegisterUserService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.RegisterUserService</servlet-class>
+  </servlet>
   
   <!-- Ping API Servlets -->
   
@@ -65,6 +69,10 @@
   <servlet-mapping>
     <servlet-name>RegisterDeviceService</servlet-name>
     <url-pattern>/api/device/register</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>RegisterUserService</servlet-name>
+    <url-pattern>/api/user/register</url-pattern>
   </servlet-mapping>
   
   <!-- Ping API Mappings -->
