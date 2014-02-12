@@ -11,7 +11,6 @@ public class ColumnDescriptionEvent extends ColumnDescription {
     private String sensorName;
 
     public ColumnDescriptionEvent(String label, Sensor.Type sensorType, EventField eventField, String sensorName) {
-        // TODO Auto-generated constructor stub
         super(label, ValueType.NUMBER, label);
         this.sensorType = sensorType;
         this.eventField = eventField;
