@@ -5,6 +5,7 @@
 	<projects>
 		<project>SerialSensor</project>
 		<project>Sensor</project>
+		<project>TestSensor</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
