@@ -21,8 +21,8 @@ public class MeasurementViewTest extends MeasurementView {
         TestSensorConfig testSensorConfig = new TestSensorConfig(
                 request.getParameter("freq"),
                 request.getParameter("sf"), 
-                request.getParameter("noiseLevel"), 
-                request.getParameter("testType"));
+                request.getParameter("noise"), 
+                request.getParameter("type"));
 
         
         MeasurementAnalyzer analyzer = new MeasurementAnalyzer(Type.FREQUENCY, Type.MAGNETIC_FIELD);
