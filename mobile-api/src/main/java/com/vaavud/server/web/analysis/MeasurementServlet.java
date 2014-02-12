@@ -55,7 +55,7 @@ public class MeasurementServlet extends HttpServlet {
 	    MeasurementView measurement;
 	    
 	    if ( "true".equals(request.getParameter("test")) ) {
-	        measurement = new MeasurementViewTest(charts());
+	        measurement = new MeasurementViewTest(charts(), request);
 	    }
 	    else {
 	        MeasurementViewSession viewSession = new MeasurementViewSession(request.getParameter("session_id"), charts());
