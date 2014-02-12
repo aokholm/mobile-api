@@ -110,6 +110,10 @@ td {
 		</div>
 	</div>
 	<div id="col2">
+	  <c:forEach var="sensor" items="${sensors}">
+      <c:out value="${sensor}"/><br />
+    </c:forEach>
+	
 		<c:out value="${deviceTable}" escapeXml="false"/>
 		<div id="map_canvas1" class="map_canvas"></div>
 		<div id="map_canvas2" class="map_canvas"></div>

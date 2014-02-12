@@ -13,9 +13,10 @@ import com.vaavud.server.web.analysis.util.Event;
 public class MeasurementView {
 
     protected EnumMap<Sensor.Type, Map<String, List<SensorEvent>>> eventMap;
-    protected Chart chart = null;
+    protected List<Sensor> sensors;
     protected List<SensorEvent> sortedEvents;
     private List<ChartConfig> chartConfigs;
+    protected Chart chart = null;
     
     
     public MeasurementView(List<ChartConfig> chartConfigs) {
@@ -25,11 +26,15 @@ public class MeasurementView {
     protected void generateCharts(List<SensorEvent> events) {
         eventMap = Event.eventMap(events);
         sortedEvents = Event.sortedList(eventMap, events.size());
-
+        sensors = Event.sensors(events);
         chart = new Chart(chartConfigs, eventMap, sortedEvents);
     }
     
     public Chart getChart() {
         return chart;
-    }    
+    }
+    
+    public List<Sensor> getSensors() {
+        return sensors;
+    }
 }

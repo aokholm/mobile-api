@@ -54,11 +54,23 @@ public class Event {
         List<SensorEvent> sortedEvents = new ArrayList<SensorEvent>(eventsSize);
 
         for (Sensor.Type sensorType : eventMap.keySet()) {
-            for (List<SensorEvent> values : eventMap.get(sensorType).values())
-                sortedEvents.addAll(values);
+            for (List<SensorEvent> value : eventMap.get(sensorType).values())
+                sortedEvents.addAll(value);
         }
         
         return sortedEvents;
+    }
+    
+    public static List<Sensor> sensors(List<SensorEvent> events) {
+        ArrayList<Sensor> sensors = new ArrayList<>();
+        
+        for (SensorEvent event : events) {
+            if (!sensors.contains(event.getSensor())) {
+                sensors.add(event.getSensor());
+            }
+        }
+        
+        return sensors;
     }
     
 

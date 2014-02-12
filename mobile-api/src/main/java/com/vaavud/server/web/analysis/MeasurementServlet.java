@@ -69,6 +69,7 @@ public class MeasurementServlet extends HttpServlet {
 	        measurement = viewSession;
 	    }
 	    
+	    request.setAttribute("sensors", measurement.getSensors());
 	    request.setAttribute("endTime", "30");
 	    request.setAttribute("dataTable", measurement.getChart().dataTableJSON());
         request.setAttribute("charts", measurement.getChart().chartsWrapped());
