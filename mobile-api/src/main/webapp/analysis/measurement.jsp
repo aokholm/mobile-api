@@ -58,7 +58,7 @@ td {
 <script>
   function initialize() {
     
-	  <c:if test="${empty latitude}">
+	  <c:if test="${not empty latitude}">
 	  
 		  var measurementLatlng = new google.maps.LatLng(<c:out value="${latitude}"/>, <c:out value="${longitude}"/>);
 		  
