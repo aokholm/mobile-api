@@ -1,44 +1,38 @@
 package com.vaavud.server.web.analysis;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
 
-import com.vaavud.sensor.Sensor;
 import com.vaavud.sensor.SensorEvent;
+import com.vaavud.sensor.Sensor.Type;
+import com.vaavud.server.analysis.post.DatabaseSensor;
 import com.vaavud.server.analysis.post.MeasurementAnalyzer;
 import com.vaavud.server.model.Model;
 import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.MagneticSession;
 import com.vaavud.server.model.entity.MeasurementSession;
-import com.vaavud.server.web.analysis.chart.Chart;
 import com.vaavud.server.web.analysis.chart.ChartConfig;
 import com.vaavud.server.web.analysis.util.Event;
 import com.vaavud.server.web.analysis.util.render.Table;
 
-public class Measurement {
+public class MeasurementViewSession extends MeasurementView {
 
     private Session hibernateSession;
     private MeasurementSession measurementSession;
     private Device device;
     private MagneticSession magneticSession;
     
-    private EnumMap<Sensor.Type, Map<String, List<SensorEvent>>> eventMap;
-    private List<SensorEvent> sortedEvents;
-    private Chart chart;
-    
-    public Measurement(String session_id, List<ChartConfig> chartConfigs) {
+    public MeasurementViewSession(String session_id, List<ChartConfig> chartConfigs) {
+        super(chartConfigs);
+        
         measurementSession = getMeasurementSession(session_id);
         device = measurementSession.getDevice();
         
         // magneticSession can be null
         magneticSession = getMagneticSession(measurementSession.getUuid());
-        
-        
         List<SensorEvent> events = new ArrayList<>();
         
         List<SensorEvent> windEvents = Event.windEvents(measurementSession.getPoints()
@@ -46,21 +40,16 @@ public class Measurement {
         events.addAll(windEvents);
         
         if (magneticSession != null) {
-            MeasurementAnalyzer analyzer = new MeasurementAnalyzer(magneticSession);
+            MeasurementAnalyzer analyzer = new MeasurementAnalyzer(Type.FREQUENCY, Type.MAGNETIC_FIELD);
+            analyzer.addSensor(new DatabaseSensor(magneticSession));
             events.addAll(analyzer.getEvents());
         }
         
-        eventMap = Event.eventMap(events);
-        sortedEvents = Event.sortedList(eventMap, events.size());
-        
-        chart = new Chart(chartConfigs, eventMap, sortedEvents);
+        generateCharts(events);
         
         closeSession();
     }
-
-    public Chart getChart() {
-        return chart;
-    }
+    
     
     public Double getLatitude() {
         if (measurementSession.getPosition() == null) {
@@ -91,8 +80,6 @@ public class Measurement {
     public String getMagneticSessionHTML() {
         return Table.getTable("MagneticSession", magneticSession);   
     }
-    
-    
     
     private MeasurementSession getMeasurementSession(String session_idString) {
         Long session_id = null;
@@ -131,5 +118,5 @@ public class Measurement {
         }
         getSession().close();
     }
-    
+
 }

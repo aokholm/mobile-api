@@ -58,35 +58,40 @@ td {
 <script>
   function initialize() {
     
-	  var measurementLatlng = new google.maps.LatLng(<c:out value="${latitude}"/>, <c:out value="${longitude}"/>);
+	  <c:if test="${empty latitude}">
 	  
-	  var mapCanvas1 = document.getElementById('map_canvas1');
-    var mapOptions1 = {
-      center: measurementLatlng,
-      zoom: 18,
-      mapTypeId: google.maps.MapTypeId.SATELLITE
-    };
-    var map1 = new google.maps.Map(mapCanvas1, mapOptions1);
-   
-    var marker1 = new google.maps.Marker({
-        position: measurementLatlng,
-        map: map1,
-        title:"!"
-    });
+		  var measurementLatlng = new google.maps.LatLng(<c:out value="${latitude}"/>, <c:out value="${longitude}"/>);
+		  
+		  var mapCanvas1 = document.getElementById('map_canvas1');
+	    var mapOptions1 = {
+	      center: measurementLatlng,
+	      zoom: 18,
+	      mapTypeId: google.maps.MapTypeId.SATELLITE
+	    };
+	    var map1 = new google.maps.Map(mapCanvas1, mapOptions1);
+	   
+	    var marker1 = new google.maps.Marker({
+	        position: measurementLatlng,
+	        map: map1,
+	        title:"!"
+	    });
+	    
+	    
+	    var mapCanvas2 = document.getElementById('map_canvas2');
+	    var mapOptions2 = {
+	    	      center: measurementLatlng,
+	    	      zoom: 4,
+	    	      mapTypeId: google.maps.MapTypeId.SATELLITE
+	    	    };
+	    var map2 = new google.maps.Map(mapCanvas2, mapOptions2);
+	    var marker2 = new google.maps.Marker({
+	        position: measurementLatlng,
+	        map: map2,
+	        title:"!"
+	    });
     
+    </c:if>
     
-    var mapCanvas2 = document.getElementById('map_canvas2');
-    var mapOptions2 = {
-    	      center: measurementLatlng,
-    	      zoom: 4,
-    	      mapTypeId: google.maps.MapTypeId.SATELLITE
-    	    };
-    var map2 = new google.maps.Map(mapCanvas2, mapOptions2);
-    var marker2 = new google.maps.Marker({
-        position: measurementLatlng,
-        map: map2,
-        title:"!"
-    });
   }
   
   google.maps.event.addDomListener(window, 'load', initialize);

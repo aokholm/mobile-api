@@ -52,16 +52,26 @@ public class MeasurementServlet extends HttpServlet {
 //	        return;
 //	    }
 	    
-	    Measurement measurement = new Measurement(request.getParameter("session_id"), charts());
-        
-        request.setAttribute("latitude", measurement.getLatitude());
-        request.setAttribute("longitude",  measurement.getLongitude());
-        request.setAttribute("endTime", "30");
-        request.setAttribute("dataTable", measurement.getChart().dataTableJSON());
+	    MeasurementView measurement;
+	    
+	    if ( "true".equals(request.getParameter("test")) ) {
+	        measurement = new MeasurementViewTest(charts());
+	    }
+	    else {
+	        MeasurementViewSession viewSession = new MeasurementViewSession(request.getParameter("session_id"), charts());
+	        
+	        request.setAttribute("latitude", viewSession.getLatitude());
+	        request.setAttribute("longitude",  viewSession.getLongitude());
+	        request.setAttribute("deviceTable", viewSession.getDeviceTableHTML());
+	        request.setAttribute("measurementSessionTable", viewSession.getMeasurementSessionTableHTML());
+	        request.setAttribute("magneticSessionTable", viewSession.getMagneticSessionHTML());
+	        
+	        measurement = viewSession;
+	    }
+	    
+	    request.setAttribute("endTime", "30");
+	    request.setAttribute("dataTable", measurement.getChart().dataTableJSON());
         request.setAttribute("charts", measurement.getChart().chartsWrapped());
-        request.setAttribute("deviceTable", measurement.getDeviceTableHTML());
-        request.setAttribute("measurementSessionTable", measurement.getMeasurementSessionTableHTML());
-        request.setAttribute("magneticSessionTable", measurement.getMagneticSessionHTML());
         
         request.getRequestDispatcher("/analysis/measurement.jsp").forward(request, response);
         
