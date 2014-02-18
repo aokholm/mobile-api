@@ -32,6 +32,8 @@ public class User extends IdEntity {
 	private String activationCode;
 	private String firstName;
 	private String lastName;
+	private Gender gender = Gender.UNKNOWN;
+	private boolean verified = false;
 	private boolean newsletter = true;
 	private boolean deleted = false;
     private List<Device> devices = new ArrayList<Device>();
@@ -120,7 +122,26 @@ public class User extends IdEntity {
 		this.lastName = lastName;
 	}
 
-	@Column(columnDefinition = "bit", length = 1)
+	@Enumerated(EnumType.ORDINAL)
+	@Column(columnDefinition = "tinyint unsigned", nullable = false)
+	public Gender getGender() {
+		return gender;
+	}
+
+    public void setGender(Gender gender) {
+		this.gender = gender;
+	}
+
+	@Column(columnDefinition = "bit", length = 1, nullable = false)
+	public boolean isVerified() {
+		return verified;
+	}
+
+	public void setVerified(boolean verified) {
+		this.verified = verified;
+	}
+
+	@Column(columnDefinition = "bit", length = 1, nullable = false)
 	public boolean isNewsletter() {
 		return newsletter;
 	}
@@ -129,7 +150,7 @@ public class User extends IdEntity {
 		this.newsletter = newsletter;
 	}
 	
-	@Column(columnDefinition = "bit", length = 1)
+	@Column(columnDefinition = "bit", length = 1, nullable = false)
 	public boolean isDeleted() {
 		return deleted;
 	}
