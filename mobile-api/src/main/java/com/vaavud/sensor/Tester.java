@@ -11,10 +11,8 @@ public class Tester implements SensorListener {
   
   
   public Tester() {
-      RevSensorConfig config = new RevSensorConfig();
-      config.revSensorUpdateRateUs=100000; // once a second
       sensorManager = new SensorManager();
-      sensorManager.addSensor(new RevolutionSensor(config));
+      sensorManager.addSensor(new RevolutionSensor(new RevSensorConfig()));
       sensorManager.addSensor(new SerialSensor());
       
       sensorManager.addListener(this, new Sensor.Type[]{Sensor.Type.FREQUENCY});

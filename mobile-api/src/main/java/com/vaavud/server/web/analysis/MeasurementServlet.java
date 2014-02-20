@@ -58,7 +58,7 @@ public class MeasurementServlet extends HttpServlet {
 	        measurement = new MeasurementViewTest(charts(), request);
 	    }
 	    else {
-	        MeasurementViewSession viewSession = new MeasurementViewSession(request.getParameter("session_id"), charts());
+	        MeasurementViewSession viewSession = new MeasurementViewSession(charts(),request);
 	        
 	        request.setAttribute("latitude", viewSession.getLatitude());
 	        request.setAttribute("longitude",  viewSession.getLongitude());
@@ -91,6 +91,20 @@ public class MeasurementServlet extends HttpServlet {
         freqChart.setvAxisTitle("Rotation Freq (Hz)/(m/s)");
         chartConfigs.add(freqChart);
         
+//        ChartConfig snChart = new ChartConfig(
+//                "signalNoise",
+//                new DataSet(null, EventField.TIME, false),
+//                new DataSet(Type.FREQUENCY, EventField.SN, true));
+//        snChart.setvAxisTitle("S/N ()");
+//        chartConfigs.add(snChart);
+        
+//        ChartConfig ampChart = new ChartConfig(
+//                "ampChart",
+//                new DataSet(null, EventField.TIME, false),
+//                new DataSet(Type.FREQUENCY, EventField.AMP, true));
+//        ampChart.setvAxisTitle("Amplitude (mu-Tesla)");
+//        chartConfigs.add(ampChart);
+        
         ChartConfig magChart = new ChartConfig(
                 "MagneticField",
                 new DataSet(null, EventField.TIME, false),
@@ -104,7 +118,8 @@ public class MeasurementServlet extends HttpServlet {
         ChartConfig sfChart = new ChartConfig(
                 "SampleFrequency",
                 new DataSet(null,  EventField.TIME, false), 
-                new DataSet(Type.FREQUENCY, EventField.SF, true));
+                new DataSet(Type.FREQUENCY, EventField.SF, true),
+                new DataSet(Type.SAMPLE_FREQUENCY, EventField.VALUE, false));
         sfChart.setvAxisTitle("Sample Frequency (Hz)");
         chartConfigs.add(sfChart);
         
@@ -115,7 +130,7 @@ public class MeasurementServlet extends HttpServlet {
         freqAmp.setLineWidth(0);
         freqAmp.setvAxisTitle("Amplitude (mu-Tesla)");
         chartConfigs.add(freqAmp);
-        
+                
         return chartConfigs;
     }
 	

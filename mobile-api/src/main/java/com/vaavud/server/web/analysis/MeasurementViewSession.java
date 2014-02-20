@@ -3,11 +3,14 @@ package com.vaavud.server.web.analysis;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 
 import com.vaavud.sensor.SensorEvent;
 import com.vaavud.sensor.Sensor.Type;
+import com.vaavud.sensor.revolution.RevSensorConfig;
 import com.vaavud.server.analysis.post.DatabaseSensor;
 import com.vaavud.server.analysis.post.MeasurementAnalyzer;
 import com.vaavud.server.model.Model;
@@ -25,10 +28,10 @@ public class MeasurementViewSession extends MeasurementView {
     private Device device;
     private MagneticSession magneticSession;
     
-    public MeasurementViewSession(String session_id, List<ChartConfig> chartConfigs) {
-        super(chartConfigs);
+    public MeasurementViewSession(List<ChartConfig> list, HttpServletRequest request) {
+        super(list);
         
-        measurementSession = getMeasurementSession(session_id);
+        measurementSession = getMeasurementSession(request.getParameter("session_id"));
         device = measurementSession.getDevice();
         
         // magneticSession can be null
@@ -40,7 +43,14 @@ public class MeasurementViewSession extends MeasurementView {
         events.addAll(windEvents);
         
         if (magneticSession != null) {
-            MeasurementAnalyzer analyzer = new MeasurementAnalyzer(Type.FREQUENCY, Type.MAGNETIC_FIELD);
+            RevSensorConfig config = new RevSensorConfig();
+            
+            
+            if (request.getParameter("movAvg") != null) {
+                config.setMovAvg(Integer.valueOf(request.getParameter("movAvg")));
+            }
+            
+            MeasurementAnalyzer analyzer = new MeasurementAnalyzer(config, Type.FREQUENCY, Type.MAGNETIC_FIELD, Type.SAMPLE_FREQUENCY);
             analyzer.addSensor(new DatabaseSensor(magneticSession));
             events.addAll(analyzer.getEvents());
         }

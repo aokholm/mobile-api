@@ -8,6 +8,8 @@ import com.vaavud.sensor.Sensor;
 import com.vaavud.sensor.SensorEvent;
 import com.vaavud.sensor.SensorListener;
 import com.vaavud.sensor.SensorManager;
+import com.vaavud.sensor.frequency.FrequencySensor;
+import com.vaavud.sensor.ref.revolution.RevolutionSensorRef;
 import com.vaavud.sensor.revolution.RevSensorConfig;
 import com.vaavud.sensor.revolution.RevolutionSensor;
 
@@ -15,17 +17,18 @@ public class MeasurementAnalyzer implements SensorListener {
     private List<SensorEvent> events;
     private SensorManager sensorManager;
 
-    public MeasurementAnalyzer(Sensor.Type ... sensorTypes) {
+    public MeasurementAnalyzer(RevSensorConfig config, Sensor.Type ... sensorTypes) {
 
         events = new ArrayList<SensorEvent>();
-
-        RevSensorConfig config = new RevSensorConfig();
-        config.revSensorUpdateRateUs = 100_000; // 10 time a second
         sensorManager = new SensorManager();
         sensorManager.addSensor(new RevolutionSensor(config));
+        sensorManager.addSensor(new RevolutionSensorRef(config));
+        sensorManager.addSensor(new FrequencySensor());
         sensorManager.addListener(this, sensorTypes);
-
-
+    }
+    
+    public MeasurementAnalyzer(Sensor.Type ... sensorTypes) {
+        this(new RevSensorConfig(), sensorTypes);
     }
     
     public void addSensor(BaseSensor sensor) {

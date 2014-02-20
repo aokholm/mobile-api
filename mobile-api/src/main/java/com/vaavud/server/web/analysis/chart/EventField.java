@@ -53,6 +53,12 @@ public enum EventField {
             SensorEventFreq e = (SensorEventFreq) event;
             return e.getSf();
         }
+    },
+    SN {
+        public Double get(Object event) {
+            SensorEventFreq e = (SensorEventFreq) event;
+            return e.getSN();
+        }
     };
 
     public abstract Double get(Object event);

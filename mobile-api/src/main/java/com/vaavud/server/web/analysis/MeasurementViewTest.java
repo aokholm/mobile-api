@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.vaavud.sensor.Sensor.Type;
 import com.vaavud.sensor.SensorEvent;
+import com.vaavud.sensor.revolution.RevSensorConfig;
 import com.vaavud.sensor.test.TestSensor;
 import com.vaavud.sensor.test.TestSensorConfig;
 import com.vaavud.server.analysis.post.MeasurementAnalyzer;
@@ -25,7 +26,13 @@ public class MeasurementViewTest extends MeasurementView {
                 request.getParameter("type"));
 
         
-        MeasurementAnalyzer analyzer = new MeasurementAnalyzer(Type.FREQUENCY, Type.MAGNETIC_FIELD);
+        RevSensorConfig config = new RevSensorConfig();
+        
+        if (request.getParameter("movAvg") != null ) {
+            config.setMovAvg(Integer.valueOf(request.getParameter("movAvg")));
+        }
+        
+        MeasurementAnalyzer analyzer = new MeasurementAnalyzer(config, Type.FREQUENCY, Type.MAGNETIC_FIELD);
         analyzer.addSensor(new TestSensor(testSensorConfig));
         List<SensorEvent> events = analyzer.getEvents();
         generateCharts(events);
