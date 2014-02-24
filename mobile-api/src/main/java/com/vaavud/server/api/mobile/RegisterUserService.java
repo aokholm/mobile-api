@@ -51,10 +51,18 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				throw new ProtocolException("Received register user input without email");
 			}
 			
-			if ((object.getClientPasswordHash() == null || object.getClientPasswordHash().isEmpty())
-					&& (object.getFacebookAccessToken() == null || object.getFacebookAccessToken().isEmpty() || object.getFacebookId() == null || object.getFacebookId().isEmpty())) {
+			boolean isFacebookRegistering = (object.getFacebookAccessToken() != null && object.getFacebookAccessToken().length() > 0
+					&& object.getFacebookId() != null && object.getFacebookId().length() > 0);
+			boolean isPasswordRegistering = (object.getClientPasswordHash() != null && object.getClientPasswordHash().length() > 0);
+			
+			if (!isPasswordRegistering && !isFacebookRegistering) {
 				logger.error("Received register user input without client password hash or facebook access token");
 				throw new ProtocolException("Received register user input without client password hash or facebook access token");
+			}
+
+			if (authenticatedDevice == null) {
+				logger.error("Received register user input with no authenticated device");
+				throw new ProtocolException("Received register user input with no authenticated device");
 			}
 
 			hibernateSession.beginTransaction();
@@ -62,40 +70,72 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			String authToken;
 
 			final User authenticatedUser;
-			User existingUser = (User) hibernateSession
-					.createQuery("from User where email=:email")
-					.setString("email", object.getEmail())
-					.uniqueResult();
+			User existingUser = null;
 
-			if (authenticatedDevice == null) {
-				logger.error("Received register user input with no authenticated device");
-				throw new ProtocolException("Received register user input with no authenticated device");
+			if (isFacebookRegistering) {
+				existingUser = (User) hibernateSession
+						.createQuery("from User where facebookId=:facebookId")
+						.setString("facebookId", object.getFacebookId())
+						.uniqueResult();
+			}
+
+			if (existingUser == null) {
+				existingUser = (User) hibernateSession
+						.createQuery("from User where email=:email")
+						.setString("email", object.getEmail())
+						.uniqueResult();
 			}
 
 			if (existingUser != null) {
 
 				// existing user...
 				
-				if (object.getClientPasswordHash() != null && object.getClientPasswordHash().length() > 0) {				
-					if (existingUser.getPasswordHash() != null && PasswordUtil.validatePassword(object.getClientPasswordHash(), existingUser.getPasswordHash())) {
-						logger.info("Password hash is matching given client hash " + object.getClientPasswordHash());
-					}	
-					else {
-						logger.info("Credentials not matching, sending INVALID_CREDENTIALS");
-						Map<String,Object> json = new HashMap<String,Object>();
-						json.put("status", "INVALID_CREDENTIALS");
-						writeJSONResponse(resp, mapper, json);
-						return;
-					}
-				}
-				else if (object.getFacebookAccessToken() != null && object.getFacebookAccessToken().length() > 0 && object.getFacebookId() != null && object.getFacebookId().length() > 0) {
+				if (isFacebookRegistering) {
 					if (verifyFacebookAccount(object.getFacebookAccessToken(), object.getFacebookId())) {
 						logger.info("Facebook account verified for Facebook user ID=" + object.getFacebookId());
+						
+						if (existingUser.getFacebookId() == null || !existingUser.getFacebookId().equals(object.getFacebookId())) {
+							
+							// There is an existing Vaavud account with the same email address as the Facebook account,
+							// but the Facebook account is not connected to that Vaavud account (because it was originally
+							// created using email/password).
+							
+							if (isPasswordRegistering && existingUser.getPasswordHash() != null && PasswordUtil.validatePassword(object.getClientPasswordHash(), existingUser.getPasswordHash())) {
+								logger.info("Account exists with Facebook email " + object.getEmail() + " and matching password has been provided");
+								existingUser.setFacebookId(object.getFacebookId());
+							}
+							else {
+								logger.info("Account exists with Facebook email " + object.getEmail() + " and matching password not provided");
+								Map<String,Object> json = new HashMap<String,Object>();
+								json.put("status", "EMAIL_USED_PROVIDE_PASSWORD");
+								writeJSONResponse(resp, mapper, json);
+								return;
+							}
+						}
 					}
 					else {
 						logger.info("Facebook account verification failed for Facebook user ID=" + object.getFacebookId());
 						Map<String,Object> json = new HashMap<String,Object>();
-						json.put("status", "INVALID_ACCESS_TOKEN");
+						json.put("status", "INVALID_FACEBOOK_ACCESS_TOKEN");
+						writeJSONResponse(resp, mapper, json);
+						return;
+					}
+				}
+				else if (isPasswordRegistering) {				
+					if (existingUser.getPasswordHash() != null && PasswordUtil.validatePassword(object.getClientPasswordHash(), existingUser.getPasswordHash())) {
+						logger.info("Password hash is matching given client hash " + object.getClientPasswordHash());
+					}	
+					else if (existingUser.getPasswordHash() == null && existingUser.getFacebookId() != null) {
+						logger.info("Credentials not matching due to no password and Facebook login needed");
+						Map<String,Object> json = new HashMap<String,Object>();
+						json.put("status", "LOGIN_WITH_FACEBOOK");
+						writeJSONResponse(resp, mapper, json);
+						return;
+					}
+					else {
+						logger.info("Credentials not matching, sending INVALID_CREDENTIALS");
+						Map<String,Object> json = new HashMap<String,Object>();
+						json.put("status", "INVALID_CREDENTIALS");
 						writeJSONResponse(resp, mapper, json);
 						return;
 					}
@@ -107,7 +147,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				
 				authenticatedUser = existingUser;
 			}
-			else if ("LOGIN".equals(object.getAction())) {
+			else if ("LOGIN".equals(object.getAction()) && isPasswordRegistering) {
 		
 				// user doesn't exist and login is intended
 				
@@ -133,11 +173,11 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				user.setFirstName(object.getFirstName());
 				user.setLastName(object.getLastName());
 				
-				if (object.getClientPasswordHash() != null && object.getClientPasswordHash().length() > 0) {
+				if (isPasswordRegistering) {
 					logger.info("Creating new user given client hash " + object.getClientPasswordHash());
 					user.setPasswordHash(PasswordUtil.createHash(object.getClientPasswordHash()));
 				}
-				else if (object.getFacebookAccessToken() != null && object.getFacebookAccessToken().length() > 0 && object.getFacebookId() != null && object.getFacebookId().length() > 0) {
+				else if (isFacebookRegistering) {
 					if (verifyFacebookAccount(object.getFacebookAccessToken(), object.getFacebookId())) {
 						logger.info("Creating new user given Facebook access token for Facebook user ID=" + object.getFacebookId());
 						user.setFacebookId(object.getFacebookId());
@@ -145,7 +185,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 					else {
 						logger.info("Facebook account verification failed for Facebook user ID=" + object.getFacebookId());
 						Map<String,Object> json = new HashMap<String,Object>();
-						json.put("status", "INVALID_ACCESS_TOKEN");
+						json.put("status", "INVALID_FACEBOOK_ACCESS_TOKEN");
 						writeJSONResponse(resp, mapper, json);
 						return;
 					}
@@ -160,6 +200,10 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				authenticatedUser = user;
 			}
 
+			if (isFacebookRegistering) {
+				authenticatedUser.setFacebookAccessToken(object.getFacebookAccessToken());
+			}
+			
 			if (authenticatedUser.getGender() == Gender.UNKNOWN && object.getGender() != null && object.getGender() != Gender.UNKNOWN) {
 				authenticatedUser.setGender(object.getGender());
 			}
