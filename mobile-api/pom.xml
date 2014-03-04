@@ -25,24 +25,24 @@
         <groupId>de.juplo</groupId>
         <artifactId>hibernate4-maven-plugin</artifactId>
         <version>1.0.1</version>
-        <configuration>
-          <driverClassName>com.mysql.jdbc.Driver</driverClassName>
-          <hibernateDialect>org.hibernate.dialect.MySQL5InnoDBDialect</hibernateDialect>
-          <url><![CDATA[jdbc:mysql://mysql-core.ctpytpqotfkq.eu-west-1.rds.amazonaws.com:3306/vaavud?characterEncoding=utf8]]></url>
-          <username>read</username>
-          <password>Eftyyl,;45</password>
-          <target>SCRIPT</target>
-          <type>CREATE</type>
-        </configuration>
 <!--         <configuration> -->
 <!--           <driverClassName>com.mysql.jdbc.Driver</driverClassName> -->
 <!--           <hibernateDialect>org.hibernate.dialect.MySQL5InnoDBDialect</hibernateDialect> -->
-<!--           <url><![CDATA[jdbc:mysql://localhost/vaavud?characterEncoding=utf8]]></url> -->
-<!--           <username>root</username> -->
-<!--           <password>fire4friend</password> -->
+<!--           <url><![CDATA[jdbc:mysql://mysql-core.ctpytpqotfkq.eu-west-1.rds.amazonaws.com:3306/vaavud?characterEncoding=utf8]]></url> -->
+<!--           <username>read</username> -->
+<!--           <password>Eftyyl,;45</password> -->
 <!--           <target>SCRIPT</target> -->
 <!--           <type>CREATE</type> -->
 <!--         </configuration> -->
+        <configuration>
+          <driverClassName>com.mysql.jdbc.Driver</driverClassName>
+          <hibernateDialect>org.hibernate.dialect.MySQL5InnoDBDialect</hibernateDialect>
+          <url><![CDATA[jdbc:mysql://localhost/vaavud?characterEncoding=utf8]]></url>
+          <username>root</username>
+          <password>fire4friend</password>
+          <target>SCRIPT</target>
+          <type>CREATE</type>
+        </configuration>
         <dependencies>
           <dependency>
             <groupId>mysql</groupId>
