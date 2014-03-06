@@ -8,11 +8,14 @@ import javax.servlet.http.HttpServletRequest;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
-import com.vaavud.sensor.SensorEvent;
+import com.vaavud.sensor.MeasurementAnalyzer;
 import com.vaavud.sensor.Sensor.Type;
+import com.vaavud.sensor.SensorEvent;
+import com.vaavud.sensor.frequency.FrequencySensor;
+import com.vaavud.sensor.ref.revolution.RevolutionSensorRef;
 import com.vaavud.sensor.revolution.RevSensorConfig;
+import com.vaavud.sensor.revolution.RevolutionSensor;
 import com.vaavud.server.analysis.post.DatabaseSensor;
-import com.vaavud.server.analysis.post.MeasurementAnalyzer;
 import com.vaavud.server.model.Model;
 import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.MagneticSession;
@@ -51,7 +54,33 @@ public class MeasurementViewSession extends MeasurementView {
             }
             
             MeasurementAnalyzer analyzer = new MeasurementAnalyzer(config, Type.FREQUENCY, Type.MAGNETIC_FIELD, Type.SAMPLE_FREQUENCY);
-            analyzer.addSensor(new DatabaseSensor(magneticSession));
+            
+            if (request.getParameter("new") != null) {
+                if (Boolean.parseBoolean(request.getParameter("new"))) {
+                    analyzer.addSensor(new RevolutionSensor(config));
+                }
+            }
+            
+            if (request.getParameter("windTunnel") != null) {
+                if (Boolean.parseBoolean(request.getParameter("windTunnel"))) {
+                    analyzer.addSensor(new RevolutionSensor(config));
+                }
+            }
+            
+            if (request.getParameter("ref") != null) {
+                if (Boolean.parseBoolean(request.getParameter("ref"))) {
+                    analyzer.addSensor(new RevolutionSensorRef(config));
+                }
+            }
+            
+            if (request.getParameter("freq") != null) {
+                if (Boolean.parseBoolean(request.getParameter("freq"))) {
+                    analyzer.addSensor(new FrequencySensor());
+                }
+            }
+            
+            analyzer.addSensor(new RevolutionSensor(config));
+            analyzer.addSensor(new DatabaseSensor(magneticSession)); // database sensor should be added last
             events.addAll(analyzer.getEvents());
         }
         

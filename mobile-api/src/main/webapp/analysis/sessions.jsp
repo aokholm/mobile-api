@@ -27,13 +27,14 @@
     	"    MagS.id as magneticSession_id,                                              " +
     	"    D.id as device_id,                                                          " +
     	"    D.vendor,                                                                   " +
-    	"	 D.appVersion,                                                                 " +
-    	"    D.model,                                                                    " +
+    	"	   D.model,                                                                    " +
+    	"    D.magneticFieldSensor,                                                      " +
+    	"    D.appVersion,                                                               " +
+    	"    from_unixtime(MS.startTime/1000) As startTime,                              " +     
     	"    MS.windSpeedAvg,                                                            " +
     	"    MS.windSpeedMax,                                                            " +
     	"    count(MS.id) As measurementPoints,                                          " +
-    	"	(MS.endTime - MS.startTime ) / 1000 as measurementLength,                      " +
-    	"	count(MS.id) / ((MS.endTime - MS.startTime ) / 1000) as measurementFrequency   " +
+    	"	(MS.endTime - MS.startTime ) / 1000 as measurementLength                       " +
     	"FROM                                                                            " +
     	"    Device AS D                                                                 " +
     	"        INNER JOIN                                                              " +
@@ -44,7 +45,7 @@
     	"    MeasurementPoint AS MP ON MS.id = MP.session_id                             " +
     	whereClause +                                                                    
     	"GROUP BY MS.id                                                                  " +
-    	"order by MS.id                                                                  " +
+    	"order by MS.id                                                                 " +
     	"DESC                                                                            " +
     	"LIMIT 0 , " + limit;                                                                
 
@@ -89,14 +90,14 @@
     	<th class="left">MS id</th>
     	<th class="left">MagS id</th>
     	<th class="left">D id</th>
-    	<th class="left">D vendor</th>
-    	<th class="left">D model</th>
-    	<th class="left">D appVersion</th>
-    	<th class="left">MS windSpeedAvg</th>
-    	<th class="left">MS windSpeedMax</th>
-    	<th class="left">N MeasurementP</th>
-    	<th class="left">Time</th>
-    	<th class="left">MeasurementPFreq</th>
+    	<th class="left">Vendor</th>
+    	<th class="left">Model</th>
+    	<th class="left">MFSensor</th>
+    	<th class="left">AppVersion</th>
+    	<th class="left">StartTime</th>
+    	<th class="left">Mean</th>
+    	<th class="left">Max</th>
+    	<th class="left">MeasurementLength</th>
     </tr>
     <%
     for (Object[] values : session_ids) {
@@ -107,11 +108,11 @@
         	<td class="left"><%=values[3]%></td>
         	<td class="left"><%=values[4]%></td>
         	<td class="left"><%=values[5]%></td>
-        	<td class="right"><%=dfs.format(values[6])%></td>
-        	<td class="right"><%=dfs.format(values[7])%></td>
-        	<td class="right"><%=values[8]%></td>
+        	<td class="left"><%=values[6]%></td>
+        	<td class="left"><%=values[7]%></td>
+          <td class="right"><%=dfs.format(values[8])%></td>
         	<td class="right"><%=dfs.format(values[9])%></td>
-        	<td class="right"><%=dfd.format(values[10])%></td>
+        	<td class="right"><%=dfs.format(values[10])%></td>
         </tr><%
     }
     %>

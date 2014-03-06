@@ -2,9 +2,7 @@ package com.vaavud.server.web.analysis;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,22 +10,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-
-import com.vaavud.sensor.Sensor;
-import com.vaavud.sensor.SensorEvent;
 import com.vaavud.sensor.Sensor.Type;
-import com.vaavud.server.analysis.post.MeasurementAnalyzer;
-import com.vaavud.server.model.Model;
-import com.vaavud.server.model.entity.Device;
-import com.vaavud.server.model.entity.MagneticSession;
-import com.vaavud.server.model.entity.MeasurementSession;
-import com.vaavud.server.web.analysis.chart.Chart;
 import com.vaavud.server.web.analysis.chart.ChartConfig;
 import com.vaavud.server.web.analysis.chart.DataSet;
 import com.vaavud.server.web.analysis.chart.EventField;
-import com.vaavud.server.web.analysis.util.Event;
 
 /**
  * Servlet implementation class MeasurementServlet

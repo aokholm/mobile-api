@@ -178,7 +178,7 @@ td {
 		        'columns': [0, 1]
 		      },
 		      // 2 seconds
-		      'minRangeSize': 1
+		      'minRangeSize': 0.1
 		    }
 		  },
 		  'state': {'range': {'start': 0, 'end': 30}}
@@ -215,7 +215,7 @@ td {
 		dashboard.draw(dataTable);
 		
 		// Print data table
-//     var chart = new google.visualization.Table(document.getElementById('table'));
+//       var chart = new google.visualization.Table(document.getElementById('table'));
 //     chart.draw(dataTable);
 		
 	}	

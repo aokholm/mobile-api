@@ -89,7 +89,9 @@ public class Tester implements SensorListener {
       active = false;
       
       try {
-          uploadMeasurement();
+          if (measurementSession.getPoints().size() > 0) {
+              uploadMeasurement();
+          }         
       } catch (Exception e) {
           throw new RuntimeException(e.getMessage() + ". Could not upload measurement Sessions");
       }
@@ -110,7 +112,7 @@ public class Tester implements SensorListener {
             
             MeasurementPoint mp = new MeasurementPoint();
             mp.setSession(measurementSession);
-            mp.setTime(new Date());
+            mp.setTime(new Date(measurementSession.getStartTime().getTime() + event.getTimeUs()/1000)); // add sensor time relative to measurement starttime
             mp.setWindSpeed((float) (double) eventfreq.getFreq());
             measurementSession.getPoints().add(mp);
             
@@ -165,14 +167,10 @@ public class Tester implements SensorListener {
           measurementSession.setWindSpeedAvg((float) freqAvg); 
           measurementSession.setWindSpeedMax((float) freqMax);
           
-          hibernateSession.save(measurementSession);
-          hibernateSession.getTransaction().commit();
           
-          
-          hibernateSession.beginTransaction();
-
           magneticSession.setEndIndex(magneticSession.getMagneticPoints().size());
           
+          hibernateSession.save(measurementSession);
           hibernateSession.save(magneticSession);          
           hibernateSession.getTransaction().commit();
           

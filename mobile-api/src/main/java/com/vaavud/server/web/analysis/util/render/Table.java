@@ -30,7 +30,7 @@ public class Table {
                 } else if (name == "magneticPoints") {
                     addRow(sb, "magneticPoints", "...");
                 } else if (value == null) {
-                    System.out.println(name);
+                    addRow(sb, name, "Null");
                 } else {
                     addRow(sb, name, value.toString());
                 }
