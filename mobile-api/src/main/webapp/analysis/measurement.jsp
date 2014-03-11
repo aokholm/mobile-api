@@ -160,6 +160,7 @@ td {
     ms.sampleId = null;
     ms.windSpeed = null;
     ms.testDescription = null;
+    ms.id = <c:out value="${measurementSession.id}"/>;
     
     source = "<c:out value="${measurementSession.source}"/>";
     <c:if test="${not empty measurementSession.source}">
@@ -227,8 +228,8 @@ td {
 						},
 						'state' : {
 							'range' : {
-								'start' : 0,
-								'end' : 30
+								'start' : 10,
+								'end' : 40
 							}
 						}
 					});
@@ -335,7 +336,7 @@ td {
 				}
 				  
 				analysis = "<table><tr><th>name</th><th>time</th><th>mean</th><th>max</th><th>min</th><th>std</th>";
-				analysis += "<th>sampleId</th><th>WindSpeed</th><th>testDescrip</th></tr>";
+				analysis += "<th>sampleId</th><th>WindSpeed</th><th>testDescrip</th><th>id</td></tr>";
 
 				for (var i = 0; i < freqCols.length; i++) {
 					name = dataView.getColumnLabel(freqCols[i]);
@@ -347,7 +348,8 @@ td {
 							+ "</td><td>" + stds[i].toPrecision(4)
 							+ "</td><td>" + ms.sampleId
 							+ "</td><td>" + ms.windSpeed
-							+ "</td><td>" + ms.testDescription + "</td></tr>";
+							+ "</td><td>" + ms.testDescription
+							+ "</td><td>" + ms.id + "</td></tr>";
 				}
 
 				analysis += "</table>";
