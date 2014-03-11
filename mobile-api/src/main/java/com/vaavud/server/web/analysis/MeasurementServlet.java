@@ -59,6 +59,7 @@ public class MeasurementServlet extends HttpServlet {
 	    request.setAttribute("endTime", "30");
 	    request.setAttribute("dataTable", measurement.getChart().dataTableJSON());
         request.setAttribute("charts", measurement.getChart().chartsWrapped());
+        request.setAttribute("controlChartColumn", measurement.getControlChartColumns());
         
         request.getRequestDispatcher("/analysis/measurement.jsp").forward(request, response);
         
@@ -66,9 +67,12 @@ public class MeasurementServlet extends HttpServlet {
 
 	}
 	
+	
 	private final static List<ChartConfig> charts() {
         List<ChartConfig> chartConfigs = new ArrayList<>();
         
+        
+        // first chart contains the control chart columns !!!
         ChartConfig freqChart = new ChartConfig(
                 "Frequency",
                 new DataSet(null, EventField.TIME, false), 

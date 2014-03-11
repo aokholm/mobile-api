@@ -2,8 +2,13 @@ package com.vaavud.sensor;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
+
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 import org.hibernate.Session;
 
@@ -21,8 +26,8 @@ import com.vaavud.util.UUIDUtil;
 public class Tester implements SensorListener {
   private SensorManager sensorManager;
   
-  private List<SensorEvent> sensorEvents;
-  public boolean active;
+  private List<SensorEvent> sensorEvents = new ArrayList<>();
+  public boolean active = false;
   private MeasurementSession measurementSession;
   private MagneticSession magneticSession;
   
@@ -34,6 +39,7 @@ public class Tester implements SensorListener {
       RevSensorConfig revSensorConfig = new RevSensorConfig();
       revSensorConfig.setWindtunnelTest(true);
       revSensorConfig.setRevSensorRateUs(500_000);
+      revSensorConfig.setLiveTest(true);
       sensorManager.addSensor(new RevolutionSensor(revSensorConfig));
       sensorManager.addSensor(new SerialSensor());
       
@@ -50,6 +56,10 @@ public class Tester implements SensorListener {
   }
   
   public void start() {
+      
+      if (active) {
+          return;
+      }
       
       sensorEvents = new ArrayList<>();
       
@@ -79,7 +89,13 @@ public class Tester implements SensorListener {
       magneticSession.setMeasurementSessionUuid(measurementSession.getUuid());
   }
   
-  public void stop() {
+  public Long stop(boolean saveData) {
+      
+      Long msId = null;
+      if (!active) {
+          return null;
+      }
+      
       try {
           sensorManager.stop();          
       } catch (Exception e) {
@@ -88,17 +104,29 @@ public class Tester implements SensorListener {
       
       active = false;
       
-      try {
-          if (measurementSession.getPoints().size() > 0) {
-              uploadMeasurement();
-          }         
-      } catch (Exception e) {
-          throw new RuntimeException(e.getMessage() + ". Could not upload measurement Sessions");
+      if (saveData) {
+          try {
+              if (measurementSession.getPoints().size() > 0) {
+                  msId = uploadMeasurement();
+              }         
+          } catch (Exception e) {
+              throw new RuntimeException(e.getMessage() + ". Could not upload measurement Sessions");
+          }
       }
+      
       
       freqSum = 0;
       freqMax = 0;
-
+      
+      return msId;
+  }
+  
+  public Long stop() {
+      return stop(true);
+  }
+  
+  public void clear() {
+      stop(false);
   }
   
   @Override
@@ -142,8 +170,28 @@ public class Tester implements SensorListener {
           
   }
   
+  public String lastFreqEvent() {
+      
+
+      Map<String, Object> eventMap = new HashMap<String, Object>();
+      
+      
+      if (sensorEvents.size() > 0) {
+          SensorEventFreq event = (SensorEventFreq) sensorEvents.get(sensorEvents.size()-1);
+          
+          eventMap.put("time", event.getTime());
+          eventMap.put("freq", event.getFreq());
+                
+          
+      }
+      
+      JSONObject jsEvent = (JSONObject) JSONSerializer.toJSON( eventMap );
+      
+      return jsEvent.toString();
+  }
   
-  private void uploadMeasurement(){
+  
+  private Long uploadMeasurement(){
       
       
       
@@ -174,7 +222,6 @@ public class Tester implements SensorListener {
           hibernateSession.save(magneticSession);          
           hibernateSession.getTransaction().commit();
           
-          
       }
       catch (RuntimeException e) {
           throw new RuntimeException("Error processing service " + getClass().getName(), e);
@@ -185,6 +232,8 @@ public class Tester implements SensorListener {
           }
           hibernateSession.close();
       }
+      
+      return measurementSession.getId();
   }
     
 }

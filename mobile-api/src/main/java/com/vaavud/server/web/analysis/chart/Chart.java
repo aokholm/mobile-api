@@ -20,6 +20,7 @@ public class Chart {
     private List<ChartConfig> chartConfigs;
     private final EnumMap<Sensor.Type, Map<String, List<SensorEvent>>> eventMap;
     private final List<SensorEvent> sortedEvents;
+    private List<Integer> controlChartColumns = new ArrayList();
     
     public Chart(List<ChartConfig> chartConfigs,
             EnumMap<Sensor.Type, Map<String, List<SensorEvent>>> eventMap,
@@ -63,6 +64,9 @@ public class Chart {
         
         return chartsWrapped;
     }
+    
+    
+    
     
     public DataTable dataTable() {
         // Create a data table,
@@ -171,6 +175,10 @@ public class Chart {
             }
         }        
         return dataSets;
+    }
+    
+    public List<Integer> getControlChartColumns() {
+        return chartConfigs.get(0).getColIndex();
     }
     
     private static String getName(String string, int maxLength) {

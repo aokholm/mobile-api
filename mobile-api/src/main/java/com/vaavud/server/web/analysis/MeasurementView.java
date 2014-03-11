@@ -37,4 +37,22 @@ public class MeasurementView {
     public List<Sensor> getSensors() {
         return sensors;
     }
+    
+    public String getControlChartColumns() {
+        
+        String str = "";
+        int i = 0;
+        for (Integer column :chart.getControlChartColumns()) {
+            if (i == 0) {
+                str = column.toString(); 
+            }
+            else {
+                str = str.concat("," + column.toString());
+            }
+            i++;
+        }
+
+        return str;
+        
+    }
 }

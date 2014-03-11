@@ -57,14 +57,14 @@
     <servlet-name>StatsServlet</servlet-name>
     <servlet-class>com.vaavud.server.web.admin.StatsServlet</servlet-class>
   </servlet>
-  
   <servlet>
-  	<servlet-name>MeasurementServlet</servlet-name>
-  	<servlet-class>com.vaavud.server.web.analysis.MeasurementServlet</servlet-class>
+    <servlet-name>MeasurementServlet</servlet-name>
+    <servlet-class>com.vaavud.server.web.analysis.MeasurementServlet</servlet-class>
   </servlet>
-  
-  <!-- Mobile API Mappings -->
-  
+  <servlet>
+    <servlet-name>SerialServlet</servlet-name>
+    <servlet-class>com.vaavud.sensor.SerialServlet</servlet-class>
+  </servlet>
   <servlet-mapping>
     <servlet-name>MagneticMeasureService</servlet-name>
     <url-pattern>/api/magnetic/measure</url-pattern>
@@ -103,8 +103,12 @@
     <servlet-name>StatsServlet</servlet-name>
     <url-pattern>/admin/stats</url-pattern>
   </servlet-mapping>
-    <servlet-mapping>
+  <servlet-mapping>
     <servlet-name>MeasurementServlet</servlet-name>
     <url-pattern>/analysis/measurement</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SerialServlet</servlet-name>
+    <url-pattern>/analysis/serial</url-pattern>
   </servlet-mapping>
 </web-app>

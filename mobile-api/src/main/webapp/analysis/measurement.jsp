@@ -100,13 +100,14 @@ td {
 <body>
   <div id="col1">
 	  <div id="dashboard">
-	   <c:forEach var="chart" items="${charts}" varStatus="theCount">
-	    <div id="<c:out value="${chart.identifier}"/>"></div>
-	      <c:if test="${theCount.count == 3}">
-	      <div id="control"></div>
-	      </c:if>
-	   </c:forEach>
-	
+	     <c:forEach var="chart" items="${charts}" varStatus="theCount">
+	     <div id="<c:out value="${chart.identifier}"/>"></div>
+	       <c:if test="${theCount.count == 3}">
+	       <div id="control"></div>
+	       </c:if>
+	     </c:forEach>
+	   <button onclick="changeRange();">Set time: 10:40</button>
+	   <div id="jsAnalysis"></div>
 		</div>
 	</div>
 	<div id="col2">
@@ -119,10 +120,14 @@ td {
 		<div id="map_canvas2" class="map_canvas"></div>
 		<c:out value="${measurementSessionTable}" escapeXml="false"/>
 		<c:out value="${magneticSessionTable}" escapeXml="false"/>
+		
+		<!-- Data table -->
+		<button onclick="table.draw(dataView);">Show Table</button>
+	  <div id="table"></div>
+		
   </div>
 
-<!-- Data table -->
-<!-- <div id="table"></div> -->
+
   
   <script type="text/javascript">
     // Load the Visualization API and the piechart package.
@@ -137,7 +142,14 @@ td {
     	drawVisualization();
     }
     
+    function changeRange() {
+    	control.setState({'range': {'start': 10, 'end': 40}});
+    	control.draw();
+    }
     
+  var table;
+  var dataView;
+  var control;
 	
 	function drawVisualization() {
 		//
@@ -157,8 +169,7 @@ td {
 		//
 		// Control chart
 		// 
-		
-		var control = new google.visualization.ControlWrapper({
+		control = new google.visualization.ControlWrapper({
 		  'controlType': 'ChartRangeFilter',
 		  'containerId': 'control',
 		  'options': {
@@ -168,14 +179,14 @@ td {
 		      'chartType': 'LineChart',
 		      'chartOptions': {
 		        'chartArea': {'left':chartAreaLeft, 'width': chartAreaWidth},
-		        'hAxis': {'baselineColor': 'none', 'minValue': 0, 'maxValue': <%=request.getAttribute("endTime")%>},
+		        'hAxis': {'baselineColor': 'none', 'minValue': 0},
 			    'width': chartWidth,
 			    'height': controlChartHeight
 		      },
 		      // Display a single series that shows the closing value of the stock.
 		      // Thus, this view has two columns: the date (axis) and the stock value (line series).
 		      'chartView': {
-		        'columns': [0, 1]
+		        'columns': [<%=request.getAttribute("controlChartColumn")%>]
 		      },
 		      // 2 seconds
 		      'minRangeSize': 0.1
@@ -205,6 +216,12 @@ td {
 	  var data = <c:out value="${dataTable}" escapeXml="false"/>;
 	  var dataTable = new google.visualization.DataTable(data, 0.6);	  
 		
+//     var table = new google.visualization.ChartWrapper({
+//         'chartType': 'Table',
+//         'containerId': 'table'
+//       });
+//       dashboard.bind(control, table);
+	  
 	  //
 	  // Add charts to the dashboard
 	  //
@@ -212,12 +229,75 @@ td {
       dashboard.bind(control, <c:out value="${chart.identifier}"/>);
     </c:forEach>
  		
-		dashboard.draw(dataTable);
 		
-		// Print data table
-//       var chart = new google.visualization.Table(document.getElementById('table'));
-//     chart.draw(dataTable);
+    dataView = new google.visualization.DataView(dataTable);
+    table = new google.visualization.Table(document.getElementById('table'));
+    
+    dashboard.draw(dataTable);
+				
+		google.visualization.events.addListener(dashboard, 'ready', function() {
+			jsFreqAnalysis();
+		});
 		
+    function jsFreqAnalysis() {
+       controlCols = control.getOption('ui.chartView').columns;
+       
+       freqCols = controlCols.slice(1);
+       rows = [];
+         
+       for (var i=0; i < freqCols.length; i++ ) {
+         rows[i] = dataView.getFilteredRows([
+                {column: 0, minValue: control.getState().range.start,
+                  maxValue: control.getState().range.end},
+                {column: freqCols[i], minValue: 0} // remove null
+              ]);
+       }
+       
+       means = [];
+       maxs = [];
+       mins = [];
+       stds = [];
+       
+       for (var i=0; i < freqCols.length; i++ ) {
+           sum = 0;
+           max = 0;
+           min = dataView.getValue(rows[i][0], freqCols[i]);
+           SS = 0;
+           
+           for (var j=0; j < rows[i].length; j++) {
+             val = dataView.getValue(rows[i][j], freqCols[i]);
+             // sum
+             sum += val;
+             // max
+             if (val > max) {
+               max = val;
+             }
+             
+             if (val < min) {
+               min = val;
+             }
+             
+             SS += Math.pow(val,2);
+             
+           }
+           
+           means[i] = sum/rows[i].length;
+           maxs[i] = max;
+           mins[i] = min;
+           stds[i] = Math.sqrt( 1 /  rows[i].length * SS - Math.pow(means[i],2));
+       }
+       
+       analysis = "<table><tr><th>name</th><th>mean</th><th>max</th><th>min</th><th>std</th></tr>";
+       
+       for (var i=0; i < freqCols.length; i++ ) {
+         name = dataView.getColumnLabel(freqCols[i]);
+         analysis += "<tr><td>" + name + "</td><td>" + means[i] + "</td><td>" + maxs[i] + "</td><td>" + mins[i] + "</td><td>" + stds[i] + "</td></tr>";
+       }
+       
+       analysis += "</table>";
+       
+       $("#jsAnalysis").html(analysis);
+    }
 	}	
  	
 </script>
