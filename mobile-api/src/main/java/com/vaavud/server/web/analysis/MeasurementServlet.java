@@ -51,12 +51,14 @@ public class MeasurementServlet extends HttpServlet {
 	        request.setAttribute("deviceTable", viewSession.getDeviceTableHTML());
 	        request.setAttribute("measurementSessionTable", viewSession.getMeasurementSessionTableHTML());
 	        request.setAttribute("magneticSessionTable", viewSession.getMagneticSessionHTML());
+	        request.setAttribute("startTime", viewSession.getMeasurementTime());
+	        request.setAttribute("measurementSession", viewSession.getMeasurementSession());
 	        
 	        measurement = viewSession;
 	    }
 	    
 	    request.setAttribute("sensors", measurement.getSensors());
-	    request.setAttribute("endTime", "30");
+//	    request.setAttribute("endTime", "30");
 	    request.setAttribute("dataTable", measurement.getChart().dataTableJSON());
         request.setAttribute("charts", measurement.getChart().chartsWrapped());
         request.setAttribute("controlChartColumn", measurement.getControlChartColumns());

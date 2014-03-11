@@ -157,5 +157,13 @@ public class MeasurementViewSession extends MeasurementView {
         }
         getSession().close();
     }
+    
+    public Long getMeasurementTime() {
+        return measurementSession.getStartTime().getTime();
+    }
+    
+    public MeasurementSession getMeasurementSession() {
+        return measurementSession;
+    }
 
 }

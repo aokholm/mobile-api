@@ -46,16 +46,7 @@ public class Tester implements SensorListener {
       sensorManager.addListener(this, new Sensor.Type[]{Sensor.Type.FREQUENCY, Sensor.Type.MAGNETIC_FIELD});
   }
   
-  public void toogleOnOff() {
-      if (active) {
-          stop();
-      }
-      else {
-          start();
-      }
-  }
-  
-  public void start() {
+  public void start(String description) {
       
       if (active) {
           return;
@@ -82,6 +73,7 @@ public class Tester implements SensorListener {
       measurementSession.setStartIndex(0);
       measurementSession.setEndIndex(0);
       measurementSession.setPosition(null);
+      measurementSession.setSource(description);
       
       
       magneticSession= new MagneticSession();

@@ -1,7 +1,6 @@
 package com.vaavud.sensor;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
-import com.vaavud.sensor.frequency.FrequencySensor;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.util.ServiceUtil;
 
@@ -48,9 +46,6 @@ public class SerialServlet extends HttpServlet {
 	
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	    
-	    
-	    
 	    if (request.getParameter("action") == null && request.getParameter("status") == null) {
 	        ServiceUtil.sendProtocolErrorResponse(response, new ProtocolException("No 'action' or 'status' parameter defined"));
 	        return;
@@ -71,7 +66,7 @@ public class SerialServlet extends HttpServlet {
 	    
 	    
         if ("start".equals(request.getParameter("action"))) {
-            tester.start();
+            tester.start(request.getParameter("description"));
             ServiceUtil.writeResponse(response, "{\"status\":1,\"action\":\"start\"}", ServiceUtil.JSON_MIME_TYPE); 
             return;
         } else if ("clear".equals(request.getParameter("action"))) {
