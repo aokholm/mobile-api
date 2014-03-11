@@ -303,17 +303,11 @@ td {
 					min = dataView.getValue(rows[i][0], freqCols[i]);
 					SS = 0;
 					timeView = Math.floor(ms.startTime + dataView.getValue(rows[i][0], 0)*1000);
-					console.log(timeView);
-					
 					date = new Date(timeView);
-					
-					console.log(date);
-					
 					timeStr = date.getFullYear() + "-" + ('0' + date.getMonth()).slice(-2)  + "-" + ('0' + date.getDay()).slice(-2) + " "
 					  + ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2) + ":" + ('0' + date.getSeconds()).slice(-2) 
 					  + "," + ('0000' + timeView%1000).slice(-3);
 					
-					console.log(timeStr);
 
 					for (var j = 0; j < rows[i].length; j++) {
 						val = dataView.getValue(rows[i][j], freqCols[i]);
