@@ -208,7 +208,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				authenticatedUser.setGender(object.getGender());
 			}
 			
-			if (!authenticatedUser.isVerified() && object.getVerified()) {
+			if (!authenticatedUser.isVerified() && object.getVerified() != null && object.getVerified()) {
 				authenticatedUser.setVerified(true);
 			}
 			
