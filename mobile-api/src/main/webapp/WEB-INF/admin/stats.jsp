@@ -27,11 +27,22 @@
     Number numberOfDevices = (Number) hibernateSession.createSQLQuery(
             "select count(*) from Device").uniqueResult();
 
+    List<Object[]> usersPerDay = hibernateSession.createSQLQuery(
+    	    "select date(from_unixtime(creationTime/1000)) as day, " + 
+    	           "count(*) as countPerDay, " +
+    	           "sum(if(passwordHash,1,0)) as password, " +
+    	           "sum(if(facebookId,1,0)) as facebook " +
+    	    "from User " +
+            "where from_unixtime(creationTime/1000) > '2014-03-20 00:00:00' " +
+    	    "group by date(from_unixtime(creationTime/1000)) " +
+            "order by date(from_unixtime(creationTime/1000)) desc").list();
+    
     List<Object[]> measurementsPerDay = hibernateSession.createSQLQuery(
        		"select date(from_unixtime(startTime/1000)) as day, count(*) as countPerDay " + 
        	    "from MeasurementSession " +
-       		"where from_unixtime(startTime/1000)>'2013-08-01 00:00:00' " +
-       	    "group by date(from_unixtime(startTime/1000))").list();
+       		"where from_unixtime(startTime/1000) > '2013-08-01 00:00:00' and from_unixtime(startTime/1000) < now() " +
+       	    "group by date(from_unixtime(startTime/1000)) " +
+       		"order by date(from_unixtime(startTime/1000)) desc").list();
 
     List<Object[]> measurementsPerCountry = hibernateSession.createSQLQuery(
     		"select country, count(*) " +
@@ -66,6 +77,15 @@
     <tr><td>Avg # of measurements per day:</td><td><%=Math.round(allTimeAvgMeasurementsPerDay.doubleValue())%></td></tr>
     <tr><td># of countries with measurements:</td><td><%=countriesWithMeasurements%></td></tr>
     <tr><td># of devices:</td><td><%=numberOfDevices%></td></tr>
+  </table>
+
+  <table>
+    <tr><th class="left">Date</th><th class="right"># of users</th><th class="right"># with password</th><th class="right"># with Facebook</th></tr>
+    <%
+    for (Object[] values : usersPerDay) {
+        %><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td><td class="right"><%=values[2]%></td><td class="right"><%=values[3]%></td></tr><%
+    }
+    %>
   </table>
 
   <table>
