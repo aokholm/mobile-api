@@ -7,7 +7,12 @@
     }
          
     Session hibernateSession = Model.get().getSessionFactory().openSession();
-         
+
+    Number numberOfMeasurements = (Number) hibernateSession.createSQLQuery(
+            "select count(*) " +
+            "from MeasurementSession " +
+            "where from_unixtime(startTime/1000)>'2013-08-01 00:00:00'").uniqueResult();
+
     Number allTimeAvgMeasurementsPerDay = (Number) hibernateSession.createSQLQuery(
     		"select avg(countPerDay) " +
     		"from (" +
@@ -37,6 +42,15 @@
     	    "group by date(from_unixtime(creationTime/1000)) " +
             "order by date(from_unixtime(creationTime/1000)) desc").list();
     
+    List<Object[]> devicesPerDayPerCountry = hibernateSession.createSQLQuery(
+    	    "select date(from_unixtime(creationTime/1000)) as day, " +
+    	    "country, " +
+    	    "count(*) as countPerDay " + 
+    	    "from Device " +
+    	    "where date(from_unixtime(creationTime/1000)) > date_sub(now(), interval 10 day) " +
+    	    "group by date(from_unixtime(creationTime/1000)), country " +
+    	    "order by date(from_unixtime(creationTime/1000)) desc, count(*) desc").list();
+
     List<Object[]> measurementsPerDay = hibernateSession.createSQLQuery(
        		"select date(from_unixtime(startTime/1000)) as day, count(*) as countPerDay " + 
        	    "from MeasurementSession " +
@@ -51,10 +65,14 @@
     		"group by d.country " +
     		"order by count(*) desc").list();
 
+    List<Object[]> deviceByOS = hibernateSession.createSQLQuery(
+    		"select os, count(*) from Device group by os order by count(*) desc").list();
+
     List<Object[]> models = hibernateSession.createSQLQuery(
             "select os, model, count(*) " +
             "from Device " +
             "group by os, model " +
+            "having count(*) > 200 " +
             "order by os, count(*) desc").list();
 
 %><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -74,6 +92,7 @@
 <body>
 
   <table>
+    <tr><td># of measurements:</td><td><%=numberOfMeasurements%></td></tr>
     <tr><td>Avg # of measurements per day:</td><td><%=Math.round(allTimeAvgMeasurementsPerDay.doubleValue())%></td></tr>
     <tr><td># of countries with measurements:</td><td><%=countriesWithMeasurements%></td></tr>
     <tr><td># of devices:</td><td><%=numberOfDevices%></td></tr>
@@ -84,6 +103,15 @@
     <%
     for (Object[] values : usersPerDay) {
         %><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td><td class="right"><%=values[2]%></td><td class="right"><%=values[3]%></td></tr><%
+    }
+    %>
+  </table>
+
+  <table>
+    <tr><th class="left">Date</th><th class="right">Country</th><th class="right"># of devices</th></tr>
+    <%
+    for (Object[] values : devicesPerDayPerCountry) {
+        %><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td><td class="right"><%=values[2]%></td></tr><%
     }
     %>
   </table>
@@ -101,6 +129,15 @@
     <tr><th class="left">Country</th><th class="right"># of measurements</th></tr>
     <%
     for (Object[] values : measurementsPerCountry) {
+        %><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td></tr><%
+    }
+    %>
+  </table>
+
+  <table>
+    <tr><th class="left">OS</th><th class="right">#</th></tr>
+    <%
+    for (Object[] values : deviceByOS) {
         %><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td></tr><%
     }
     %>
