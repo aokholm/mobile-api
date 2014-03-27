@@ -1,6 +1,7 @@
 package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -124,6 +125,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			json.put("fftLength", Integer.toString(phoneModel.getFFTLength(device.getOsVersion())));
 			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
 			json.put("hourOptions", HOUR_OPTIONS);
+			json.put("creationTime", device.getCreationTime());
 			//json.put("maxMapMarkers", MAX_MAP_MARKERS);
 			writeJSONResponse(resp, mapper, json);
 		}
