@@ -96,6 +96,7 @@ td {
 </head>
 <body>
 	<div id="col1">
+	 <div id="jsAnalysis"></div>
 		<div id="dashboard">
 			<c:forEach var="chart" items="${charts}" varStatus="theCount">
 				<div id="<c:out value="${chart.identifier}"/>"></div>
@@ -103,8 +104,7 @@ td {
 					<div id="control"></div>
 				</c:if>
 			</c:forEach>
-			<button onclick="changeRange();">Set time: 10:40</button>
-			<div id="jsAnalysis"></div>
+			<button onclick="changeRange();">Set time: 5:25</button>
 		</div>
 	</div>
 	<div id="col2">
@@ -143,8 +143,8 @@ td {
 		function changeRange() {
 			control.setState({
 				'range' : {
-					'start' : 10,
-					'end' : 40
+					'start' : 5,
+					'end' : 25
 				}
 			});
 			control.draw();
@@ -228,8 +228,8 @@ td {
 						},
 						'state' : {
 							'range' : {
-								'start' : 10,
-								'end' : 40
+								'start' : 5,
+								'end' : 25
 							}
 						}
 					});

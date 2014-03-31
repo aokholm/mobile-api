@@ -16,7 +16,7 @@
     
     for (String param : queryParams) {
     	if (request.getParameter(param) != null && request.getParameter(param) != "")
-    		whereClause = "where " + param + " = '" + request.getParameter(param) + "' ";
+    		whereClause = "where " + param + " like '" + request.getParameter(param) + "' ";
     }
     
     String limit = "1000";
