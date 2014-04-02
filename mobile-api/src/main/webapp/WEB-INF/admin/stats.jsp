@@ -49,6 +49,7 @@
     	    "from Device " +
     	    "where date(from_unixtime(creationTime/1000)) > date_sub(now(), interval 10 day) " +
     	    "group by date(from_unixtime(creationTime/1000)), country " +
+    	    "having count(*) > 5 " +
     	    "order by date(from_unixtime(creationTime/1000)) desc, count(*) desc").list();
 
     List<Object[]> measurementsPerDay = hibernateSession.createSQLQuery(
@@ -67,6 +68,14 @@
 
     List<Object[]> deviceByOS = hibernateSession.createSQLQuery(
     		"select os, count(*) from Device group by os order by count(*) desc").list();
+
+    List<Object[]> deviceByOSByMonth = hibernateSession.createSQLQuery(
+            "select year(from_unixtime(creationTime/1000)) as year, " +
+                   "month(from_unixtime(creationTime/1000)) as month, " +
+                   "os, count(*) " + 
+            "from Device " +
+            "group by year(from_unixtime(creationTime/1000)), month(from_unixtime(creationTime/1000)), os " +
+            "order by year(from_unixtime(creationTime/1000)) desc, month(from_unixtime(creationTime/1000)) desc, os").list();
 
     List<Object[]> models = hibernateSession.createSQLQuery(
             "select os, model, count(*) " +
@@ -108,7 +117,7 @@
   </table>
 
   <table>
-    <tr><th class="left">Date</th><th class="right">Country</th><th class="right"># of devices</th></tr>
+    <tr><th class="left">Date</th><th class="right">Country</th><th class="right"># of devices (>5)</th></tr>
     <%
     for (Object[] values : devicesPerDayPerCountry) {
         %><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td><td class="right"><%=values[2]%></td></tr><%
@@ -139,6 +148,15 @@
     <%
     for (Object[] values : deviceByOS) {
         %><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td></tr><%
+    }
+    %>
+  </table>
+
+  <table>
+    <tr><th class="left">Month</th><th class="left">OS</th><th class="right"># of devices</th></tr>
+    <%
+    for (Object[] values : deviceByOSByMonth) {
+        %><tr><td class="left"><%=values[0] + "-" + values[1]%></td><td class="left"><%=values[2]%></td><td class="right"><%=values[3]%></td></tr><%
     }
     %>
   </table>
