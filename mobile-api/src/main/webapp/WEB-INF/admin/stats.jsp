@@ -72,10 +72,11 @@
     List<Object[]> deviceByOSByMonth = hibernateSession.createSQLQuery(
             "select year(from_unixtime(creationTime/1000)) as year, " +
                    "month(from_unixtime(creationTime/1000)) as month, " +
-                   "os, count(*) " + 
+                   "sum(if(os='iPhone OS',1,0)) as ios, " +
+                   "sum(if(os='Android',1,0)) as android " + 
             "from Device " +
-            "group by year(from_unixtime(creationTime/1000)), month(from_unixtime(creationTime/1000)), os " +
-            "order by year(from_unixtime(creationTime/1000)) desc, month(from_unixtime(creationTime/1000)) desc, os").list();
+            "group by year(from_unixtime(creationTime/1000)), month(from_unixtime(creationTime/1000)) " +
+            "order by year(from_unixtime(creationTime/1000)) desc, month(from_unixtime(creationTime/1000)) desc").list();
 
     List<Object[]> models = hibernateSession.createSQLQuery(
             "select os, model, count(*) " +
@@ -153,10 +154,10 @@
   </table>
 
   <table>
-    <tr><th class="left">Month</th><th class="left">OS</th><th class="right"># of devices</th></tr>
+    <tr><th class="left">Month</th><th class="right"># of iOS devices</th><th class="right"># of Android devices</th></tr>
     <%
     for (Object[] values : deviceByOSByMonth) {
-        %><tr><td class="left"><%=values[0] + "-" + values[1]%></td><td class="left"><%=values[2]%></td><td class="right"><%=values[3]%></td></tr><%
+        %><tr><td class="left"><%=values[0] + "-" + values[1]%></td><td class="right"><%=values[2]%></td><td class="right"><%=values[3]%></td></tr><%
     }
     %>
   </table>
