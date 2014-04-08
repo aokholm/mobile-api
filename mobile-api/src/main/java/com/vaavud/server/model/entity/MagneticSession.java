@@ -25,10 +25,12 @@ public class MagneticSession extends IdEntity {
 	private Long id;
 	private String measurementSessionUuid;
     private Date creationTime = new Date();
-	private int startIndex;
-	private int endIndex;
-	private List<Float[]> points;
+    private Date startTime;
+	private int startIndex;       // magnetic point upload start index
+	private int endIndex;         // magnetic point upload end index
+	private List<Float[]> points; // magnetic points uploaded (not mapped to DB)
 	private List<MagneticPoint> magneticPoints = new ArrayList<MagneticPoint>();
+	private List<AccPoint> accPoints = new ArrayList<AccPoint>();
 	
 	public MagneticSession() {
 	}
@@ -63,6 +65,19 @@ public class MagneticSession extends IdEntity {
 		this.creationTime = creationTime;
 	}
 
+	@Type(type = "com.vaavud.server.model.hibernate.IntegerDateType")
+	public Date getStartTime() {
+		return startTime;
+	}
+
+	@SuppressWarnings("unused")
+	private void setStartTime(Date startTime) {
+		this.startTime = startTime;
+	}
+
+	/**
+	 * Magnetic points.
+	 */
 	@OneToMany(
 		cascade = {CascadeType.ALL},
 		mappedBy = "magneticSession",
@@ -77,6 +92,9 @@ public class MagneticSession extends IdEntity {
 		this.magneticPoints = magneticPoints;
 	}
 
+	/**
+	 * Magnetic point start index.
+	 */
 	@Transient
 	public int getStartIndex() {
 		return startIndex;
@@ -86,6 +104,9 @@ public class MagneticSession extends IdEntity {
 		this.startIndex = startIndex;
 	}
 
+	/**
+	 * Magnetic point end index.
+	 */
 	@Basic
 	public int getEndIndex() {
 		return endIndex;
@@ -95,6 +116,9 @@ public class MagneticSession extends IdEntity {
 		this.endIndex = endIndex;
 	}
 
+	/**
+	 * Magnetic points as floats.
+	 */
 	@Transient
 	public List<Float[]> getPoints() {
 		return points;
@@ -111,6 +135,20 @@ public class MagneticSession extends IdEntity {
 			num++;
 		}
 		return num;
+	}
+
+	@OneToMany(
+		cascade = {CascadeType.ALL},
+		mappedBy = "magneticSession",
+		fetch = FetchType.LAZY
+	)
+	@OnDelete(action = OnDeleteAction.CASCADE)
+	public List<AccPoint> getAccPoints() {
+		return accPoints;
+	}
+
+	public void setAccPoints(List<AccPoint> accPoints) {
+		this.accPoints = accPoints;
 	}
 
 	@Override
