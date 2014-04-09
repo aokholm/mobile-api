@@ -25,9 +25,9 @@ import com.vaavud.server.model.entity.LatLng;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
 
-public class MeasurementsService extends AbstractJSONService<MeasurementsService.RequestParameters> {
+public class HistoryService extends AbstractJSONService<HistoryService.RequestParameters> {
 
-	private static final Logger logger = Logger.getLogger(MeasurementsService.class);
+	private static final Logger logger = Logger.getLogger(HistoryService.class);
 	
 	private static final long TIME_LIMIT_MILLIS = 24L * 3600L * 1000L;
 	

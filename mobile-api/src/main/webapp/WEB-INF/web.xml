@@ -5,6 +5,10 @@
   <!-- Mobile API Servlets -->
   
   <servlet>
+    <servlet-name>HistoryService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.HistoryService</servlet-class>
+  </servlet>
+  <servlet>
     <servlet-name>MagneticMeasureService</servlet-name>
     <servlet-class>com.vaavud.server.api.mobile.MagneticMeasureService</servlet-class>
   </servlet>
@@ -54,6 +58,10 @@
   
   <!-- Mobile API Mappings -->
   
+  <servlet-mapping>
+    <servlet-name>HistoryService</servlet-name>
+    <url-pattern>/api/history</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>MagneticMeasureService</servlet-name>
     <url-pattern>/api/magnetic/measure</url-pattern>
