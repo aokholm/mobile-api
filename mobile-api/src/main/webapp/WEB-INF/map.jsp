@@ -59,7 +59,7 @@
           var marker = new google.maps.Marker({
               position: new google.maps.LatLng(measurement.position.latitude,measurement.position.longitude),
               map: map,
-              icon: (measurement.iconNum == 0) ? "/gfx/WindMarker.png" : "/gfx/WindMarker2.png"
+              icon: (measurement.iconNum == 0) ? "/gfx/MapMarkerRed.png" : "/gfx/MapMarkerBlue.png"
           });
           var infowindow = new google.maps.InfoWindow({
               content: "Start Time: " + (new Date(measurement.startTime)) + "<br/>" +
