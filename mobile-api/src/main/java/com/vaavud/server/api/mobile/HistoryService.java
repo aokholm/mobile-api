@@ -38,29 +38,29 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	
 	public static class RequestParameters implements Serializable {
 		
-		private Date latestStartTime;
-		private String hashedUUIDs;
+		private Date latestEndTime;
+		private String hash;
 		
-		public Date getLatestStartTime() {
-			return latestStartTime;
+		public Date getLatestEndTime() {
+			return latestEndTime;
 		}
 		
-		public void setLatestStartTime(Date latestStartTime) {
-			this.latestStartTime = latestStartTime;
+		public void setLatestEndTime(Date latestEndTime) {
+			this.latestEndTime = latestEndTime;
 		}
 		
-		public String getHashedUUIDs() {
-			return hashedUUIDs;
+		public String getHash() {
+			return hash;
 		}
 		
-		public void setHashedUUIDs(String hashedUUIDs) {
-			this.hashedUUIDs = hashedUUIDs;
+		public void setHash(String hash) {
+			this.hash = hash;
 		}
 		
 		@Override
 		public String toString() {
-			return "RequestParameters [latestStartTime=" + latestStartTime
-					+ ", hashedUUIDs=" + hashedUUIDs + "]";
+			return "RequestParameters [latestEndTime=" + latestEndTime
+					+ ", hash=" + hash + "]";
 		}
 	}
 	
@@ -68,6 +68,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 
 		private String uuid;
 	    private Date startTime;
+	    private Date endTime;
 	    private Double latitude;
 	    private Double longitude;
 	    private Float windSpeedAvg;
@@ -79,6 +80,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    public ResponseObject(MeasurementSession measurementSession) {
 	    	this.uuid = measurementSession.getUuid();
 	    	this.startTime = measurementSession.getStartTime();
+	    	this.endTime = measurementSession.getEndTime();
 	    	if (measurementSession.getPosition() != null &&
 	    			measurementSession.getPosition().getLatitude() != null && measurementSession.getPosition().getLongitude() != null &&
 	    			measurementSession.getPosition().getLatitude() != 0D && measurementSession.getPosition().getLongitude() != 0D) {
@@ -105,6 +107,14 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 			this.startTime = startTime;
 		}
 		
+		public Date getEndTime() {
+			return endTime;
+		}
+
+		public void setEndTime(Date endTime) {
+			this.endTime = endTime;
+		}
+
 		public Double getLatitude() {
 			return latitude;
 		}
@@ -156,30 +166,32 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		
 		Date returnMeasurementsFrom = new Date(0L);
 		
-		if (object != null && object.getLatestStartTime() != null && object.getHashedUUIDs() != null) {
+		if (object != null && object.getLatestEndTime() != null && object.getHash() != null) {
 			@SuppressWarnings("unchecked")
-			List<String> uuids = (List<String>) hibernateSession.createQuery(
-					"select s.uuid from MeasurementSession s where s.device.user.id=:userId and s.startTime<=:startTime order by s.startTime")
+			List<Object[]> uuids = (List<Object[]>) hibernateSession.createQuery(
+					"select s.uuid, s.endTime from MeasurementSession s where s.device.user.id=:userId and s.endTime<=:endTime order by s.endTime")
 					.setLong("userId", authenticatedDevice.getUser().getId())
-					.setLong("startTime", object.getLatestStartTime().getTime()).list();
+					.setLong("endTime", object.getLatestEndTime().getTime()).list();
 			
-			StringBuilder sb = new StringBuilder(uuids.size() * 36);
-			for (String uuid : uuids) {
-				sb.append(uuid);
+			StringBuilder sb = new StringBuilder(uuids.size() * (36 + 10));
+			for (Object[] values : uuids) {
+				String endTimeSecondsString = Long.toString((long) Math.ceil(((double) ((Date) values[1]).getTime()) / 1000D));
+				sb.append(values[0]);
+				sb.append(endTimeSecondsString);
 			}
 			String serverHashedUUIDs = UUIDUtil.md5Hash(sb.toString().toUpperCase(Locale.US));
-			logger.info("Server hashed UUIDs: " + serverHashedUUIDs + " until " + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(object.getLatestStartTime())) + " (" + object.getLatestStartTime().getTime() + "), client hashed UUIDs: " + object.getHashedUUIDs());
+			logger.info("Server hash: " + serverHashedUUIDs + " until " + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(object.getLatestEndTime())) + " (" + object.getLatestEndTime().getTime() + "), client hash: " + object.getHash());
 			
-			if (serverHashedUUIDs.equals(object.getHashedUUIDs())) {
-				returnMeasurementsFrom = object.getLatestStartTime();
+			if (serverHashedUUIDs.equals(object.getHash())) {
+				returnMeasurementsFrom = object.getLatestEndTime();
 			}
 		}
 
 		@SuppressWarnings("unchecked")
 		List<MeasurementSession> measurements = (List<MeasurementSession>) hibernateSession.createQuery(
-				"select s from MeasurementSession s where s.device.user.id=:userId and s.startTime>:startTime")
+				"select s from MeasurementSession s where s.device.user.id=:userId and s.endTime>:endTime")
 				.setLong("userId", authenticatedDevice.getUser().getId())
-				.setLong("startTime", returnMeasurementsFrom.getTime()).list();
+				.setLong("endTime", returnMeasurementsFrom.getTime()).list();
 		
 		logger.info("Found " + measurements.size() + " measurements");
 		
@@ -189,7 +201,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		}
 		
 		Map<String,Object> responseMap = new HashMap<String,Object>();
-		responseMap.put("fromStartTime", returnMeasurementsFrom);
+		responseMap.put("fromEndTime", returnMeasurementsFrom);
 		responseMap.put("measurements", responseList);
 		
 		writeJSONResponse(resp, mapper, responseMap);
