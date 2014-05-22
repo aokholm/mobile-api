@@ -27,6 +27,7 @@ import com.vaavud.server.api.UnauthorizedException;
 import com.vaavud.server.api.util.json.DeviceByUUIDModule;
 import com.vaavud.server.api.util.json.DirectLatLngModule;
 import com.vaavud.server.model.entity.Device;
+import com.vaavud.server.model.entity.IdEntity;
 import com.vaavud.server.model.entity.LatLng;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
@@ -64,7 +65,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		}
 	}
 	
-	public static class ResponseObject implements Serializable {
+	public static class ResponseSessionObject implements Serializable {
 
 		private String uuid;
 	    private Date startTime;
@@ -73,11 +74,12 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    private Double longitude;
 	    private Float windSpeedAvg;
 	    private Float windSpeedMax;
+	    private ResponsePointObject[] points;
 	    
-	    public ResponseObject() {
+	    public ResponseSessionObject() {
 	    }
 	    
-	    public ResponseObject(MeasurementSession measurementSession) {
+	    public ResponseSessionObject(MeasurementSession measurementSession) {
 	    	this.uuid = measurementSession.getUuid();
 	    	this.startTime = measurementSession.getStartTime();
 	    	this.endTime = measurementSession.getEndTime();
@@ -89,6 +91,21 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	}
 	    	this.windSpeedAvg = measurementSession.getWindSpeedAvg();
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
+	    	
+	    	List<MeasurementPoint> originalPoints = measurementSession.getPoints();
+	    	List<ResponsePointObject> points = new ArrayList<ResponsePointObject>(originalPoints.size());
+	    	
+	    	if (originalPoints.size() > 1000) {
+	    		logger.warn("History service requesting session with more than 1000 points, skipping");
+	    	}
+	    	else {
+		    	for (MeasurementPoint point : originalPoints) {
+		    		if (point.getTime() != null && point.getWindSpeed() != null && point.getWindSpeed() >= 0.0) {
+		    			points.add(new ResponsePointObject(point));
+		    		}
+		    	}
+	    	}
+	    	this.points = points.toArray(new ResponsePointObject[points.size()]);
 	    }
 	    
 		public String getUuid() {
@@ -146,8 +163,48 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		public void setWindSpeedMax(Float windSpeedMax) {
 			this.windSpeedMax = windSpeedMax;
 		}
+
+		public ResponsePointObject[] getPoints() {
+			return points;
+		}
+
+		public void setPoints(ResponsePointObject[] points) {
+			this.points = points;
+		}
 	}
 			
+	public static class ResponsePointObject implements Serializable {
+	
+		private Date time;
+		private Float speed;
+		
+		public ResponsePointObject(Date time, Float speed) {
+			this.time = time;
+			this.speed = speed;
+		}
+
+		public ResponsePointObject(MeasurementPoint point) {
+			this.time = point.getTime();
+			this.speed = point.getWindSpeed();
+		}
+
+		public Date getTime() {
+			return time;
+		}
+		
+		public void setTime(Date time) {
+			this.time = time;
+		}
+		
+		public Float getSpeed() {
+			return speed;
+		}
+		
+		public void setSpeed(Float speed) {
+			this.speed = speed;
+		}
+	}
+	
 	@Override
 	protected Class<RequestParameters> type() {
 		return RequestParameters.class;
@@ -169,21 +226,41 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		if (object != null && object.getLatestEndTime() != null && object.getHash() != null) {
 			@SuppressWarnings("unchecked")
 			List<Object[]> uuids = (List<Object[]>) hibernateSession.createQuery(
-					"select s.uuid, s.endTime from MeasurementSession s where s.device.user.id=:userId and s.endTime<=:endTime order by s.endTime")
-					.setLong("userId", authenticatedDevice.getUser().getId())
-					.setLong("endTime", object.getLatestEndTime().getTime()).list();
+					"select s.uuid, s.endTime from MeasurementSession s where s.device.user.id=:userId order by s.endTime")
+					.setLong("userId", authenticatedDevice.getUser().getId()).list();
 			
-			StringBuilder sb = new StringBuilder(uuids.size() * (36 + 10));
-			for (Object[] values : uuids) {
-				String endTimeSecondsString = Long.toString((long) Math.ceil(((double) ((Date) values[1]).getTime()) / 1000D));
-				sb.append(values[0]);
-				sb.append(endTimeSecondsString);
+			StringBuilder sb1 = new StringBuilder(uuids.size() * (36 + 10));
+			String nextUuid = null;
+			for (int i = 0; i < uuids.size(); i++) {
+				Object[] values = uuids.get(i);
+				Date endTime = (Date) values[1];
+				
+				if (endTime.getTime() <= object.getLatestEndTime().getTime()) {
+					String endTimeSecondsString = Long.toString((long) Math.ceil(((double) endTime.getTime()) / 1000D));
+					sb1.append(values[0]);
+					sb1.append(endTimeSecondsString);
+				}
+				else {
+					nextUuid = (String) values[0];
+					break;
+				}
 			}
-			String serverHashedUUIDs = UUIDUtil.md5Hash(sb.toString().toUpperCase(Locale.US));
+			String serverHashedUUIDs = UUIDUtil.md5Hash(sb1.toString().toUpperCase(Locale.US));
 			logger.info("Server hash: " + serverHashedUUIDs + " until " + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(object.getLatestEndTime())) + " (" + object.getLatestEndTime().getTime() + "), client hash: " + object.getHash());
 			
 			if (serverHashedUUIDs.equals(object.getHash())) {
 				returnMeasurementsFrom = object.getLatestEndTime();
+			}
+			else if (nextUuid != null) {
+				// mismatch might be due to the latest session still in progress, so test if this is the case
+				String endTimeSecondsString = Long.toString((long) Math.ceil(((double) object.getLatestEndTime().getTime()) / 1000D));
+				sb1.append(nextUuid);
+				sb1.append(endTimeSecondsString);
+				serverHashedUUIDs = UUIDUtil.md5Hash(sb1.toString().toUpperCase(Locale.US));
+				logger.info("Modified server hash: " + serverHashedUUIDs + " until " + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(object.getLatestEndTime())) + " (" + object.getLatestEndTime().getTime() + "), client hash: " + object.getHash());
+				if (serverHashedUUIDs.equals(object.getHash())) {
+					returnMeasurementsFrom = object.getLatestEndTime();
+				}
 			}
 		}
 
@@ -195,9 +272,9 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		
 		logger.info("Found " + measurements.size() + " measurements");
 		
-		List<ResponseObject> responseList = new ArrayList<ResponseObject>(measurements.size());
+		List<ResponseSessionObject> responseList = new ArrayList<ResponseSessionObject>(measurements.size());
 		for (MeasurementSession measurementSession : measurements) {
-			responseList.add(new ResponseObject(measurementSession));
+			responseList.add(new ResponseSessionObject(measurementSession));
 		}
 		
 		Map<String,Object> responseMap = new HashMap<String,Object>();
