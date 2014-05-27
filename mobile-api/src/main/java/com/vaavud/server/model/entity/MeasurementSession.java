@@ -19,6 +19,7 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Index;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
@@ -35,6 +36,7 @@ public class MeasurementSession extends IdEntity {
 	private String source;
     private boolean measuring = false;
     private boolean uploaded = false;
+    private boolean deleted = false;
     private int startIndex = 0;
     private int endIndex = 0;
     private Long timezoneOffset;
@@ -117,6 +119,16 @@ public class MeasurementSession extends IdEntity {
 
 	public void setUploaded(boolean uploaded) {
 		this.uploaded = uploaded;
+	}
+
+	@Index(name = "deletedIndex")
+	@Column(columnDefinition = "bit", length = 1, nullable = false)
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
 	}
 
 	@Column(nullable = false)
@@ -229,7 +241,7 @@ public class MeasurementSession extends IdEntity {
 	@Override
 	public String toString() {
 		return "MeasurementSession [id=" + id + ", uuid=" + uuid
-				+ ", measuring=" + measuring + ", uploaded=" + uploaded
+				+ ", measuring=" + measuring + ", uploaded=" + uploaded + ", deleted=" + deleted
 				+ ", startIndex=" + startIndex + ", endIndex=" + endIndex
 				+ ", creationTime=" + creationTime + ", startTime=" + startTime
 				+ ", endTime=" + endTime + ", position=" + position

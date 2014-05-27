@@ -226,7 +226,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		if (object != null && object.getLatestEndTime() != null && object.getHash() != null) {
 			@SuppressWarnings("unchecked")
 			List<Object[]> uuids = (List<Object[]>) hibernateSession.createQuery(
-					"select s.uuid, s.endTime from MeasurementSession s where s.device.user.id=:userId order by s.endTime")
+					"select s.uuid, s.endTime from MeasurementSession s where s.deleted=0 and s.device.user.id=:userId order by s.endTime")
 					.setLong("userId", authenticatedDevice.getUser().getId()).list();
 			
 			StringBuilder sb1 = new StringBuilder(uuids.size() * (36 + 10));
@@ -266,7 +266,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 
 		@SuppressWarnings("unchecked")
 		List<MeasurementSession> measurements = (List<MeasurementSession>) hibernateSession.createQuery(
-				"select s from MeasurementSession s where s.device.user.id=:userId and s.endTime>:endTime")
+				"select s from MeasurementSession s where s.deleted=0 and s.device.user.id=:userId and s.endTime>:endTime")
 				.setLong("userId", authenticatedDevice.getUser().getId())
 				.setLong("endTime", returnMeasurementsFrom.getTime()).list();
 		

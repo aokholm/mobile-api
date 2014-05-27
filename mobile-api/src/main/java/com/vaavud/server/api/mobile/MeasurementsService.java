@@ -2,11 +2,8 @@ package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,12 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
-import com.vaavud.server.api.util.json.DeviceByUUIDModule;
-import com.vaavud.server.api.util.json.DirectLatLngModule;
 import com.vaavud.server.model.entity.Device;
-import com.vaavud.server.model.entity.LatLng;
-import com.vaavud.server.model.entity.MeasurementPoint;
-import com.vaavud.server.model.entity.MeasurementSession;
 
 public class MeasurementsService extends AbstractJSONService<MeasurementsService.RequestParameters> {
 
@@ -40,6 +32,11 @@ public class MeasurementsService extends AbstractJSONService<MeasurementsService
 
 		public void setStartTime(Date startTime) {
 			this.startTime = startTime;
+		}
+
+		@Override
+		public String toString() {
+			return "RequestParameters [startTime=" + startTime + "]";
 		}
 	}
 			
@@ -63,7 +60,13 @@ public class MeasurementsService extends AbstractJSONService<MeasurementsService
 				startTime = new Date(System.currentTimeMillis() - TIME_LIMIT_MILLIS);
 			}
 
-			List<Object[]> measurements = hibernateSession.createSQLQuery("select latitude, longitude, startTime, windSpeedAvg, windSpeedMax from MeasurementSession where startTime>:startTime and latitude is not null and longitude is not null and windSpeedAvg is not null").setLong("startTime", startTime.getTime()).list();
+			List<Object[]> measurements = hibernateSession.createSQLQuery(
+					"select latitude, longitude, startTime, windSpeedAvg, windSpeedMax " + 
+					"from MeasurementSession " + 
+					"where deleted=0 and startTime>:startTime and " + 
+					"latitude is not null and longitude is not null and " +
+					"windSpeedAvg is not null")
+					.setLong("startTime", startTime.getTime()).list();
 			
 			writeJSONResponse(resp, mapper, measurements);
 		}

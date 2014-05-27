@@ -5,6 +5,10 @@
   <!-- Mobile API Servlets -->
   
   <servlet>
+    <servlet-name>DeleteMeasurementService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.DeleteMeasurementService</servlet-class>
+  </servlet>
+  <servlet>
     <servlet-name>HistoryService</servlet-name>
     <servlet-class>com.vaavud.server.api.mobile.HistoryService</servlet-class>
   </servlet>
@@ -58,6 +62,10 @@
   
   <!-- Mobile API Mappings -->
   
+  <servlet-mapping>
+    <servlet-name>DeleteMeasurementService</servlet-name>
+    <url-pattern>/api/measurement/delete</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>HistoryService</servlet-name>
     <url-pattern>/api/history</url-pattern>
