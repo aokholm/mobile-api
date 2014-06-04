@@ -68,6 +68,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	public static class ResponseSessionObject implements Serializable {
 
 		private String uuid;
+		private String deviceUuid;
 	    private Date startTime;
 	    private Date endTime;
 	    private Double latitude;
@@ -81,6 +82,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    
 	    public ResponseSessionObject(MeasurementSession measurementSession) {
 	    	this.uuid = measurementSession.getUuid();
+	    	this.deviceUuid = measurementSession.getDevice().getUuid();
 	    	this.startTime = measurementSession.getStartTime();
 	    	this.endTime = measurementSession.getEndTime();
 	    	if (measurementSession.getPosition() != null &&
@@ -116,6 +118,14 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 			this.uuid = uuid;
 		}
 		
+		public String getDeviceUuid() {
+			return deviceUuid;
+		}
+
+		public void setDeviceUuid(String deviceUuid) {
+			this.deviceUuid = deviceUuid;
+		}
+
 		public Date getStartTime() {
 			return startTime;
 		}
