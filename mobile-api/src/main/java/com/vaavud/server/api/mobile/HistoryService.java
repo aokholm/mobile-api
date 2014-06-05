@@ -80,7 +80,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    public ResponseSessionObject() {
 	    }
 	    
-	    public ResponseSessionObject(MeasurementSession measurementSession) {
+	    public ResponseSessionObject(MeasurementSession measurementSession, Session hibernateSession) {
 	    	this.uuid = measurementSession.getUuid();
 	    	this.deviceUuid = measurementSession.getDevice().getUuid();
 	    	this.startTime = measurementSession.getStartTime();
@@ -94,20 +94,22 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.windSpeedAvg = measurementSession.getWindSpeedAvg();
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
 	    	
-	    	List<MeasurementPoint> originalPoints = measurementSession.getPoints();
-	    	List<ResponsePointObject> points = new ArrayList<ResponsePointObject>(originalPoints.size());
-	    	
-	    	if (originalPoints.size() > 1000) {
-	    		logger.warn("History service requesting session with more than 1000 points, skipping");
+	    	Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
+	    	if (numberOfPoints.intValue() > 500) {
+	    		logger.warn("History service requesting session with more than 500 points, skipping");
+	    		this.points = new ResponsePointObject[0];
 	    	}
 	    	else {
+		    	List<MeasurementPoint> originalPoints = measurementSession.getPoints();
+		    	List<ResponsePointObject> points = new ArrayList<ResponsePointObject>(originalPoints.size());
+		    	
 		    	for (MeasurementPoint point : originalPoints) {
 		    		if (point.getTime() != null && point.getWindSpeed() != null && point.getWindSpeed() >= 0.0) {
 		    			points.add(new ResponsePointObject(point));
 		    		}
 		    	}
+		    	this.points = points.toArray(new ResponsePointObject[points.size()]);
 	    	}
-	    	this.points = points.toArray(new ResponsePointObject[points.size()]);
 	    }
 	    
 		public String getUuid() {
@@ -231,6 +233,8 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		
 		logger.info("User " + authenticatedDevice.getUser().getEmail() + " and ID " + authenticatedDevice.getUser().getId());
 		
+		long startTimeNanos = System.nanoTime();
+		
 		Date returnMeasurementsFrom = new Date(0L);
 		
 		if (object != null && object.getLatestEndTime() != null && object.getHash() != null) {
@@ -284,14 +288,18 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		
 		List<ResponseSessionObject> responseList = new ArrayList<ResponseSessionObject>(measurements.size());
 		for (MeasurementSession measurementSession : measurements) {
-			responseList.add(new ResponseSessionObject(measurementSession));
+			responseList.add(new ResponseSessionObject(measurementSession, hibernateSession));
 		}
 		
 		Map<String,Object> responseMap = new HashMap<String,Object>();
 		responseMap.put("fromEndTime", returnMeasurementsFrom);
 		responseMap.put("measurements", responseList);
 		
+		logger.info("Processing time: " + ((System.nanoTime() - startTimeNanos) / 1000000D) + " ms");
+		
 		writeJSONResponse(resp, mapper, responseMap);
+
+		logger.info("Total time: " + ((System.nanoTime() - startTimeNanos) / 1000000D) + " ms");
 	}
 
 	@Override
