@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,8 @@ import com.vaavud.util.UUIDUtil;
 public class HistoryService extends AbstractJSONService<HistoryService.RequestParameters> {
 
 	private static final Logger logger = Logger.getLogger(HistoryService.class);
+	
+	private static final int MAX_NUMBER_OF_RETURNED_POINTS = 100;
 	
 	public static class RequestParameters implements Serializable {
 		
@@ -80,7 +83,8 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    public ResponseSessionObject() {
 	    }
 	    
-	    public ResponseSessionObject(MeasurementSession measurementSession, Session hibernateSession) {
+	    @SuppressWarnings("unchecked")
+		public ResponseSessionObject(MeasurementSession measurementSession, Session hibernateSession) {
 	    	this.uuid = measurementSession.getUuid();
 	    	this.deviceUuid = measurementSession.getDevice().getUuid();
 	    	this.startTime = measurementSession.getStartTime();
@@ -94,22 +98,28 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.windSpeedAvg = measurementSession.getWindSpeedAvg();
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
 	    	
+	    	List<MeasurementPoint> originalPoints;
 	    	Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
-	    	if (numberOfPoints.intValue() > 500) {
-	    		logger.warn("History service requesting session with more than 500 points, skipping");
-	    		this.points = new ResponsePointObject[0];
+	    	if (numberOfPoints.intValue() > MAX_NUMBER_OF_RETURNED_POINTS) {
+	    		SQLQuery query = hibernateSession.createSQLQuery("select * from MeasurementPoint where session_id=:sessionId and id mod :modulo = 0 order by id");
+	    		query.setLong("sessionId", measurementSession.getId());
+	    		query.setLong("modulo", (long) Math.ceil(numberOfPoints.doubleValue() / (double) MAX_NUMBER_OF_RETURNED_POINTS));
+	    		query.addEntity(MeasurementPoint.class);
+	    		originalPoints = query.list();
+	    		logger.warn("History service requesting session with more than " + MAX_NUMBER_OF_RETURNED_POINTS + " points (" + numberOfPoints + "), returning " + originalPoints.size() + " instead");
 	    	}
 	    	else {
-		    	List<MeasurementPoint> originalPoints = measurementSession.getPoints();
-		    	List<ResponsePointObject> points = new ArrayList<ResponsePointObject>(originalPoints.size());
-		    	
-		    	for (MeasurementPoint point : originalPoints) {
-		    		if (point.getTime() != null && point.getWindSpeed() != null && point.getWindSpeed() >= 0.0) {
-		    			points.add(new ResponsePointObject(point));
-		    		}
-		    	}
-		    	this.points = points.toArray(new ResponsePointObject[points.size()]);
+	    		originalPoints = measurementSession.getPoints();
 	    	}
+
+	    	List<ResponsePointObject> points = new ArrayList<ResponsePointObject>(originalPoints.size());
+		    	
+	    	for (MeasurementPoint point : originalPoints) {
+	    		if (point.getTime() != null && point.getWindSpeed() != null && point.getWindSpeed() >= 0.0) {
+	    			points.add(new ResponsePointObject(point));
+	    		}
+	    	}
+	    	this.points = points.toArray(new ResponsePointObject[points.size()]);
 	    }
 	    
 		public String getUuid() {
