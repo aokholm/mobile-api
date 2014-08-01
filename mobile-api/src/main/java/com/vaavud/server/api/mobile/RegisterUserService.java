@@ -229,6 +229,15 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			// use authToken from device			
 			authToken = authenticatedDevice.getAuthToken();			
 
+			// check if user has measurements
+			boolean hasMeasurements = false;
+			if (existingUser != null) {
+				Number count = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementSession s, Device d where s.device_id=d.id and d.user_id=:userId and s.windSpeedAvg>0").setLong("userId", existingUser.getId()).uniqueResult();
+				if (count != null && count.intValue() > 0) {
+					hasMeasurements = true;
+				}
+			}
+			
 			// commit
 			hibernateSession.getTransaction().commit();
 			hibernateSession.beginTransaction();
@@ -237,7 +246,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			if (authToken == null || authToken.trim().isEmpty()) {
 				logger.error("AuthToken not supposed to be null or empty here");
 				throw new IllegalStateException();
-			}
+			}			
 			
 			Map<String,Object> json = new HashMap<String,Object>();
 			json.put("authToken", authToken);
@@ -246,6 +255,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			json.put("email", authenticatedUser.getEmail());
 			json.put("firstName", authenticatedUser.getFirstName());
 			json.put("lastName", authenticatedUser.getLastName());
+			json.put("hasWindMeter", hasMeasurements);
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
