@@ -1,8 +1,11 @@
 package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,7 +30,18 @@ import com.vaavud.server.model.entity.User;
 public class RegisterUserService extends AbstractJSONService<Input> {
 
 	private static final Logger logger = Logger.getLogger(RegisterUserService.class);
-			
+	
+	private static final Set<String> enableShareFeatureFacebookIds = new HashSet<String>(Arrays.asList(
+			"100007800124397", // Open Graph Test User
+			"566581357", // Thomas Ambus
+			"628147726", // Juan
+			"100000830246266", // Thomas Helms
+			"100000398003125", // Helder
+			"1565954635", // Andreas
+			"100000704153960", // Ditte
+			"605310060" // Maria
+		));
+	
 	@Override
 	protected Class<Input> type() {
 		return Input.class;
@@ -246,7 +260,14 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			if (authToken == null || authToken.trim().isEmpty()) {
 				logger.error("AuthToken not supposed to be null or empty here");
 				throw new IllegalStateException();
-			}			
+			}
+			
+			boolean enableShareFeature = false;
+			if (authenticatedUser.getFacebookId() != null) {
+				if (enableShareFeatureFacebookIds.contains(authenticatedUser.getFacebookId())) {
+					enableShareFeature = true;
+				}
+			}
 			
 			Map<String,Object> json = new HashMap<String,Object>();
 			json.put("authToken", authToken);
@@ -256,6 +277,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			json.put("firstName", authenticatedUser.getFirstName());
 			json.put("lastName", authenticatedUser.getLastName());
 			json.put("hasWindMeter", hasMeasurements);
+			json.put("enableShareFeature", enableShareFeature);
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
