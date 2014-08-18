@@ -31,6 +31,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 
 	private static final Logger logger = Logger.getLogger(RegisterUserService.class);
 	
+	/*
 	private static final Set<String> enableShareFeatureFacebookIds = new HashSet<String>(Arrays.asList(
 			"100007800124397", // Open Graph Test User
 			"566581357", // Thomas Ambus
@@ -41,6 +42,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			"100000704153960", // Ditte
 			"605310060" // Maria
 		));
+	*/
 	
 	@Override
 	protected Class<Input> type() {
@@ -262,13 +264,6 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				throw new IllegalStateException();
 			}
 			
-			boolean enableShareFeature = false;
-			if (authenticatedUser.getFacebookId() != null) {
-				if (enableShareFeatureFacebookIds.contains(authenticatedUser.getFacebookId())) {
-					enableShareFeature = true;
-				}
-			}
-			
 			Map<String,Object> json = new HashMap<String,Object>();
 			json.put("authToken", authToken);
 			json.put("status", (existingUser == null) ? "CREATED" : "PAIRED");
@@ -277,7 +272,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			json.put("firstName", authenticatedUser.getFirstName());
 			json.put("lastName", authenticatedUser.getLastName());
 			json.put("hasWindMeter", hasMeasurements);
-			json.put("enableShareFeature", enableShareFeature);
+			json.put("enableShareFeature", true);
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
