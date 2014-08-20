@@ -126,6 +126,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
 			json.put("hourOptions", HOUR_OPTIONS);
 			json.put("creationTime", device.getCreationTime());
+			json.put("enableShareFeature", true);
 			//json.put("maxMapMarkers", MAX_MAP_MARKERS);
 			writeJSONResponse(resp, mapper, json);
 		}
