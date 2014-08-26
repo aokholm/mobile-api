@@ -61,6 +61,7 @@ public class MeasurementSession extends IdEntity {
     	setWindSpeedAvg(other.getWindSpeedAvg());
     	setWindSpeedMax(other.getWindSpeedMax());
     	setWindDirection(other.getWindDirection());
+    	setTemperature(other.getTemperature());
     }
     
 	@Id @GeneratedValue(strategy=GenerationType.AUTO)
