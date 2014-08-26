@@ -78,6 +78,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    private Double longitude;
 	    private Float windSpeedAvg;
 	    private Float windSpeedMax;
+	    private Float temperature;
 	    private ResponsePointObject[] points;
 	    
 	    public ResponseSessionObject() {
@@ -97,6 +98,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	}
 	    	this.windSpeedAvg = measurementSession.getWindSpeedAvg();
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
+	    	this.temperature = measurementSession.getTemperature();
 	    	
 	    	List<MeasurementPoint> originalPoints;
 	    	Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
