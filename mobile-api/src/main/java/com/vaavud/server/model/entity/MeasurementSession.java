@@ -46,6 +46,7 @@ public class MeasurementSession extends IdEntity {
     private Float windSpeedAvg;
     private Float windSpeedMax;
     private Float windDirection;
+    private Float temperature;
     private List<MeasurementPoint> points = new ArrayList<MeasurementPoint>();
 	
     public void setFrom(MeasurementSession other) {
@@ -223,6 +224,15 @@ public class MeasurementSession extends IdEntity {
 		this.windDirection = windDirection;
 	}
 	
+	@Basic
+	public Float getTemperature() {
+		return temperature;
+	}
+
+	public void setTemperature(Float temperature) {
+		this.temperature = temperature;
+	}
+
 	@OneToMany(
 		cascade = {CascadeType.ALL},
 		mappedBy = "session",
@@ -246,6 +256,7 @@ public class MeasurementSession extends IdEntity {
 				+ ", creationTime=" + creationTime + ", startTime=" + startTime
 				+ ", endTime=" + endTime + ", position=" + position
 				+ ", windSpeedAvg=" + windSpeedAvg + ", windSpeedMax="
-				+ windSpeedMax + ", windDirection=" + windDirection + "]";
+				+ windSpeedMax + ", windDirection=" + windDirection
+				+ ", temperature=" + temperature + "]";
 	}
 }
