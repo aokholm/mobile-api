@@ -53,11 +53,13 @@
     	    "order by date(from_unixtime(creationTime/1000)) desc, count(*) desc").list();
 
     List<Object[]> measurementsPerDay = hibernateSession.createSQLQuery(
-       		"select date(from_unixtime(startTime/1000)) as day, count(*) as countPerDay " + 
-       	    "from MeasurementSession " +
-       		"where from_unixtime(startTime/1000) > '2013-08-01 00:00:00' and from_unixtime(startTime/1000) < now() " +
-       	    "group by date(from_unixtime(startTime/1000)) " +
-       		"order by date(from_unixtime(startTime/1000)) desc").list();
+    		"select date(from_unixtime(startTime/1000)) as day, count(*) as countPerDay, " +
+            "sum(if(strcmp(d.os,'iPhone OS')=0,1,0)) as iPhone, " +
+    		"sum(if(strcmp(d.os,'Android')=0,1,0)) as android " +
+            "from MeasurementSession s,Device d " +
+    		"where s.device_id=d.id and from_unixtime(startTime/1000) > '2013-08-01 00:00:00' and from_unixtime(startTime/1000) < now() " +
+            "group by date(from_unixtime(startTime/1000)) " +
+    		"order by date(from_unixtime(startTime/1000)) desc;").list();
 
     List<Object[]> measurementsPerCountry = hibernateSession.createSQLQuery(
     		"select country, count(*) " +
@@ -127,10 +129,10 @@
   </table>
 
   <table>
-    <tr><th class="left">Date</th><th class="right"># of measurements</th></tr>
+    <tr><th class="left">Date</th><th class="right"># of measurements</th><th class="right"># on iPhone</th><th class="right"># on Android</th></tr>
     <%
     for (Object[] values : measurementsPerDay) {
-    	%><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td></tr><%
+    	%><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td><td class="right"><%=values[2]%></td><td class="right"><%=values[3]%></td></tr><%
     }
     %>
   </table>
