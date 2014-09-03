@@ -55,7 +55,10 @@
     List<Object[]> measurementsPerDay = hibernateSession.createSQLQuery(
     		"select date(from_unixtime(startTime/1000)) as day, count(*) as countPerDay, " +
             "sum(if(strcmp(d.os,'iPhone OS')=0,1,0)) as iPhone, " +
-    		"sum(if(strcmp(d.os,'Android')=0,1,0)) as android " +
+    		"sum(if(strcmp(d.os,'Android')=0,1,0)) as android, " +
+            "sum(if(s.windSpeedAvg,1,0)) as realPerDay, " +
+    		"sum(if(strcmp(d.os,'iPhone OS')=0,if(s.windSpeedAvg,1,0),0)) as iPhoneReal, " +
+            "sum(if(strcmp(d.os,'Android')=0,if(s.windSpeedAvg,1,0),0)) as androidReal " +
             "from MeasurementSession s,Device d " +
     		"where s.device_id=d.id and from_unixtime(startTime/1000) > '2013-08-01 00:00:00' and from_unixtime(startTime/1000) < now() " +
             "group by date(from_unixtime(startTime/1000)) " +
@@ -129,10 +132,10 @@
   </table>
 
   <table>
-    <tr><th class="left">Date</th><th class="right"># of measurements</th><th class="right"># on iPhone</th><th class="right"># on Android</th></tr>
+    <tr><th class="left">Date</th><th class="right"># of measurements</th><th class="right"># on iPhone</th><th class="right"># on Android</th><th class="right"># of real</th><th class="right"># of real iPhone</th><th class="right"># of real Android</th></tr>
     <%
     for (Object[] values : measurementsPerDay) {
-    	%><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td><td class="right"><%=values[2]%></td><td class="right"><%=values[3]%></td></tr><%
+    	%><tr><td class="left"><%=values[0]%></td><td class="right"><%=values[1]%></td><td class="right"><%=values[2]%></td><td class="right"><%=values[3]%></td><td class="right"><%=values[4]%></td><td class="right"><%=values[5]%></td><td class="right"><%=values[6]%></td></tr><%
     }
     %>
   </table>
