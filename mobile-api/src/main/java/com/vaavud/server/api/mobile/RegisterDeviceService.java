@@ -133,7 +133,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			
 			// note: prior to iOS app version 1.1.4, the code expected this value as a string and
 			// will crash if it is a boolean
-			if (device.isIOS() && device.isAppVersionLessThan("1.1.3")) {
+			if (device.isIOS() && device.isAppVersionLessThan("1.1.4")) {
 				json.put("enableMixpanel", ENABLE_MIXPANEL ? "true" : "false");
 			}
 			else {
