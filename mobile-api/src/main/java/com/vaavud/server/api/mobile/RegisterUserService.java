@@ -2,6 +2,7 @@ package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -189,6 +190,14 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				user.setFirstName(object.getFirstName());
 				user.setLastName(object.getLastName());
 				
+				Date creationTime = authenticatedDevice.getCreationTime();
+				Date now = new Date();
+				if (now.before(creationTime)) {
+					creationTime = now;
+				}
+				
+				user.setCreationTime(creationTime);
+				
 				if (isPasswordRegistering) {
 					logger.info("Creating new user given client hash " + object.getClientPasswordHash());
 					user.setPasswordHash(PasswordUtil.createHash(object.getClientPasswordHash()));
@@ -271,6 +280,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			json.put("email", authenticatedUser.getEmail());
 			json.put("firstName", authenticatedUser.getFirstName());
 			json.put("lastName", authenticatedUser.getLastName());
+			json.put("creationTime", authenticatedUser.getCreationTime());
 			json.put("hasWindMeter", hasMeasurements);
 			json.put("enableShareFeature", true);
 			writeJSONResponse(resp, mapper, json);
