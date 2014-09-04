@@ -23,9 +23,11 @@ import com.vaavud.util.UUIDUtil;
 public class RegisterDeviceService extends AbstractJSONService<Device> {
 
 	private static final Logger logger = Logger.getLogger(RegisterDeviceService.class);
+	
 	private static final float[] HOUR_OPTIONS = new float[] {3F, 6F, 12F, 24F};
-	private static final int MAX_MAP_MARKERS = 1000;
-			
+	private static final boolean ENABLE_MIXPANEL = true;
+	private static final boolean ENABLE_MIXPANEL_PEOPLE = true;
+	
 	@Override
 	protected Class<Device> type() {
 		return Device.class;
@@ -127,6 +129,17 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			json.put("hourOptions", HOUR_OPTIONS);
 			json.put("creationTime", device.getCreationTime());
 			json.put("enableShareFeature", true);
+			json.put("enableMixpanelPeople", ENABLE_MIXPANEL_PEOPLE);
+			
+			// note: prior to iOS app version 1.1.4, the code expected this value as a string and
+			// will crash if it is a boolean
+			if (device.isIOS() && device.isAppVersionLessThan("1.1.3")) {
+				json.put("enableMixpanel", ENABLE_MIXPANEL ? "true" : "false");
+			}
+			else {
+				json.put("enableMixpanel", ENABLE_MIXPANEL);
+			}
+			
 			//json.put("maxMapMarkers", MAX_MAP_MARKERS);
 			writeJSONResponse(resp, mapper, json);
 		}

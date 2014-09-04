@@ -1,6 +1,8 @@
 package com.vaavud.server.model.entity;
 
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -12,12 +14,44 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
 @Entity
 public class Device extends IdEntity {
 
+	public static final String OS_IOS = "iPhone OS";
+	public static final String OS_ANDROID = "Android";
+	
+	private static final boolean isAppVersionGreatherThanEq(String appVersion1, String appVersion2) {
+		int v1 = (appVersion1 == null) ? -1 : computeComparableVersion(appVersion1);
+		int v2 = (appVersion2 == null) ? -1 : computeComparableVersion(appVersion2);
+		return v1 == -1 || v2 == -1 ? false : v1 >= v2;
+	}
+	
+	private static final boolean isAppVersionLessThan(String appVersion1, String appVersion2) {
+		int v1 = (appVersion1 == null) ? -1 : computeComparableVersion(appVersion1);
+		int v2 = (appVersion2 == null) ? -1 : computeComparableVersion(appVersion2);
+		return v1 == -1 || v2 == -1 ? false : v1 < v2;
+	}
+	
+	private static final int computeComparableVersion(String appVersion) {
+		Matcher matcher = Pattern.compile("(\\d+)\\.(\\d+).(\\d+)").matcher(appVersion);
+		if (matcher.find()) {
+			try {
+				int major = Integer.parseInt(matcher.group(1));
+				int minor = Integer.parseInt(matcher.group(2));
+				int sub = Integer.parseInt(matcher.group(3));
+				return major * 10000 + minor * 100 + sub;
+			}
+			catch (NumberFormatException e) {
+				return -1;
+			}
+		}
+		return -1;
+	}
+	
 	private Long id;
 	private User user;
 	private String uuid;
@@ -211,6 +245,26 @@ public class Device extends IdEntity {
 
 	public void setUploadMagneticData(Boolean uploadMagneticData) {
 		this.uploadMagneticData = uploadMagneticData;
+	}
+
+	@Transient
+	public boolean isIOS() {
+		return OS_IOS.equals(this.os);
+	}
+	
+	@Transient
+	public boolean isAndroid() {
+		return OS_ANDROID.equals(this.os);
+	}
+	
+	@Transient
+	public boolean isAppVersionGreatherThanOrEq(String version) {
+		return isAppVersionGreatherThanEq(this.appVersion, version);
+	}
+	
+	@Transient
+	public boolean isAppVersionLessThan(String version) {
+		return isAppVersionLessThan(this.appVersion, version);
 	}
 
 	public boolean equalValues(Device other) {
