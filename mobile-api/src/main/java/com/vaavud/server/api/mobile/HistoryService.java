@@ -32,6 +32,7 @@ import com.vaavud.server.model.entity.IdEntity;
 import com.vaavud.server.model.entity.LatLng;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
+import com.vaavud.server.model.entity.WindMeter;
 import com.vaavud.util.UUIDUtil;
 
 public class HistoryService extends AbstractJSONService<HistoryService.RequestParameters> {
@@ -72,6 +73,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 
 		private String uuid;
 		private String deviceUuid;
+		private WindMeter windMeter;
 	    private Date startTime;
 	    private Date endTime;
 	    private Double latitude;
@@ -88,6 +90,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		public ResponseSessionObject(MeasurementSession measurementSession, Session hibernateSession) {
 	    	this.uuid = measurementSession.getUuid();
 	    	this.deviceUuid = measurementSession.getDevice().getUuid();
+	    	this.windMeter = measurementSession.getWindMeter();
 	    	this.startTime = measurementSession.getStartTime();
 	    	this.endTime = measurementSession.getEndTime();
 	    	if (measurementSession.getPosition() != null &&
@@ -138,6 +141,22 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 
 		public void setDeviceUuid(String deviceUuid) {
 			this.deviceUuid = deviceUuid;
+		}
+
+		public WindMeter getWindMeter() {
+			return windMeter;
+		}
+
+		public void setWindMeter(WindMeter windMeter) {
+			this.windMeter = windMeter;
+		}
+
+		public Float getTemperature() {
+			return temperature;
+		}
+
+		public void setTemperature(Float temperature) {
+			this.temperature = temperature;
 		}
 
 		public Date getStartTime() {

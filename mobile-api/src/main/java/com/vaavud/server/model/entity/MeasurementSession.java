@@ -9,6 +9,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -32,6 +34,7 @@ public class MeasurementSession extends IdEntity {
 	private Long id;
 	private String uuid;
 	private Device device;
+	private WindMeter windMeter = WindMeter.MJOLNIR;
     private Date creationTime = new Date();
 	private String source;
     private boolean measuring = false;
@@ -50,6 +53,7 @@ public class MeasurementSession extends IdEntity {
     private List<MeasurementPoint> points = new ArrayList<MeasurementPoint>();
 	
     public void setFrom(MeasurementSession other) {
+    	setWindMeter(other.getWindMeter());
     	setSource(other.getSource());
     	setMeasuring(other.isMeasuring());
     	setUploaded(other.isUploaded());
@@ -94,6 +98,16 @@ public class MeasurementSession extends IdEntity {
 
 	public void setDevice(Device device) {
 		this.device = device;
+	}
+
+	@Enumerated(EnumType.ORDINAL)
+	@Column(columnDefinition = "tinyint unsigned", nullable = false)
+	public WindMeter getWindMeter() {
+		return windMeter;
+	}
+
+	public void setWindMeter(WindMeter windMeter) {
+		this.windMeter = windMeter;
 	}
 
 	public String getSource() {
@@ -258,6 +272,7 @@ public class MeasurementSession extends IdEntity {
 				+ ", endTime=" + endTime + ", position=" + position
 				+ ", windSpeedAvg=" + windSpeedAvg + ", windSpeedMax="
 				+ windSpeedMax + ", windDirection=" + windDirection
-				+ ", temperature=" + temperature + "]";
+				+ ", temperature=" + temperature
+				+ ", windMeter=" + windMeter + "]";
 	}
 }

@@ -22,6 +22,7 @@ import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.LatLng;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
+import com.vaavud.server.model.entity.WindMeter;
 
 public class MeasureService extends AbstractJSONService<MeasurementSession> {
 
@@ -81,6 +82,9 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				.uniqueResult();
 
 		if (storedMeasurementSession == null) {
+			if (object.getWindMeter() == null) {
+				object.setWindMeter(WindMeter.MJOLNIR);
+			}
 			setMeasurementSessionOnPoints(object.getPoints(), object);
 			if (object.getStartIndex() != 0) {
 				logger.warn("Received MeasurementSession that is not already stored but startIndex (" + object.getStartIndex() + ") is greater than 0");
@@ -148,6 +152,9 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				.uniqueResult();
 
 		if (storedMeasurementSession == null) {
+			if (object.getWindMeter() == null) {
+				object.setWindMeter(WindMeter.MJOLNIR);
+			}
 			setMeasurementSessionOnPoints(object.getPoints(), object);
 			hibernateSession.save(object);
 			hibernateSession.getTransaction().commit();
