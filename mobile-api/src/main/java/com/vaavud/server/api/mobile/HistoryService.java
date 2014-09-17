@@ -80,6 +80,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    private Double longitude;
 	    private Float windSpeedAvg;
 	    private Float windSpeedMax;
+	    private Float windDirection;
 	    private Float temperature;
 	    private ResponsePointObject[] points;
 	    
@@ -101,6 +102,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	}
 	    	this.windSpeedAvg = measurementSession.getWindSpeedAvg();
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
+	    	this.windDirection = (measurementSession.getWindMeter() == WindMeter.MJOLNIR) ? null : measurementSession.getWindDirection();
 	    	this.temperature = measurementSession.getTemperature();
 	    	
 	    	List<MeasurementPoint> originalPoints;
