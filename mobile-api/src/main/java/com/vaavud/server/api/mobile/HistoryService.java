@@ -73,7 +73,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 
 		private String uuid;
 		private String deviceUuid;
-		private WindMeter windMeter;
+		private Integer windMeter;
 	    private Date startTime;
 	    private Date endTime;
 	    private Double latitude;
@@ -91,7 +91,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		public ResponseSessionObject(MeasurementSession measurementSession, Session hibernateSession) {
 	    	this.uuid = measurementSession.getUuid();
 	    	this.deviceUuid = measurementSession.getDevice().getUuid();
-	    	this.windMeter = measurementSession.getWindMeter();
+	    	this.windMeter = (measurementSession.getWindMeter() != null) ? measurementSession.getWindMeter().ordinal() : 1;
 	    	this.startTime = measurementSession.getStartTime();
 	    	this.endTime = measurementSession.getEndTime();
 	    	if (measurementSession.getPosition() != null &&
@@ -103,7 +103,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.windSpeedAvg = measurementSession.getWindSpeedAvg();
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
 	    	this.windDirection = (measurementSession.getWindMeter() == WindMeter.MJOLNIR) ? null : measurementSession.getWindDirection();
-	    	this.temperature = measurementSession.getTemperature();
+	    	this.temperature = (measurementSession.getTemperature() == null || measurementSession.getTemperature() == 0) ? null : measurementSession.getTemperature();
 	    	
 	    	List<MeasurementPoint> originalPoints;
 	    	Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
@@ -145,11 +145,11 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 			this.deviceUuid = deviceUuid;
 		}
 
-		public WindMeter getWindMeter() {
+		public Integer getWindMeter() {
 			return windMeter;
 		}
 
-		public void setWindMeter(WindMeter windMeter) {
+		public void setWindMeter(Integer windMeter) {
 			this.windMeter = windMeter;
 		}
 
@@ -160,7 +160,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		public void setTemperature(Float temperature) {
 			this.temperature = temperature;
 		}
-
+		
 		public Date getStartTime() {
 			return startTime;
 		}
@@ -207,6 +207,14 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 		
 		public void setWindSpeedMax(Float windSpeedMax) {
 			this.windSpeedMax = windSpeedMax;
+		}
+		
+		public Float getWindDirection() {
+			return windDirection;
+		}
+
+		public void setWindDirection(Float windDirection) {
+			this.windDirection = windDirection;
 		}
 
 		public ResponsePointObject[] getPoints() {
