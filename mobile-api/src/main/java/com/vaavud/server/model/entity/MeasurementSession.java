@@ -50,6 +50,13 @@ public class MeasurementSession extends IdEntity {
     private Float windSpeedMax;
     private Float windDirection;
     private Float temperature;
+    private Boolean reducingEquipment;
+    private Float dose;
+    private Integer boomHeight;
+    private SprayQuality sprayQuality;
+    private Integer generalConsideration;
+    private Integer specialConsideration;
+    private Privacy privacy = Privacy.PUBLIC;
     private List<MeasurementPoint> points = new ArrayList<MeasurementPoint>();
 	
     public void setFrom(MeasurementSession other) {
@@ -66,6 +73,12 @@ public class MeasurementSession extends IdEntity {
     	setWindSpeedMax(other.getWindSpeedMax());
     	setWindDirection(other.getWindDirection());
     	setTemperature(other.getTemperature());
+    	setReducingEquipment(other.getReducingEquipment());
+    	setDose(other.getDose());
+    	setBoomHeight(other.getBoomHeight());
+    	setSprayQuality(other.getSprayQuality());
+    	setGeneralConsideration(other.getGeneralConsideration());
+    	setSpecialConsideration(other.getSpecialConsideration());
     }
     
 	@Id @GeneratedValue(strategy=GenerationType.AUTO)
@@ -247,6 +260,71 @@ public class MeasurementSession extends IdEntity {
 	public void setTemperature(Float temperature) {
 		this.temperature = temperature;
 	}
+	
+	@Column(columnDefinition = "bit")
+	public Boolean getReducingEquipment() {
+		return reducingEquipment;
+	}
+
+	public void setReducingEquipment(Boolean reducingEquipment) {
+		this.reducingEquipment = reducingEquipment;
+	}
+
+	@Basic
+	public Float getDose() {
+		return dose;
+	}
+
+	public void setDose(Float dose) {
+		this.dose = dose;
+	}
+
+	@Basic
+	public Integer getBoomHeight() {
+		return boomHeight;
+	}
+
+	public void setBoomHeight(Integer boomHeight) {
+		this.boomHeight = boomHeight;
+	}
+
+	@Enumerated(EnumType.ORDINAL)
+	@Column(columnDefinition = "tinyint unsigned")
+	public SprayQuality getSprayQuality() {
+		return sprayQuality;
+	}
+
+	public void setSprayQuality(SprayQuality sprayQuality) {
+		this.sprayQuality = sprayQuality;
+	}
+
+	@Basic
+	public Integer getGeneralConsideration() {
+		return generalConsideration;
+	}
+
+	public void setGeneralConsideration(Integer generalConsideration) {
+		this.generalConsideration = generalConsideration;
+	}
+
+	@Basic
+	public Integer getSpecialConsideration() {
+		return specialConsideration;
+	}
+
+	public void setSpecialConsideration(Integer specialConsideration) {
+		this.specialConsideration = specialConsideration;
+	}
+	
+	@Enumerated(EnumType.ORDINAL)
+	@Column(columnDefinition = "tinyint unsigned")
+	public Privacy getPrivacy() {
+		return privacy;
+	}
+
+	public void setPrivacy(Privacy privacy) {
+		this.privacy = privacy;
+	}
 
 	@OneToMany(
 		cascade = {CascadeType.ALL},
@@ -266,13 +344,18 @@ public class MeasurementSession extends IdEntity {
 	@Override
 	public String toString() {
 		return "MeasurementSession [id=" + id + ", uuid=" + uuid
-				+ ", measuring=" + measuring + ", uploaded=" + uploaded + ", deleted=" + deleted
+				+ ", windMeter=" + windMeter + ", creationTime=" + creationTime
+				+ ", source=" + source + ", measuring=" + measuring
+				+ ", uploaded=" + uploaded + ", deleted=" + deleted
 				+ ", startIndex=" + startIndex + ", endIndex=" + endIndex
-				+ ", creationTime=" + creationTime + ", startTime=" + startTime
-				+ ", endTime=" + endTime + ", position=" + position
+				+ ", timezoneOffset=" + timezoneOffset + ", startTime="
+				+ startTime + ", endTime=" + endTime + ", position=" + position
 				+ ", windSpeedAvg=" + windSpeedAvg + ", windSpeedMax="
 				+ windSpeedMax + ", windDirection=" + windDirection
-				+ ", temperature=" + temperature
-				+ ", windMeter=" + windMeter + "]";
+				+ ", temperature=" + temperature + ", reducingEquipment="
+				+ reducingEquipment + ", dose=" + dose + ", boomHeight="
+				+ boomHeight + ", sprayQuality=" + sprayQuality
+				+ ", generalConsideration=" + generalConsideration
+				+ ", specialConsideration=" + specialConsideration + "]";
 	}
 }

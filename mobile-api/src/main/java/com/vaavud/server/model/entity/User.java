@@ -36,6 +36,7 @@ public class User extends IdEntity {
 	private boolean verified = false;
 	private boolean newsletter = true;
 	private boolean deleted = false;
+	private boolean validAgricultureSubscription = false;
     private List<Device> devices = new ArrayList<Device>();
 
 	@Id
@@ -157,6 +158,15 @@ public class User extends IdEntity {
 
 	public void setDeleted(boolean deleted) {
 		this.deleted = deleted;
+	}
+	
+	@Column(columnDefinition = "bit", length = 1, nullable = false)
+	public boolean isValidAgricultureSubscription() {
+		return validAgricultureSubscription;
+	}
+
+	public void setValidAgricultureSubscription(boolean validAgricultureSubscription) {
+		this.validAgricultureSubscription = validAgricultureSubscription;
 	}
 
 	@OneToMany(
