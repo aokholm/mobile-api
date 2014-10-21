@@ -87,7 +87,7 @@ public class User extends IdEntity {
 		this.facebookId = facebookId;
 	}
 
-	@Basic
+	@Column(columnDefinition = "varchar(1023)", length = 1023)
 	public String getFacebookAccessToken() {
 		return facebookAccessToken;
 	}
