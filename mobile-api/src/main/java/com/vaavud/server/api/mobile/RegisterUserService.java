@@ -17,6 +17,7 @@ import org.hibernate.Session;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
+import com.restfb.exception.FacebookNetworkException;
 import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
@@ -108,7 +109,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				// existing user...
 				
 				if (isFacebookRegistering) {
-					if (verifyFacebookAccount(object.getFacebookAccessToken(), object.getFacebookId())) {
+					if (verifyFacebookAccount(object.getFacebookAccessToken(), object.getFacebookId(), 3)) {
 						logger.info("Facebook account verified for Facebook user ID=" + object.getFacebookId());
 						
 						if (existingUser.getFacebookId() == null || !existingUser.getFacebookId().equals(object.getFacebookId())) {
@@ -203,7 +204,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 					user.setPasswordHash(PasswordUtil.createHash(object.getClientPasswordHash()));
 				}
 				else if (isFacebookRegistering) {
-					if (verifyFacebookAccount(object.getFacebookAccessToken(), object.getFacebookId())) {
+					if (verifyFacebookAccount(object.getFacebookAccessToken(), object.getFacebookId(), 3)) {
 						logger.info("Creating new user given Facebook access token for Facebook user ID=" + object.getFacebookId());
 						user.setFacebookId(object.getFacebookId());
 					}
@@ -292,11 +293,20 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 		return logger;
 	}
 	
-	private boolean verifyFacebookAccount(String accessToken, String facebookUserId) {
+	private boolean verifyFacebookAccount(String accessToken, String facebookUserId, int retryCount) {
+		
+		if (retryCount <= 0) {
+			return false;
+		}
+		
 		try {
 			FacebookClient facebookClient = new DefaultFacebookClient(accessToken, FacebookUtil.APP_SECRET);
 			com.restfb.types.User user = facebookClient.fetchObject("me", com.restfb.types.User.class);
 			return facebookUserId.equals(user.getId());
+		}
+		catch (FacebookNetworkException e) {
+			getLogger().error("Facebook network error verifying Facebook account", e);
+			return verifyFacebookAccount(accessToken, facebookUserId, retryCount - 1);
 		}
 		catch (RuntimeException e) {
 			getLogger().error("Error verifying Facebook account", e);
