@@ -135,7 +135,15 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				hibernateSession.getTransaction().commit();					
 			}
 			else if (storedMeasurementSession.getEndIndex() == object.getEndIndex()) {
-				logger.info("Received MeasurementSession already stored but endIndex is the same, so probably a duplicate transmission");
+				
+				if (object.hasAdditionalProperties()) {
+					logger.info("Received MeasurementSession with only additional information");
+					storedMeasurementSession.setFrom(object);
+					hibernateSession.getTransaction().commit();					
+				}
+				else {
+					logger.info("Received MeasurementSession already stored but endIndex is the same, so probably a duplicate transmission");
+				}
 			}
 			else {
 				logger.error("Received MeasurementSession already stored but stored endIndex is greater: stored=" + storedMeasurementSession.getEndIndex() + ", received=" + object.getEndIndex());
@@ -181,7 +189,14 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				hibernateSession.getTransaction().commit();					
 			}
 			else if (storedMeasurementSession.getPoints().size() == object.getPoints().size()) {
-				logger.info("Received MeasurementSession already stored but number of points is the same, so probably a duplicate transmission");
+				if (object.hasAdditionalProperties()) {
+					logger.info("Received MeasurementSession with only additional information");
+					storedMeasurementSession.setFrom(object);
+					hibernateSession.getTransaction().commit();					
+				}
+				else {
+					logger.info("Received MeasurementSession already stored but number of points is the same, so probably a duplicate transmission");
+				}
 			}
 			else {
 				logger.error("Received MeasurementSession already stored but number of stored points is greater: stored=" + storedMeasurementSession.getPoints().size() + ", received=" + object.getPoints().size());

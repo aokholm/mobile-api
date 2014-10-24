@@ -81,6 +81,10 @@ public class MeasurementSession extends IdEntity {
     	setSpecialConsideration(other.getSpecialConsideration());
     }
     
+    public boolean hasAdditionalProperties() {
+    	return (dose != null && dose > 0.0F) || (boomHeight != null && boomHeight > 0) || (sprayQuality != null && sprayQuality != SprayQuality.NOT_APPLICABLE);
+    }
+    
 	@Id @GeneratedValue(strategy=GenerationType.AUTO)
 	@Override
 	public Long getId() {
