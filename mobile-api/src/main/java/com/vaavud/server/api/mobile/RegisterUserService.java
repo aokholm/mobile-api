@@ -325,6 +325,9 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 		private String lastName;
 		private Gender gender;
 		private Boolean verified;
+		private String metaMethod;
+		private String metaAppAction;
+		private String metaCurrentPermissions;
 		
 		public String getAction() {
 			return action;
@@ -397,6 +400,30 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 		public void setVerified(Boolean verified) {
 			this.verified = verified;
 		}
+		
+		public String getMetaMethod() {
+			return metaMethod;
+		}
+
+		public void setMetaMethod(String metaMethod) {
+			this.metaMethod = metaMethod;
+		}
+
+		public String getMetaAppAction() {
+			return metaAppAction;
+		}
+
+		public void setMetaAppAction(String metaAppAction) {
+			this.metaAppAction = metaAppAction;
+		}
+
+		public String getMetaCurrentPermissions() {
+			return metaCurrentPermissions;
+		}
+
+		public void setMetaCurrentPermissions(String metaCurrentPermissions) {
+			this.metaCurrentPermissions = metaCurrentPermissions;
+		}
 
 		@Override
 		public String toString() {
@@ -406,6 +433,9 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 					+ ", firstName=" + firstName + ", lastName=" + lastName
 					+ ", gender=" + (gender == null ? "null" : gender.name())
 					+ ", verified=" + verified
+					+ ", metaMethod=" + metaMethod
+					+ ", metaAppAction=" + metaAppAction
+					+ ", metaCurrentPermissions=" + metaCurrentPermissions
 					+ "]";
 		}
 	}
