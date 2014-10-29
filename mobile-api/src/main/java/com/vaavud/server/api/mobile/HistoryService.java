@@ -111,7 +111,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
 	    	this.windDirection = (measurementSession.getWindMeter() == WindMeter.MJOLNIR) ? null : measurementSession.getWindDirection();
 	    	this.temperature = (measurementSession.getTemperature() == null || measurementSession.getTemperature() == 0) ? null : measurementSession.getTemperature();
-	    	this.reducingEquipment = (measurementSession.getReducingEquipment()) ? null : measurementSession.getReducingEquipment();
+	    	this.reducingEquipment = (measurementSession.getReducingEquipment() == null) ? null : measurementSession.getReducingEquipment();
 	    	this.dose = (measurementSession.getDose() == null || measurementSession.getDose() == 0) ? null : measurementSession.getDose();
 	    	this.boomHeight = (measurementSession.getBoomHeight() == null || measurementSession.getBoomHeight() == 0) ? null : measurementSession.getBoomHeight();
 	    	this.sprayQuality = (measurementSession.getSprayQuality() == null || measurementSession.getSprayQuality() == SprayQuality.NOT_APPLICABLE) ? null : measurementSession.getSprayQuality();
