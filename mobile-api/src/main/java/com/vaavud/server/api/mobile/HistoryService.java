@@ -32,6 +32,7 @@ import com.vaavud.server.model.entity.IdEntity;
 import com.vaavud.server.model.entity.LatLng;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
+import com.vaavud.server.model.entity.SprayQuality;
 import com.vaavud.server.model.entity.WindMeter;
 import com.vaavud.util.UUIDUtil;
 
@@ -82,6 +83,12 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    private Float windSpeedMax;
 	    private Float windDirection;
 	    private Float temperature;
+	    private Boolean reducingEquipment;
+	    private Float dose;
+	    private Integer boomHeight;
+	    private SprayQuality sprayQuality;
+	    private Integer generalConsideration;
+	    private Integer specialConsideration;
 	    private ResponsePointObject[] points;
 	    
 	    public ResponseSessionObject() {
@@ -104,6 +111,12 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
 	    	this.windDirection = (measurementSession.getWindMeter() == WindMeter.MJOLNIR) ? null : measurementSession.getWindDirection();
 	    	this.temperature = (measurementSession.getTemperature() == null || measurementSession.getTemperature() == 0) ? null : measurementSession.getTemperature();
+	    	this.reducingEquipment = (measurementSession.getReducingEquipment()) ? null : measurementSession.getReducingEquipment();
+	    	this.dose = (measurementSession.getDose() == null || measurementSession.getDose() == 0) ? null : measurementSession.getDose();
+	    	this.boomHeight = (measurementSession.getBoomHeight() == null || measurementSession.getBoomHeight() == 0) ? null : measurementSession.getBoomHeight();
+	    	this.sprayQuality = (measurementSession.getSprayQuality() == null || measurementSession.getSprayQuality() == SprayQuality.NOT_APPLICABLE) ? null : measurementSession.getSprayQuality();
+	    	this.generalConsideration = (measurementSession.getGeneralConsideration() == null || measurementSession.getGeneralConsideration() == 0) ? null : measurementSession.getGeneralConsideration();
+	    	this.specialConsideration = (measurementSession.getSpecialConsideration() == null || measurementSession.getSpecialConsideration() == 0) ? null : measurementSession.getSpecialConsideration();
 	    	
 	    	List<MeasurementPoint> originalPoints;
 	    	Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
@@ -215,6 +228,54 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 
 		public void setWindDirection(Float windDirection) {
 			this.windDirection = windDirection;
+		}
+		
+		public Boolean getReducingEquipment() {
+			return reducingEquipment;
+		}
+
+		public void setReducingEquipment(Boolean reducingEquipment) {
+			this.reducingEquipment = reducingEquipment;
+		}
+
+		public Float getDose() {
+			return dose;
+		}
+
+		public void setDose(Float dose) {
+			this.dose = dose;
+		}
+
+		public Integer getBoomHeight() {
+			return boomHeight;
+		}
+
+		public void setBoomHeight(Integer boomHeight) {
+			this.boomHeight = boomHeight;
+		}
+
+		public SprayQuality getSprayQuality() {
+			return sprayQuality;
+		}
+
+		public void setSprayQuality(SprayQuality sprayQuality) {
+			this.sprayQuality = sprayQuality;
+		}
+
+		public Integer getGeneralConsideration() {
+			return generalConsideration;
+		}
+
+		public void setGeneralConsideration(Integer generalConsideration) {
+			this.generalConsideration = generalConsideration;
+		}
+
+		public Integer getSpecialConsideration() {
+			return specialConsideration;
+		}
+
+		public void setSpecialConsideration(Integer specialConsideration) {
+			this.specialConsideration = specialConsideration;
 		}
 
 		public ResponsePointObject[] getPoints() {
