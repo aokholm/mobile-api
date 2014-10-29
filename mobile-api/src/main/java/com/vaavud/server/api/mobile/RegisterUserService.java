@@ -282,6 +282,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			json.put("firstName", authenticatedUser.getFirstName());
 			json.put("lastName", authenticatedUser.getLastName());
 			json.put("creationTime", authenticatedUser.getCreationTime());
+			json.put("validAgricultureSubscription", authenticatedUser.isValidAgricultureSubscription());
 			json.put("hasWindMeter", hasMeasurements);
 			json.put("enableShareFeature", true);
 			writeJSONResponse(resp, mapper, json);

@@ -63,7 +63,7 @@ public class MeasurementsService extends AbstractJSONService<MeasurementsService
 			List<Object[]> measurements = hibernateSession.createSQLQuery(
 					"select latitude, longitude, startTime, windSpeedAvg, windSpeedMax, if(windMeter=1,null,windDirection) " + 
 					"from MeasurementSession " + 
-					"where deleted=0 and startTime>:startTime and " + 
+					"where deleted=0 and privacy=1 and startTime>:startTime and " + 
 					"latitude is not null and longitude is not null and " +
 					"windSpeedAvg is not null")
 					.setLong("startTime", startTime.getTime()).list();

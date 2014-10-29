@@ -72,6 +72,7 @@ public class MeasurementSession extends IdEntity {
     	setWindSpeedAvg(other.getWindSpeedAvg());
     	setWindSpeedMax(other.getWindSpeedMax());
     	setWindDirection(other.getWindDirection());
+    	setPrivacy(other.getPrivacy());
     	setTemperature(other.getTemperature());
     	setReducingEquipment(other.getReducingEquipment());
     	setDose(other.getDose());

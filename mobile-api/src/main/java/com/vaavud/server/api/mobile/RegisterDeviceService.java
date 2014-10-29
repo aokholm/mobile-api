@@ -17,6 +17,7 @@ import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
 import com.vaavud.server.api.util.ServiceUtil;
 import com.vaavud.server.model.entity.Device;
+import com.vaavud.server.model.entity.User;
 import com.vaavud.server.model.phone.PhoneModel;
 import com.vaavud.util.UUIDUtil;
 
@@ -116,6 +117,14 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 				logger.error("AuthToken not supposed to be null or empty here");
 			}
 			
+			boolean validAgricultureSubscription = false;
+			if (device.getUser() != null) {
+				User deviceUser = device.getUser();
+				if (deviceUser.isValidAgricultureSubscription()) {
+					validAgricultureSubscription = true;
+				}
+			}
+			
 			PhoneModel phoneModel = PhoneModel.getPhoneModel(device.getOs(), device.getModel());
 			
 			Map<String,Object> json = new HashMap<String,Object>();
@@ -128,6 +137,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
 			json.put("hourOptions", HOUR_OPTIONS);
 			json.put("creationTime", device.getCreationTime());
+			json.put("validAgricultureSubscription", validAgricultureSubscription);
 			json.put("enableShareFeature", true);
 			json.put("enableMixpanelPeople", ENABLE_MIXPANEL_PEOPLE);
 			
