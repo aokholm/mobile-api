@@ -50,7 +50,7 @@ public class MeasurementSession extends IdEntity {
     private Float windSpeedMax;
     private Float windDirection;
     private Float temperature;
-    private Boolean reducingEquipment;
+    private ReduceEquipment reduceEquipment;
     private Float dose;
     private Integer boomHeight;
     private SprayQuality sprayQuality;
@@ -74,7 +74,7 @@ public class MeasurementSession extends IdEntity {
     	setWindDirection(other.getWindDirection());
     	setPrivacy(other.getPrivacy());
     	setTemperature(other.getTemperature());
-    	setReducingEquipment(other.getReducingEquipment());
+    	setReduceEquipment(other.getReduceEquipment());
     	setDose(other.getDose());
     	setBoomHeight(other.getBoomHeight());
     	setSprayQuality(other.getSprayQuality());
@@ -266,13 +266,14 @@ public class MeasurementSession extends IdEntity {
 		this.temperature = temperature;
 	}
 	
-	@Column(columnDefinition = "bit")
-	public Boolean getReducingEquipment() {
-		return reducingEquipment;
+	@Enumerated(EnumType.ORDINAL)
+	@Column(columnDefinition = "tinyint unsigned")
+	public ReduceEquipment getReduceEquipment() {
+		return reduceEquipment;
 	}
 
-	public void setReducingEquipment(Boolean reducingEquipment) {
-		this.reducingEquipment = reducingEquipment;
+	public void setReduceEquipment(ReduceEquipment reduceEquipment) {
+		this.reduceEquipment = reduceEquipment;
 	}
 
 	@Basic
@@ -357,8 +358,8 @@ public class MeasurementSession extends IdEntity {
 				+ startTime + ", endTime=" + endTime + ", position=" + position
 				+ ", windSpeedAvg=" + windSpeedAvg + ", windSpeedMax="
 				+ windSpeedMax + ", windDirection=" + windDirection
-				+ ", temperature=" + temperature + ", reducingEquipment="
-				+ reducingEquipment + ", dose=" + dose + ", boomHeight="
+				+ ", temperature=" + temperature + ", reduceEquipment="
+				+ reduceEquipment + ", dose=" + dose + ", boomHeight="
 				+ boomHeight + ", sprayQuality=" + sprayQuality
 				+ ", generalConsideration=" + generalConsideration
 				+ ", specialConsideration=" + specialConsideration + "]";

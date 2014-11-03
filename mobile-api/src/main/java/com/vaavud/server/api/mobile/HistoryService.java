@@ -32,6 +32,7 @@ import com.vaavud.server.model.entity.IdEntity;
 import com.vaavud.server.model.entity.LatLng;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
+import com.vaavud.server.model.entity.ReduceEquipment;
 import com.vaavud.server.model.entity.SprayQuality;
 import com.vaavud.server.model.entity.WindMeter;
 import com.vaavud.util.UUIDUtil;
@@ -83,10 +84,10 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    private Float windSpeedMax;
 	    private Float windDirection;
 	    private Float temperature;
-	    private Boolean reducingEquipment;
+	    private Integer reduceEquipment;
 	    private Float dose;
 	    private Integer boomHeight;
-	    private SprayQuality sprayQuality;
+	    private Integer sprayQuality;
 	    private Integer generalConsideration;
 	    private Integer specialConsideration;
 	    private ResponsePointObject[] points;
@@ -111,10 +112,10 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
 	    	this.windDirection = (measurementSession.getWindMeter() == WindMeter.MJOLNIR) ? null : measurementSession.getWindDirection();
 	    	this.temperature = (measurementSession.getTemperature() == null || measurementSession.getTemperature() == 0) ? null : measurementSession.getTemperature();
-	    	this.reducingEquipment = (measurementSession.getReducingEquipment() == null) ? null : measurementSession.getReducingEquipment();
+	    	this.reduceEquipment = (measurementSession.getReduceEquipment() == null || measurementSession.getReduceEquipment() == ReduceEquipment.NOT_APPLICABLE) ? null : measurementSession.getReduceEquipment().ordinal();
 	    	this.dose = (measurementSession.getDose() == null || measurementSession.getDose() == 0) ? null : measurementSession.getDose();
 	    	this.boomHeight = (measurementSession.getBoomHeight() == null || measurementSession.getBoomHeight() == 0) ? null : measurementSession.getBoomHeight();
-	    	this.sprayQuality = (measurementSession.getSprayQuality() == null || measurementSession.getSprayQuality() == SprayQuality.NOT_APPLICABLE) ? null : measurementSession.getSprayQuality();
+	    	this.sprayQuality = (measurementSession.getSprayQuality() == null || measurementSession.getSprayQuality() == SprayQuality.NOT_APPLICABLE) ? null : measurementSession.getSprayQuality().ordinal();
 	    	this.generalConsideration = (measurementSession.getGeneralConsideration() == null || measurementSession.getGeneralConsideration() == 0) ? null : measurementSession.getGeneralConsideration();
 	    	this.specialConsideration = (measurementSession.getSpecialConsideration() == null || measurementSession.getSpecialConsideration() == 0) ? null : measurementSession.getSpecialConsideration();
 	    	
@@ -230,12 +231,12 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 			this.windDirection = windDirection;
 		}
 		
-		public Boolean getReducingEquipment() {
-			return reducingEquipment;
+		public Integer getReduceEquipment() {
+			return reduceEquipment;
 		}
 
-		public void setReducingEquipment(Boolean reducingEquipment) {
-			this.reducingEquipment = reducingEquipment;
+		public void setReduceEquipment(Integer reduceEquipment) {
+			this.reduceEquipment = reduceEquipment;
 		}
 
 		public Float getDose() {
@@ -254,11 +255,11 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 			this.boomHeight = boomHeight;
 		}
 
-		public SprayQuality getSprayQuality() {
+		public Integer getSprayQuality() {
 			return sprayQuality;
 		}
 
-		public void setSprayQuality(SprayQuality sprayQuality) {
+		public void setSprayQuality(Integer sprayQuality) {
 			this.sprayQuality = sprayQuality;
 		}
 
