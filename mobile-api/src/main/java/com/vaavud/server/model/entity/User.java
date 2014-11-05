@@ -36,7 +36,7 @@ public class User extends IdEntity {
 	private boolean verified = false;
 	private boolean newsletter = true;
 	private boolean deleted = false;
-	private boolean validAgricultureSubscription = false;
+	private boolean validAgricultureSubscription = true;
     private List<Device> devices = new ArrayList<Device>();
 
 	@Id
