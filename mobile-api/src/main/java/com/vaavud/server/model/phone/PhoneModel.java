@@ -2,16 +2,21 @@ package com.vaavud.server.model.phone;
 
 import java.util.Locale;
 
+import org.apache.log4j.Logger;
+
 public enum PhoneModel {
 
 	/* iPhone Algorithm Configurations */
 	
 	IOS_STANDARD(OS.IOS, FFTLength.IOS, Algorithm.STANDARD, 0.238D, 1.07D, new String[] {}),
-
-	IPHONE4(OS.IOS, FFTLength.IOS, Algorithm.IPHONE4, 0.238D, 1.16D, new String[] {"IPHONE4"}),
 	
-	IPHONE5(OS.IOS, FFTLength.IOS, Algorithm.STANDARD, 0.238D, 1.04D, new String[] {"IPHONE5"}),
-
+	// using both legacy (app version 1.2.1) naming (ie. iPhone4GSM) and new (ie. iPhone4,) 
+	IPHONE4(OS.IOS, FFTLength.IOS, Algorithm.IPHONE4, 0.238D, 1.16D, new String[] {"iPhone4GSM", "iPhone4GSMRevA", "iPhone4GSM+CDMA", "iPhone4S", "iPhone3,", "iPhone4,"}),
+	
+	IPHONE5(OS.IOS, FFTLength.IOS, Algorithm.STANDARD, 0.238D, 1.04D, new String[] {"iPhone5GSM", "iPhone5GSM+CDMA", "iPhone5,", "iPhone6,"}),
+	
+	IPHONE6(OS.IOS, FFTLength.IOS, Algorithm.STANDARD, 0.238D, 1.04D, new String[] {"iPhone7,"}),
+	
 	/* Android Algorithm Configurations */
 	
 	ANDROID_STANDARD(OS.ANDROID, FFTLength.ANDROID, Algorithm.STANDARD, 0.238D, 1.07D, new String[] {}),
@@ -39,6 +44,7 @@ public enum PhoneModel {
 		}
 		for (PhoneModel phoneModel : PhoneModel.values()) {
 			if (phoneModel.matches(os, model)) {
+			    logger.info("Phone model upload: " + model + "Phone model server: " + phoneModel.toString());
 				return phoneModel;
 			}
 		}
@@ -51,6 +57,8 @@ public enum PhoneModel {
 	private final double frequencyStart;
 	private final double frequencyFactor;
 	private final String[] models;
+	
+	private static final Logger logger = Logger.getLogger(PhoneModel.class);
 	
 	private PhoneModel(OS os, FFTLength fftLength, Algorithm algorithm, double frequencyStart, double frequencyFactor, String[] models) {
 		this.os = os;
@@ -67,6 +75,7 @@ public enum PhoneModel {
 		}
 		for (String canonicalModel : models) {
 			if (model.toUpperCase(Locale.US).startsWith(canonicalModel.toUpperCase(Locale.US))) {
+//			    logger.info("Compare model upload: " + model.toUpperCase(Locale.US) + "Phone model server: " + canonicalModel.toUpperCase(Locale.US) );
 				return true;
 			}
 		}
