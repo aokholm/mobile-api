@@ -57,6 +57,7 @@ public class MeasurementSession extends IdEntity {
     private Integer generalConsideration;
     private Integer specialConsideration;
     private Privacy privacy = Privacy.PUBLIC;
+    private Boolean testMode;
     private List<MeasurementPoint> points = new ArrayList<MeasurementPoint>();
 	
     public void setFrom(MeasurementSession other) {
@@ -330,6 +331,15 @@ public class MeasurementSession extends IdEntity {
 
 	public void setPrivacy(Privacy privacy) {
 		this.privacy = privacy;
+	}
+
+	@Column(columnDefinition = "bit", length = 1)
+	public Boolean getTestMode() {
+		return testMode;
+	}
+
+	public void setTestMode(Boolean testMode) {
+		this.testMode = testMode;
 	}
 
 	@OneToMany(
