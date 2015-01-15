@@ -34,6 +34,7 @@
         
         <mapping class="com.vaavud.server.model.entity.AccPoint" />
         <mapping class="com.vaavud.server.model.entity.Device" />
+        <mapping class="com.vaavud.server.model.entity.CalibrationFile" />
         <mapping class="com.vaavud.server.model.entity.MagneticPoint" />
         <mapping class="com.vaavud.server.model.entity.MagneticSession" />
         <mapping class="com.vaavud.server.model.entity.MeasurementPoint" />
