@@ -74,7 +74,7 @@ public class CalibrationFile extends IdEntity {
 		
 	}
 	@Basic
-	private float[] getCalibrationCoefficients() {
+	public float[] getCalibrationCoefficients() {
 		return calibrationCoefficients;
 	}
 
@@ -83,7 +83,7 @@ public class CalibrationFile extends IdEntity {
 	}
 
 	@Basic
-	private String getDeviceUuid() {
+	public String getDeviceUuid() {
 		return deviceUuid;
 	}
 
@@ -92,7 +92,7 @@ public class CalibrationFile extends IdEntity {
 		
 	}
 	@Column(unique = true, nullable = false)
-	private String getS3FileName() {
+	public String getS3FileName() {
 		return s3FileName;
 	}
 
@@ -124,5 +124,10 @@ public class CalibrationFile extends IdEntity {
 
 	public void setCreationTime(Date creationTime) {
 		this.creationTime = creationTime;
+	}
+
+	public boolean isValidFileName() {
+		
+		return true;
 	}
 }

@@ -16,31 +16,25 @@ import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
 import com.vaavud.server.api.util.ServiceUtil;
+import com.vaavud.server.api.util.json.DeviceByUUIDModule;
+import com.vaavud.server.model.entity.CalibrationFile;
 import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.User;
 import com.vaavud.server.model.phone.PhoneModel;
 import com.vaavud.util.UUIDUtil;
 
-public class CalibrationService extends AbstractJSONService<Device> {
+public class CalibrationService extends AbstractJSONService<CalibrationFile> {
 
 	private static final Logger logger = Logger.getLogger(CalibrationService.class);
 	
-	private static final float[] HOUR_OPTIONS = new float[] {3F, 6F, 12F, 24F};
-	private static final boolean ENABLE_MIXPANEL = true;
-	private static final boolean ENABLE_MIXPANEL_PEOPLE = true;
-	
 	@Override
-	protected Class<Device> type() {
-		return Device.class;
-	}
-
-	@Override
-	protected boolean requiresAuthentication() {
-		return false;
+	protected Class<CalibrationFile> type() {
+		return CalibrationFile.class;
 	}
 	
 	@Override
-	protected void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, Device object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException {
+	protected void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, CalibrationFile object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException {
+		logger.info("Calibration service Call");
 		if (object == null) {
 			logger.info("Process object (null)");
 		}
@@ -52,42 +46,35 @@ public class CalibrationService extends AbstractJSONService<Device> {
 				object.setId(null);
 			}
 			
-			if (object.getUuid() == null || object.getUuid().isEmpty()) {
+			if (object.getDeviceUuid() == null || object.getDeviceUuid().isEmpty()) {
 				logger.error("Received Device with no UUID");
 				throw new ProtocolException("Received Device with no uuid");
 			}
 			
-			if (object.getCountry() != null && object.getCountry().length() > 2) {
-				logger.warn("Got country code that is longer than 2 characters: " + object.getCountry());
+			if (object.getS3FileName() == null && object.isValidFileName()) {
+				logger.error("File name is not valid. : Manufacturer_DeviceName_DeviceUUID_HumanReadableTimeStamp[DDMMYY_HHMMSS]) " + object.getS3FileName());
+				throw new ProtocolException("Received Device with no uuid");
+			}
+			
+			if (object.getCalibrationCoefficients()==null){
+				logger.error("Received Device with no UUID");
+				throw new ProtocolException("Received Device with no uuid");
 			}
 
 			String authToken = null;
 			
 			hibernateSession.beginTransaction();
 
-			final Device device;
 			Device storedDevice = (Device) hibernateSession
 					.createQuery("from Device where uuid=:uuid")
-					.setString("uuid", object.getUuid())
+					.setString("uuid", object.getDeviceUuid())
 					.uniqueResult();
 
 			if (storedDevice == null) {
-				logger.info("Registering new Device");
-				authToken = UUIDUtil.generateUUID();
-				object.setAuthToken(authToken);
-				object.setUploadMagneticData(null);
-				
-				hibernateSession.save(object);
-				hibernateSession.getTransaction().commit();
-				
-				device = object;
+				logger.error("Received Device with no UUID");
+				throw new ProtocolException("Received Device not registered");
 			}
 			else {
-				
-				// existing device requires a matching authToken sent as HTTP header
-				// note: for backwards compatibility, we only require this if a user is
-				// associated with the device, since older apps won't be able to handle
-				// an unauthorized response here
 				
 				if (storedDevice.getUser() != null) {
 					String httpAuthToken = req.getHeader("authToken");
@@ -100,58 +87,42 @@ public class CalibrationService extends AbstractJSONService<Device> {
 				}
 				
 				authToken = storedDevice.getAuthToken();
-				
-				if (!storedDevice.equalValues(object)) {
-					logger.info("Received Device already stored and values have changed");
-					storedDevice.setFrom(object);
-					hibernateSession.getTransaction().commit();					
-				}
-				else {
-					logger.info("Received Device already stored and no changes in values");
-				}
-				
-				device = storedDevice;
 			}
 			
 			if (authToken == null || authToken.trim().isEmpty()) {
 				logger.error("AuthToken not supposed to be null or empty here");
 			}
 			
-			boolean validAgricultureSubscription = false;
-			if (device.getUser() != null) {
-				User deviceUser = device.getUser();
-				if (deviceUser.isValidAgricultureSubscription()) {
-					validAgricultureSubscription = true;
-				}
-			}
+			hibernateSession.save(object);
+			hibernateSession.getTransaction().commit();
 			
-			PhoneModel phoneModel = PhoneModel.getPhoneModel(device.getOs(), device.getModel());
-			
-			Map<String,Object> json = new HashMap<String,Object>();
-			json.put("authToken", authToken);
-			json.put("uploadMagneticData", device.getUploadMagneticData() == null ? "true" : (device.getUploadMagneticData() ? "true" : "false"));
-			json.put("algorithm", phoneModel.getAlgorithm().name());
-			json.put("frequencyStart", Double.toString(phoneModel.getFrequencyStart()));
-			json.put("frequencyFactor", Double.toString(phoneModel.getFrequencyFactor()));
-			json.put("fftLength", Integer.toString(phoneModel.getFFTLength(device.getOsVersion())));
-			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
-			json.put("hourOptions", HOUR_OPTIONS);
-			json.put("creationTime", device.getCreationTime());
-			json.put("validAgricultureSubscription", validAgricultureSubscription);
-			json.put("enableShareFeature", true);
-			json.put("enableMixpanelPeople", ENABLE_MIXPANEL_PEOPLE);
-			
-			// note: prior to iOS app version 1.1.4, the code expected this value as a string and
-			// will crash if it is a boolean
-			if (device.isIOS() && device.isAppVersionLessThan("1.1.4")) {
-				json.put("enableMixpanel", ENABLE_MIXPANEL ? "true" : "false");
-			}
-			else {
-				json.put("enableMixpanel", ENABLE_MIXPANEL);
-			}
-			
-			//json.put("maxMapMarkers", MAX_MAP_MARKERS);
-			writeJSONResponse(resp, mapper, json);
+//			PhoneModel phoneModel = PhoneModel.getPhoneModel(device.getOs(), device.getModel());
+//			
+//			Map<String,Object> json = new HashMap<String,Object>();
+//			json.put("authToken", authToken);
+//			json.put("uploadMagneticData", device.getUploadMagneticData() == null ? "true" : (device.getUploadMagneticData() ? "true" : "false"));
+//			json.put("algorithm", phoneModel.getAlgorithm().name());
+//			json.put("frequencyStart", Double.toString(phoneModel.getFrequencyStart()));
+//			json.put("frequencyFactor", Double.toString(phoneModel.getFrequencyFactor()));
+//			json.put("fftLength", Integer.toString(phoneModel.getFFTLength(device.getOsVersion())));
+//			json.put("fftDataLength", Integer.toString(phoneModel.getFFTDataLength(device.getOsVersion())));
+//			json.put("hourOptions", HOUR_OPTIONS);
+//			json.put("creationTime", device.getCreationTime());
+//			json.put("validAgricultureSubscription", validAgricultureSubscription);
+//			json.put("enableShareFeature", true);
+//			json.put("enableMixpanelPeople", ENABLE_MIXPANEL_PEOPLE);
+//			
+//			// note: prior to iOS app version 1.1.4, the code expected this value as a string and
+//			// will crash if it is a boolean
+//			if (device.isIOS() && device.isAppVersionLessThan("1.1.4")) {
+//				json.put("enableMixpanel", ENABLE_MIXPANEL ? "true" : "false");
+//			}
+//			else {
+//				json.put("enableMixpanel", ENABLE_MIXPANEL);
+//			}
+//			
+//			//json.put("maxMapMarkers", MAX_MAP_MARKERS);
+//			writeJSONResponse(resp, mapper, json);
 		}
 	}
 	

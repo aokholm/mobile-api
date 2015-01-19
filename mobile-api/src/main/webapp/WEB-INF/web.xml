@@ -48,6 +48,10 @@
     <servlet-name>RegisterUserService</servlet-name>
     <servlet-class>com.vaavud.server.api.mobile.RegisterUserService</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>CalibrationService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.CalibrationService</servlet-class>
+  </servlet>
   
   <!-- Ping API Servlets -->
   
@@ -105,6 +109,10 @@
   <servlet-mapping>
     <servlet-name>RegisterUserService</servlet-name>
     <url-pattern>/api/user/register</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>CalibrationService</servlet-name>
+    <url-pattern>/api/device/calibration</url-pattern>
   </servlet-mapping>
   
   <!-- Ping API Mappings -->
