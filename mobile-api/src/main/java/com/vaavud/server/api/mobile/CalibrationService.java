@@ -33,6 +33,11 @@ public class CalibrationService extends AbstractJSONService<CalibrationFile> {
 	}
 	
 	@Override
+	protected boolean requiresAuthentication() {
+		return true;
+	}
+	
+	@Override
 	protected void process(HttpServletRequest req, HttpServletResponse resp, Device authenticatedDevice, CalibrationFile object, ObjectMapper mapper, Session hibernateSession) throws UnauthorizedException, ProtocolException, IOException {
 		logger.info("Calibration service Call");
 		if (object == null) {

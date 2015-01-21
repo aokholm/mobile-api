@@ -5,23 +5,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
+@Entity
 public class CalibrationFile extends IdEntity {
 	
 	private static final boolean isAlgorithmVersionGreatherThanEq(String appVersion1, String appVersion2) {
@@ -60,6 +52,9 @@ public class CalibrationFile extends IdEntity {
 	private String algorithmVersion;
 	private Boolean verified = false;
 	
+	public CalibrationFile(){
+		
+	}
 	
 	public void setFrom(CalibrationFile other) {
 		
@@ -69,7 +64,7 @@ public class CalibrationFile extends IdEntity {
 		setCalibrationCoefficients(other.getCalibrationCoefficients());
 	}
 
-	private void setCalibrationCoefficients(float[] calibrationCoefficients) {
+	public void setCalibrationCoefficients(float[] calibrationCoefficients) {
 		this.calibrationCoefficients=calibrationCoefficients;
 		
 	}
@@ -78,16 +73,16 @@ public class CalibrationFile extends IdEntity {
 		return calibrationCoefficients;
 	}
 
-	private void setDeviceUuid(String deviceUuid) {
+	public void setDeviceUuid(String deviceUuid) {
 		this.deviceUuid = deviceUuid;
 	}
 
-	@Basic
+	@Column(nullable = false)
 	public String getDeviceUuid() {
 		return deviceUuid;
 	}
 
-	private void setS3FileName(String s3FileName) {
+	public void setS3FileName(String s3FileName) {
 		this.s3FileName=s3FileName;
 		
 	}
@@ -96,11 +91,12 @@ public class CalibrationFile extends IdEntity {
 		return s3FileName;
 	}
 
-	private void setAlgorithmVersion(String algorithmVersion) {
+	public void setAlgorithmVersion(String algorithmVersion) {
 		this.algorithmVersion = algorithmVersion;
 		
 	}
 
+	@Basic
 	private String getAlgorithmVersion() {
 		return algorithmVersion;
 	}
@@ -125,9 +121,21 @@ public class CalibrationFile extends IdEntity {
 	public void setCreationTime(Date creationTime) {
 		this.creationTime = creationTime;
 	}
+	
+	@Column(nullable = false)
+	public Boolean getVerified() {
+		return verified;
+	}
+
+	
+	public void setVerified(Boolean verified) {
+		this.verified = verified;
+	}
 
 	public boolean isValidFileName() {
 		
 		return true;
 	}
+
+	
 }
