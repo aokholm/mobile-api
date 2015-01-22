@@ -91,6 +91,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    private Integer generalConsideration;
 	    private Integer specialConsideration;
 	    private ResponsePointObject[] points;
+	    private Boolean testMode;
 	    
 	    public ResponseSessionObject() {
 	    }
@@ -118,6 +119,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.sprayQuality = (measurementSession.getSprayQuality() == null || measurementSession.getSprayQuality() == SprayQuality.NOT_APPLICABLE) ? null : measurementSession.getSprayQuality().ordinal();
 	    	this.generalConsideration = (measurementSession.getGeneralConsideration() == null || measurementSession.getGeneralConsideration() == 0) ? null : measurementSession.getGeneralConsideration();
 	    	this.specialConsideration = (measurementSession.getSpecialConsideration() == null || measurementSession.getSpecialConsideration() == 0) ? null : measurementSession.getSpecialConsideration();
+	    	this.setTestMode((measurementSession.getSpecialConsideration() == null ? null: measurementSession.getTestMode()));
 	    	
 	    	List<MeasurementPoint> originalPoints;
 	    	Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
@@ -285,6 +287,14 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 
 		public void setPoints(ResponsePointObject[] points) {
 			this.points = points;
+		}
+
+		public Boolean getTestMode() {
+			return testMode;
+		}
+
+		public void setTestMode(Boolean testMode) {
+			this.testMode = testMode;
 		}
 	}
 			

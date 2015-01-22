@@ -372,6 +372,6 @@ public class MeasurementSession extends IdEntity {
 				+ reduceEquipment + ", dose=" + dose + ", boomHeight="
 				+ boomHeight + ", sprayQuality=" + sprayQuality
 				+ ", generalConsideration=" + generalConsideration
-				+ ", specialConsideration=" + specialConsideration + "]";
+				+ ", specialConsideration=" + specialConsideration + ", testMode=" + testMode + "]";
 	}
 }
