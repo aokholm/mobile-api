@@ -2,11 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vaavud</groupId>
   <artifactId>mobile-api</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.1</version>
   <packaging>war</packaging>
   <name>mobile-api</name>
   <properties>
-    <hibernatecfg>src/main/java/hibernate.cfg.xml</hibernatecfg>
+    <hibernatecfg>src/main/resources/hibernate.cfg.xml</hibernatecfg>
     <schemaname>dbschema.sql</schemaname>
   </properties>
   <build>

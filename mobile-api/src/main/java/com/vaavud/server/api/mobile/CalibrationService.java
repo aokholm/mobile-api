@@ -56,7 +56,7 @@ public class CalibrationService extends AbstractJSONService<CalibrationFile> {
 				throw new ProtocolException("Received Device with no uuid");
 			}
 			
-			if (object.getS3FileName() == null && object.isValidFileName()) {
+			if (object.getS3FileName() == null) {
 				logger.error("File name is not valid. : Manufacturer_DeviceName_DeviceUUID_HumanReadableTimeStamp[DDMMYY_HHMMSS]) " + object.getS3FileName());
 				throw new ProtocolException("Received Device with no uuid");
 			}

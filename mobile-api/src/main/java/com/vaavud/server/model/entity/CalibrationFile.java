@@ -48,7 +48,7 @@ public class CalibrationFile extends IdEntity {
 	private String s3FileName;
 	private String deviceUuid;
 	private Date creationTime = new Date();
-	private float[] calibrationCoefficients;
+	private String calibrationCoefficients;
 	private String algorithmVersion;
 	private Boolean verified = false;
 	
@@ -64,12 +64,12 @@ public class CalibrationFile extends IdEntity {
 		setCalibrationCoefficients(other.getCalibrationCoefficients());
 	}
 
-	public void setCalibrationCoefficients(float[] calibrationCoefficients) {
+	public void setCalibrationCoefficients(String calibrationCoefficients) {
 		this.calibrationCoefficients=calibrationCoefficients;
 		
 	}
 	@Basic
-	public float[] getCalibrationCoefficients() {
+	public String getCalibrationCoefficients() {
 		return calibrationCoefficients;
 	}
 
@@ -122,7 +122,7 @@ public class CalibrationFile extends IdEntity {
 		this.creationTime = creationTime;
 	}
 	
-	@Column(nullable = false)
+	@Column(columnDefinition = "bit", length = 1, nullable = false)
 	public Boolean getVerified() {
 		return verified;
 	}
@@ -132,10 +132,7 @@ public class CalibrationFile extends IdEntity {
 		this.verified = verified;
 	}
 
-	public boolean isValidFileName() {
-		
-		return true;
-	}
+	
 
 	
 }
