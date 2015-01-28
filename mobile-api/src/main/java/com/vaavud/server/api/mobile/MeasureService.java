@@ -85,6 +85,10 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 			if (object.getWindMeter() == null) {
 				object.setWindMeter(WindMeter.MJOLNIR);
 			}
+			if (object.getWindMeter() == WindMeter.MJOLNIR) {
+                object.setWindDirection(null);
+            }
+			
 			setMeasurementSessionOnPoints(object.getPoints(), object);
 			if (object.getStartIndex() != 0) {
 				logger.warn("Received MeasurementSession that is not already stored but startIndex (" + object.getStartIndex() + ") is greater than 0");
@@ -163,6 +167,11 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 			if (object.getWindMeter() == null) {
 				object.setWindMeter(WindMeter.MJOLNIR);
 			}
+			
+			if (object.getWindMeter() == WindMeter.MJOLNIR) {
+			    object.setWindDirection(null);
+			}
+			
 			setMeasurementSessionOnPoints(object.getPoints(), object);
 			hibernateSession.save(object);
 			hibernateSession.getTransaction().commit();
