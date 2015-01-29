@@ -500,7 +500,7 @@ public class MeasurementSession extends IdEntity {
                 + sourcedWindDirection + ", reduceEquipment=" + reduceEquipment + ", dose=" + dose + ", boomHeight="
                 + boomHeight + ", sprayQuality=" + sprayQuality + ", generalConsideration=" + generalConsideration
                 + ", specialConsideration=" + specialConsideration + ", privacy=" + privacy + ", testMode=" + testMode
-                + "]";
+                + ", geoLocation= " + geoLocationNameLocalized + "]";
     }
 
 
