@@ -84,6 +84,20 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    private Float windSpeedMax;
 	    private Float windDirection;
 	    private Float temperature;
+	    private Float humidity;
+	    private Integer pressure;
+	    private Float gustiness;
+	    private Float windChill;	    
+	    
+	    private Float sourcedTemperature;
+	    private Float sourcedHumidity;
+	    private Integer sourcedPressureGroundLevel;
+	    private Float sourcedWindSpeedAvg;
+	    private Float sourcedWindSpeedMax;
+	    private Float sourcedWindDirection;
+
+	    private String geoLocationNameLocalized;	    
+	    
 	    private Integer reduceEquipment;
 	    private Float dose;
 	    private Integer boomHeight;
@@ -113,6 +127,20 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.windSpeedMax = measurementSession.getWindSpeedMax();
 	    	this.windDirection = (measurementSession.getWindMeter() == WindMeter.MJOLNIR) ? null : measurementSession.getWindDirection();
 	    	this.temperature = (measurementSession.getTemperature() == null || measurementSession.getTemperature() == 0) ? null : measurementSession.getTemperature();
+	    	this.humidity = measurementSession.getHumidity();
+	    	this.pressure = measurementSession.getPressure();
+	    	this.gustiness = measurementSession.getGustiness();
+	    	this.windChill = measurementSession.getWindChill();
+	    	
+	    	this.geoLocationNameLocalized = measurementSession.getGeoLocationNameLocalized();
+	    	
+	        this.sourcedTemperature = measurementSession.getSourcedTemperature();
+	        this.sourcedHumidity = measurementSession.getSourcedHumidity();
+	        this.sourcedPressureGroundLevel = measurementSession.getSourcedPressureGroundLevel();
+	        this.sourcedWindSpeedAvg = measurementSession.getSourcedWindSpeedAvg();
+	        this.sourcedWindSpeedMax = measurementSession.getSourcedWindSpeedMax();
+	        this.sourcedWindDirection = measurementSession.getSourcedWindDirection();
+	    	
 	    	this.reduceEquipment = (measurementSession.getReduceEquipment() == null || measurementSession.getReduceEquipment() == ReduceEquipment.NOT_APPLICABLE) ? null : measurementSession.getReduceEquipment().ordinal();
 	    	this.dose = (measurementSession.getDose() == null || measurementSession.getDose() == 0) ? null : measurementSession.getDose();
 	    	this.boomHeight = (measurementSession.getBoomHeight() == null || measurementSession.getBoomHeight() == 0) ? null : measurementSession.getBoomHeight();
@@ -177,7 +205,95 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 			this.temperature = temperature;
 		}
 		
-		public Date getStartTime() {
+		public Float getHumidity() {
+            return humidity;
+        }
+
+        public void setHumidity(Float humidity) {
+            this.humidity = humidity;
+        }
+
+        public Integer getPressure() {
+            return pressure;
+        }
+
+        public void setPressure(Integer pressure) {
+            this.pressure = pressure;
+        }
+
+        public Float getGustiness() {
+            return gustiness;
+        }
+
+        public void setGustiness(Float gustiness) {
+            this.gustiness = gustiness;
+        }
+
+        public Float getWindChill() {
+            return windChill;
+        }
+
+        public void setWindChill(Float windChill) {
+            this.windChill = windChill;
+        }
+
+        public Float getSourcedTemperature() {
+            return sourcedTemperature;
+        }
+
+        public void setSourcedTemperature(Float sourcedTemperature) {
+            this.sourcedTemperature = sourcedTemperature;
+        }
+
+        public Float getSourcedHumidity() {
+            return sourcedHumidity;
+        }
+
+        public void setSourcedHumidity(Float sourcedHumidity) {
+            this.sourcedHumidity = sourcedHumidity;
+        }
+
+        public Integer getSourcedPressureGroundLevel() {
+            return sourcedPressureGroundLevel;
+        }
+
+        public void setSourcedPressureGroundLevel(Integer sourcedPressureGroundLevel) {
+            this.sourcedPressureGroundLevel = sourcedPressureGroundLevel;
+        }
+
+        public Float getSourcedWindSpeedAvg() {
+            return sourcedWindSpeedAvg;
+        }
+
+        public void setSourcedWindSpeedAvg(Float sourcedWindSpeedAvg) {
+            this.sourcedWindSpeedAvg = sourcedWindSpeedAvg;
+        }
+
+        public Float getSourcedWindSpeedMax() {
+            return sourcedWindSpeedMax;
+        }
+
+        public void setSourcedWindSpeedMax(Float sourcedWindSpeedMax) {
+            this.sourcedWindSpeedMax = sourcedWindSpeedMax;
+        }
+
+        public Float getSourcedWindDirection() {
+            return sourcedWindDirection;
+        }
+
+        public void setSourcedWindDirection(Float sourcedWindDirection) {
+            this.sourcedWindDirection = sourcedWindDirection;
+        }
+
+        public String getGeoLocationNameLocalized() {
+            return geoLocationNameLocalized;
+        }
+
+        public void setGeoLocationNameLocalized(String geoLocationNameLocalized) {
+            this.geoLocationNameLocalized = geoLocationNameLocalized;
+        }
+
+        public Date getStartTime() {
 			return startTime;
 		}
 		
