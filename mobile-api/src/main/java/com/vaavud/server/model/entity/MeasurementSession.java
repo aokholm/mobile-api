@@ -113,7 +113,7 @@ public class MeasurementSession extends IdEntity {
     }
     
     public boolean hasAdditionalProperties() {
-    	return (dose != null && dose > 0.0F) || (boomHeight != null && boomHeight > 0) || (sprayQuality != null && sprayQuality != SprayQuality.NOT_APPLICABLE);
+    	return (dose != null && dose > 0.0F) || (boomHeight != null && boomHeight > 0) || (sprayQuality != null && sprayQuality != SprayQuality.NOT_APPLICABLE) || (geoLocationNameLocalized != null);
     }
     
 	@Id @GeneratedValue(strategy=GenerationType.AUTO)
