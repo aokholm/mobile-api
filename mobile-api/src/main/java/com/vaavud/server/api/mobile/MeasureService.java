@@ -63,6 +63,17 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				throw new ProtocolException("Received MeasurementSession with no registered Device");
 			}
 
+			if (object.getWindMeter() == null) {
+                object.setWindMeter(WindMeter.MJOLNIR);
+            }
+            
+            if (object.getWindMeter() == WindMeter.MJOLNIR && object.getDevice().isAppVersionLessThan("1.2.4") ) {
+                object.setWindDirection(null);
+                for (MeasurementPoint point : object.getPoints()) {
+                    point.setWindDirection(null);
+                }
+            }
+			
 			if (object.getStartIndex() > 0 || object.getEndIndex() > 0) {
 				processIncrementalMeasurementSession(hibernateSession, object);
 			}
@@ -82,13 +93,6 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				.uniqueResult();
 
 		if (storedMeasurementSession == null) {
-			if (object.getWindMeter() == null) {
-				object.setWindMeter(WindMeter.MJOLNIR);
-			}
-			if (object.getWindMeter() == WindMeter.MJOLNIR) {
-                object.setWindDirection(null);
-            }
-			
 			setMeasurementSessionOnPoints(object.getPoints(), object);
 			if (object.getStartIndex() != 0) {
 				logger.warn("Received MeasurementSession that is not already stored but startIndex (" + object.getStartIndex() + ") is greater than 0");
@@ -164,15 +168,7 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				.uniqueResult();
 
 		if (storedMeasurementSession == null) {
-			if (object.getWindMeter() == null) {
-				object.setWindMeter(WindMeter.MJOLNIR);
-			}
-			
-			if (object.getWindMeter() == WindMeter.MJOLNIR) {
-			    object.setWindDirection(null);
-			}
-			
-			setMeasurementSessionOnPoints(object.getPoints(), object);
+		    setMeasurementSessionOnPoints(object.getPoints(), object);
 			hibernateSession.save(object);
 			hibernateSession.getTransaction().commit();
 		}
