@@ -87,14 +87,29 @@ public class MeasurementSession extends IdEntity {
     	setWindSpeedAvg(other.getWindSpeedAvg());
     	setWindSpeedMax(other.getWindSpeedMax());
     	setWindDirection(other.getWindDirection());
-    	setPrivacy(other.getPrivacy());
+    	setHumidity(other.getHumidity());
     	setTemperature(other.getTemperature());
+    	setPressure(other.getPressure());
+    	setGustiness(other.getGustiness());
+    	setWindChill(other.getWindChill());
+    	
+    	setSourcedHumidity(other.getSourcedHumidity());
+    	setSourcedPressureGroundLevel(other.getSourcedPressureGroundLevel());
+    	setSourcedTemperature(other.getSourcedTemperature());
+    	setSourcedWindDirection(other.getSourcedWindDirection());
+    	setSourcedWindSpeedAvg(other.getSourcedWindSpeedAvg());
+    	setSourcedWindSpeedMax(other.getSourcedWindSpeedMax());
+    	
+    	setGeoLocationNameLocalized(other.getGeoLocationNameLocalized());
+    	
+    	setPrivacy(other.getPrivacy());
     	setReduceEquipment(other.getReduceEquipment());
     	setDose(other.getDose());
     	setBoomHeight(other.getBoomHeight());
     	setSprayQuality(other.getSprayQuality());
     	setGeneralConsideration(other.getGeneralConsideration());
     	setSpecialConsideration(other.getSpecialConsideration());
+    	setTestMode(other.getTestMode());
     }
     
     public boolean hasAdditionalProperties() {
