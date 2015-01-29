@@ -50,6 +50,20 @@ public class MeasurementSession extends IdEntity {
     private Float windSpeedMax;
     private Float windDirection;
     private Float temperature;
+    private Float humidity;
+    private Integer pressure;
+    private Float gustiness;
+    private Float windChill;
+    
+    private Float sourcedTemperature;
+    private Float sourcedHumidity;
+    private Integer sourcedPressureGroundLevel;
+    private Float sourcedWindSpeedAvg;
+    private Float sourcedWindSpeedMax;
+    private Float sourcedWindDirection;
+    
+    private String geoLocationNameLocalized;
+    
     private ReduceEquipment reduceEquipment;
     private Float dose;
     private Integer boomHeight;
@@ -342,7 +356,106 @@ public class MeasurementSession extends IdEntity {
 		this.testMode = testMode;
 	}
 
-	@OneToMany(
+	@Basic
+	public Float getHumidity() {
+        return humidity;
+    }
+
+    public void setHumidity(Float humidity) {
+        this.humidity = humidity;
+    }
+    
+    @Basic
+    public Float getGustiness() {
+        return gustiness;
+    }
+
+    public void setGustiness(Float gustiness) {
+        this.gustiness = gustiness;
+    }
+
+    @Basic
+    public Float getWindChill() {
+        return windChill;
+    }
+
+    public void setWindChill(Float windChill) {
+        this.windChill = windChill;
+    }
+
+    @Basic
+    public Float getSourcedTemperature() {
+        return sourcedTemperature;
+    }
+
+    public void setSourcedTemperature(Float sourcedTemperature) {
+        this.sourcedTemperature = sourcedTemperature;
+    }
+
+    @Basic
+    public Float getSourcedHumidity() {
+        return sourcedHumidity;
+    }
+
+    public void setSourcedHumidity(Float sourcedHumidity) {
+        this.sourcedHumidity = sourcedHumidity;
+    }
+
+    @Basic
+    public Integer getPressure() {
+        return pressure;
+    }
+
+    public void setPressure(Integer pressure) {
+        this.pressure = pressure;
+    }
+    
+    @Basic
+    public Integer getSourcedPressureGroundLevel() {
+        return sourcedPressureGroundLevel;
+    }
+
+    public void setSourcedPressureGroundLevel(Integer sourcedPressureGroundLevel) {
+        this.sourcedPressureGroundLevel = sourcedPressureGroundLevel;
+    }
+
+    @Basic
+    public Float getSourcedWindSpeedAvg() {
+        return sourcedWindSpeedAvg;
+    }
+
+    public void setSourcedWindSpeedAvg(Float sourcedWindSpeedAvg) {
+        this.sourcedWindSpeedAvg = sourcedWindSpeedAvg;
+    }
+
+    @Basic
+    public Float getSourcedWindSpeedMax() {
+        return sourcedWindSpeedMax;
+    }
+
+    public void setSourcedWindSpeedMax(Float sourcedWindSpeedMax) {
+        this.sourcedWindSpeedMax = sourcedWindSpeedMax;
+    }
+
+    @Basic
+    public Float getSourcedWindDirection() {
+        return sourcedWindDirection;
+    }
+
+    public void setSourcedWindDirection(Float sourcedWindDirection) {
+        this.sourcedWindDirection = sourcedWindDirection;
+    }
+
+    @Basic
+    public String getGeoLocationNameLocalized() {
+        return geoLocationNameLocalized;
+    }
+
+    public void setGeoLocationNameLocalized(String geoLocationNameLocalized) {
+        this.geoLocationNameLocalized = geoLocationNameLocalized;
+    }
+
+    @OneToMany(
 		cascade = {CascadeType.ALL},
 		mappedBy = "session",
 		fetch = FetchType.LAZY
@@ -357,21 +470,23 @@ public class MeasurementSession extends IdEntity {
 		this.points = points;
 	}
 	
-	@Override
-	public String toString() {
-		return "MeasurementSession [id=" + id + ", uuid=" + uuid
-				+ ", windMeter=" + windMeter + ", creationTime=" + creationTime
-				+ ", source=" + source + ", measuring=" + measuring
-				+ ", uploaded=" + uploaded + ", deleted=" + deleted
-				+ ", startIndex=" + startIndex + ", endIndex=" + endIndex
-				+ ", timezoneOffset=" + timezoneOffset + ", startTime="
-				+ startTime + ", endTime=" + endTime + ", position=" + position
-				+ ", windSpeedAvg=" + windSpeedAvg + ", windSpeedMax="
-				+ windSpeedMax + ", windDirection=" + windDirection
-				+ ", temperature=" + temperature + ", reduceEquipment="
-				+ reduceEquipment + ", dose=" + dose + ", boomHeight="
-				+ boomHeight + ", sprayQuality=" + sprayQuality
-				+ ", generalConsideration=" + generalConsideration
-				+ ", specialConsideration=" + specialConsideration + ", testMode=" + testMode + "]";
-	}
+    @Override
+    public String toString() {
+        return "MeasurementSession [id=" + id + ", uuid=" + uuid + ", device=" + device + ", windMeter=" + windMeter
+                + ", creationTime=" + creationTime + ", source=" + source + ", measuring=" + measuring + ", uploaded="
+                + uploaded + ", deleted=" + deleted + ", startIndex=" + startIndex + ", endIndex=" + endIndex
+                + ", timezoneOffset=" + timezoneOffset + ", startTime=" + startTime + ", endTime=" + endTime
+                + ", position=" + position + ", windSpeedAvg=" + windSpeedAvg + ", windSpeedMax=" + windSpeedMax
+                + ", windDirection=" + windDirection + ", temperature=" + temperature + ", humidity=" + humidity
+                + ", pressure=" + pressure + ", gustiness=" + gustiness + ", windChill=" + windChill
+                + ", sourcedTemperature=" + sourcedTemperature + ", sourcedHumidity=" + sourcedHumidity
+                + ", sourcedPressureGroundLevel=" + sourcedPressureGroundLevel + ", sourcedWindSpeedAvg="
+                + sourcedWindSpeedAvg + ", sourcedWindSpeedMax=" + sourcedWindSpeedMax + ", sourcedWindDirection="
+                + sourcedWindDirection + ", reduceEquipment=" + reduceEquipment + ", dose=" + dose + ", boomHeight="
+                + boomHeight + ", sprayQuality=" + sprayQuality + ", generalConsideration=" + generalConsideration
+                + ", specialConsideration=" + specialConsideration + ", privacy=" + privacy + ", testMode=" + testMode
+                + "]";
+    }
+
+
 }
