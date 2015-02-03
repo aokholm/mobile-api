@@ -147,7 +147,7 @@ public class HistoryService extends AbstractJSONService<HistoryService.RequestPa
 	    	this.sprayQuality = (measurementSession.getSprayQuality() == null || measurementSession.getSprayQuality() == SprayQuality.NOT_APPLICABLE) ? null : measurementSession.getSprayQuality().ordinal();
 	    	this.generalConsideration = (measurementSession.getGeneralConsideration() == null || measurementSession.getGeneralConsideration() == 0) ? null : measurementSession.getGeneralConsideration();
 	    	this.specialConsideration = (measurementSession.getSpecialConsideration() == null || measurementSession.getSpecialConsideration() == 0) ? null : measurementSession.getSpecialConsideration();
-	    	this.setTestMode((measurementSession.getSpecialConsideration() == null ? null: measurementSession.getTestMode()));
+	    	this.testMode = measurementSession.getTestMode() == null ? null: measurementSession.getTestMode();
 	    	
 	    	List<MeasurementPoint> originalPoints;
 	    	Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
