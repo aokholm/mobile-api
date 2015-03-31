@@ -12,22 +12,25 @@ import javax.persistence.Id;
 import org.hibernate.annotations.Type;
 
 @Entity
-public class ProductionTestSession extends IdEntity {
+public class ProductionQCSession extends IdEntity {
 
 	private Long id;
-	private Date creationTime;
+	private Date creationTime = new Date();
 	private Float velocityProfileError;
 	private Float velocity;
-	private Float direction;
+	private Float velocityTarget;
+    private Float direction;
 	private Integer measurementPoints;
 	
-	public ProductionTestSession() {
+	public ProductionQCSession() {
 	}
 
-    public ProductionTestSession(Float velocityProfileError, Float velocity, Float direction, Integer measurementPoints) {
+	public ProductionQCSession(Float velocityProfileError, Float velocity, Float velocityTarget, Float direction,
+            Integer measurementPoints) {
         super();
         this.velocityProfileError = velocityProfileError;
         this.velocity = velocity;
+        this.velocityTarget = velocityTarget;
         this.direction = direction;
         this.measurementPoints = measurementPoints;
     }
@@ -40,7 +43,7 @@ public class ProductionTestSession extends IdEntity {
 	}
 
 	@SuppressWarnings("unused")
-	private void setId(Long id) {
+    public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -73,6 +76,15 @@ public class ProductionTestSession extends IdEntity {
     }
 
     @Basic
+    public Float getVelocityTarget() {
+        return velocityTarget;
+    }
+
+    public void setVelocityTarget(Float velocityTarget) {
+        this.velocityTarget = velocityTarget;
+    }
+    
+    @Basic
     public Float getDirection() {
         return direction;
     }
@@ -92,7 +104,7 @@ public class ProductionTestSession extends IdEntity {
 
     @Override
     public String toString() {
-        return "ProductionTestSession [id=" + id + ", creationTime=" + creationTime + ", velocityProfileError="
+        return "ProductionQCSession [id=" + id + ", creationTime=" + creationTime + ", velocityProfileError="
                 + velocityProfileError + ", velocity=" + velocity + ", direction=" + direction + ", measurementPoints="
                 + measurementPoints + "]";
     }

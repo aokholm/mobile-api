@@ -48,6 +48,10 @@
     <servlet-name>RegisterUserService</servlet-name>
     <servlet-class>com.vaavud.server.api.mobile.RegisterUserService</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>ProductionQualityControlService</servlet-name>
+    <servlet-class>com.vaavud.server.api.mobile.ProductionQualityControlService</servlet-class>
+  </servlet>
   
   <!-- Ping API Servlets -->
   
@@ -106,6 +110,10 @@
     <servlet-name>RegisterUserService</servlet-name>
     <url-pattern>/api/user/register</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>ProductionQualityControlService</servlet-name>
+    <url-pattern>/api/production/qc</url-pattern>
+  </servlet-mapping>  
   
   <!-- Ping API Mappings -->
   
