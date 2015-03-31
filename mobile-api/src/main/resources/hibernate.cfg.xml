@@ -41,6 +41,7 @@
         <mapping class="com.vaavud.server.model.entity.MeasurementPoint" />
         <mapping class="com.vaavud.server.model.entity.MeasurementSession" />
         <mapping class="com.vaavud.server.model.entity.User" />
+        <mapping class="com.vaavud.server.model.entity.ProductionTestSession" />
 
     </session-factory>
 </hibernate-configuration>
