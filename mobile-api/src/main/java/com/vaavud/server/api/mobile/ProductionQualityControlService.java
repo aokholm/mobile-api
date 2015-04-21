@@ -63,9 +63,19 @@ public class ProductionQualityControlService extends AbstractJSONService<Product
                 throw new ProtocolException("Received ProductionQCSession with no Direction");
             }
             
-            if (object.getMeasurementPoints() == null) {
-                logger.error("Received ProductionQCSession with no MeasurementPoints");
-                throw new ProtocolException("Received ProductionQCSession with no MeasurementPoints");
+            if (object.getTickDetectionErrorCount() == null) {
+                logger.error("Received ProductionQCSession with no TickDetectionErrorCount");
+                throw new ProtocolException("Received ProductionQCSession with no TickDetectionErrorCount");
+            }
+            
+            if (object.getVelocityProfile() == null) {
+                logger.error("Received ProductionQCSession with no velocityProfile");
+                throw new ProtocolException("Received ProductionQCSession with no velocityProfile");
+            }
+            
+            if (object.getQcPassed() == null) {
+                logger.error("Received ProductionQCSession with no QcPassed");
+                throw new ProtocolException("Received ProductionQCSession with no QcPassed");
             }
 
             String seriveAuthToken = "gvasidyfgaisudyfgoauysgdf";            

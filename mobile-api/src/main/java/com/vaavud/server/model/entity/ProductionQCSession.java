@@ -1,9 +1,13 @@
 package com.vaavud.server.model.entity;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Basic;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -14,27 +18,31 @@ import org.hibernate.annotations.Type;
 @Entity
 public class ProductionQCSession extends IdEntity {
 
-	private Long id;
+    private Long id;
 	private Date creationTime = new Date();
 	private Float velocityProfileError;
 	private Float velocity;
 	private Float velocityTarget;
     private Float direction;
-	private Integer measurementPoints;
+	private Integer tickDetectionErrorCount;
+    private List<Float> velocityProfile = new ArrayList<Float>();
+	private Boolean qcPassed;
 	
 	public ProductionQCSession() {
 	}
 
-	public ProductionQCSession(Float velocityProfileError, Float velocity, Float velocityTarget, Float direction,
-            Integer measurementPoints) {
+    public ProductionQCSession(Float velocityProfileError, Float velocity,
+            Float velocityTarget, Float direction, Integer tickDetectionErrorCount, List<Float> velocityProfile,
+            Boolean qcPassed) {
         super();
         this.velocityProfileError = velocityProfileError;
         this.velocity = velocity;
         this.velocityTarget = velocityTarget;
         this.direction = direction;
-        this.measurementPoints = measurementPoints;
+        this.tickDetectionErrorCount = tickDetectionErrorCount;
+        this.velocityProfile = velocityProfile;
+        this.qcPassed = qcPassed;
     }
-
 
     @Id @GeneratedValue(strategy=GenerationType.AUTO)
 	@Override
@@ -94,18 +102,38 @@ public class ProductionQCSession extends IdEntity {
     }
 
     @Basic
-    public Integer getMeasurementPoints() {
-        return measurementPoints;
+    public Integer getTickDetectionErrorCount() {
+        return tickDetectionErrorCount;
     }
 
-    public void setMeasurementPoints(Integer measurementPoints) {
-        this.measurementPoints = measurementPoints;
+    public void setTickDetectionErrorCount(Integer tickDetectionErrorCount) {
+        this.tickDetectionErrorCount = tickDetectionErrorCount;
+    }
+
+    @ElementCollection
+    @CollectionTable(name ="QCVelocityProfile")
+    public List<Float> getVelocityProfile() {
+        return velocityProfile;
+    }
+
+    public void setVelocityProfile(List<Float> velocityProfile) {
+        this.velocityProfile = velocityProfile;
+    }
+
+    @Column(columnDefinition = "bit", length = 1)
+    public Boolean getQcPassed() {
+        return qcPassed;
+    }
+
+    public void setQcPassed(Boolean qcPassed) {
+        this.qcPassed = qcPassed;
     }
 
     @Override
     public String toString() {
         return "ProductionQCSession [id=" + id + ", creationTime=" + creationTime + ", velocityProfileError="
-                + velocityProfileError + ", velocity=" + velocity + ", direction=" + direction + ", measurementPoints="
-                + measurementPoints + "]";
+                + velocityProfileError + ", velocity=" + velocity + ", velocityTarget=" + velocityTarget
+                + ", direction=" + direction + ", tickDetectionErrorCount=" + tickDetectionErrorCount
+                + ", velocityProfile=" + velocityProfile + ", qcPassed=" + qcPassed + "]";
     }
 }
