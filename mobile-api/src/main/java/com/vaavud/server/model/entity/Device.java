@@ -1,11 +1,15 @@
 package com.vaavud.server.model.entity;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.persistence.Basic;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -69,6 +73,9 @@ public class Device extends IdEntity {
 	private WindSpeedUnit windSpeedUnit;
 	private String magneticFieldSensor;
 	private Boolean uploadMagneticData;
+	private Float sleipnirVolume;
+	private List<Float> sleipnirEncoderCoefficients = new ArrayList<Float>();
+	
 
 	public void setFrom(Device other) {
 		setVendor(other.getVendor());
@@ -82,6 +89,8 @@ public class Device extends IdEntity {
 		setTimezoneOffset(other.getTimezoneOffset());
 		setWindSpeedUnit(other.getWindSpeedUnit());
 		setMagneticFieldSensor(other.getMagneticFieldSensor());
+		setSleipnirVolume(other.getSleipnirVolume());
+		setSleipnirEncoderCoefficients(other.getSleipnirEncoderCoefficients());
 		// note: explicitly do not copy uploadMagneticData property to make sure it is only set from server
 	}
 
@@ -246,8 +255,27 @@ public class Device extends IdEntity {
 	public void setUploadMagneticData(Boolean uploadMagneticData) {
 		this.uploadMagneticData = uploadMagneticData;
 	}
+	
+	@Basic
+	public Float getSleipnirVolume() {
+        return sleipnirVolume;
+    }
 
-	@Transient
+    public void setSleipnirVolume(Float sleipnirVolume) {
+        this.sleipnirVolume = sleipnirVolume;
+    }
+
+    @ElementCollection
+    @CollectionTable(name ="SleipnirEncoderCoefficients")
+    public List<Float> getSleipnirEncoderCoefficients() {
+        return sleipnirEncoderCoefficients;
+    }
+
+    public void setSleipnirEncoderCoefficients(List<Float> sleipnirEncoderCoefficients) {
+        this.sleipnirEncoderCoefficients = sleipnirEncoderCoefficients;
+    }
+    
+    @Transient
 	public boolean isIOS() {
 		return OS_IOS.equals(this.os);
 	}
@@ -344,19 +372,24 @@ public class Device extends IdEntity {
 		if (windSpeedUnit != other.windSpeedUnit) {
 			return false;
 		}
+		if (sleipnirVolume != other.sleipnirVolume) {
+            return false;
+        }
+		if (!sleipnirEncoderCoefficients.equals(other.sleipnirEncoderCoefficients)) {
+            return false;
+        }
+		
 		return true;
 	}
 
 	@Override
-	public String toString() {
-		return "Device [id=" + id + ", uuid=" + uuid + ", authToken="
-				+ authToken + ", creationTime=" + creationTime + ", vendor="
-				+ vendor + ", model=" + model + ", os=" + os + ", osVersion="
-				+ osVersion + ", app=" + app + ", appVersion=" + appVersion
-				+ ", country=" + country + ", language=" + language
-				+ ", timezoneOffset=" + timezoneOffset + ", windSpeedUnit="
-				+ windSpeedUnit + ", magneticFieldSensor="
-				+ magneticFieldSensor + ", uploadMagneticData="
-				+ uploadMagneticData + "]";
-	}
+    public String toString() {
+        return "Device [id=" + id + ", user=" + user + ", uuid=" + uuid + ", authToken=" + authToken
+                + ", creationTime=" + creationTime + ", vendor=" + vendor + ", model=" + model + ", os=" + os
+                + ", osVersion=" + osVersion + ", app=" + app + ", appVersion=" + appVersion + ", country=" + country
+                + ", language=" + language + ", timezoneOffset=" + timezoneOffset + ", windSpeedUnit=" + windSpeedUnit
+                + ", magneticFieldSensor=" + magneticFieldSensor + ", uploadMagneticData=" + uploadMagneticData
+                + ", sleipnirVolume=" + sleipnirVolume + ", sleipnirEncoderCoefficients=" + sleipnirEncoderCoefficients
+                + "]";
+    }
 }
