@@ -1,145 +1,156 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
-  <display-name>mobile-api</display-name>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	id="WebApp_ID" version="3.0">
+	<display-name>mobile-api</display-name>
 
-  <context-param>
-    <param-name>quartz:shutdown-on-unload</param-name>
-    <param-value>true</param-value>
-  </context-param>
-  <context-param>
-    <param-name>quartz:wait-on-shutdown</param-name>
-    <param-value>false</param-value>
-  </context-param>
-  <context-param>
-    <param-name>quartz:start-on-load</param-name>
-    <param-value>true</param-value>
-  </context-param>   
-  <listener>
-    <listener-class>org.quartz.ee.servlet.QuartzInitializerListener</listener-class>
-  </listener>
-     
-  <!-- Mobile API Servlets -->
-  
-  <servlet>
-    <servlet-name>DeleteMeasurementService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.DeleteMeasurementService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>HistoryService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.HistoryService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>MagneticMeasureService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.MagneticMeasureService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>MeasureService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.MeasureService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>MeasurementsService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.MeasurementsService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>RegisterDeviceService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.RegisterDeviceService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>RegisterUserService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.RegisterUserService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>ProductionQualityControlService</servlet-name>
-    <servlet-class>com.vaavud.server.api.mobile.ProductionQualityControlService</servlet-class>
-  </servlet>
-  
-  <!-- Ping API Servlets -->
-  
-  <servlet>
-    <servlet-name>DatabasePingService</servlet-name>
-    <servlet-class>com.vaavud.server.api.ping.DatabasePingService</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>JVMPingService</servlet-name>
-    <servlet-class>com.vaavud.server.api.ping.JVMPingService</servlet-class>
-  </servlet>
-  
-  <!-- Web Servlets -->
-  
-  <servlet>
-    <servlet-name>MapServlet</servlet-name>
-    <servlet-class>com.vaavud.server.web.map.MapServlet</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>StatsServlet</servlet-name>
-    <servlet-class>com.vaavud.server.web.admin.StatsServlet</servlet-class>
-  </servlet>
-  
-  <servlet>
-  	<servlet-name>HelloServlet</servlet-name>
-  	<servlet-class>com.vaavud.server.web.hello.HelloServlet</servlet-class>
-  </servlet>
-  
-  <!-- Mobile API Mappings -->
-  
-  <servlet-mapping>
-    <servlet-name>DeleteMeasurementService</servlet-name>
-    <url-pattern>/api/measurement/delete</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>HistoryService</servlet-name>
-    <url-pattern>/api/history</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>MagneticMeasureService</servlet-name>
-    <url-pattern>/api/magnetic/measure</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>MeasureService</servlet-name>
-    <url-pattern>/api/measure</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>MeasurementsService</servlet-name>
-    <url-pattern>/api/measurements</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>RegisterDeviceService</servlet-name>
-    <url-pattern>/api/device/register</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>RegisterUserService</servlet-name>
-    <url-pattern>/api/user/register</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>ProductionQualityControlService</servlet-name>
-    <url-pattern>/api/production/qc</url-pattern>
-  </servlet-mapping>  
-  
-  <!-- Ping API Mappings -->
-  
-  <servlet-mapping>
-    <servlet-name>DatabasePingService</servlet-name>
-    <url-pattern>/ping/database</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>JVMPingService</servlet-name>
-    <url-pattern>/ping/jvm</url-pattern>
-  </servlet-mapping>
-  
-  <!-- Web Mappings -->
-  
-  <servlet-mapping>
-    <servlet-name>MapServlet</servlet-name>
-    <url-pattern>/map</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>StatsServlet</servlet-name>
-    <url-pattern>/admin/stats</url-pattern>
-  </servlet-mapping>
-  
-  <servlet-mapping>
-    <servlet-name>HelloServlet</servlet-name>
-    <url-pattern>/hello</url-pattern>
-  </servlet-mapping>
+	<context-param>
+		<param-name>quartz:shutdown-on-unload</param-name>
+		<param-value>true</param-value>
+	</context-param>
+	<context-param>
+		<param-name>quartz:wait-on-shutdown</param-name>
+		<param-value>false</param-value>
+	</context-param>
+	<context-param>
+		<param-name>quartz:start-on-load</param-name>
+		<param-value>true</param-value>
+	</context-param>
+	<listener>
+		<listener-class>org.quartz.ee.servlet.QuartzInitializerListener</listener-class>
+	</listener>
+
+	<!-- Mobile API Servlets -->
+
+	<servlet>
+		<servlet-name>DeleteMeasurementService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.DeleteMeasurementService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>HistoryService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.HistoryService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>MagneticMeasureService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.MagneticMeasureService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>MeasureService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.MeasureService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>MeasurementsService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.MeasurementsService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>RegisterDeviceService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.RegisterDeviceService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>RegisterUserService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.RegisterUserService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>ProductionQualityControlService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.ProductionQualityControlService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>PasswordService</servlet-name>
+		<servlet-class>com.vaavud.server.api.mobile.PasswordService</servlet-class>
+	</servlet>
+	<!-- Ping API Servlets -->
+
+	<servlet>
+		<servlet-name>DatabasePingService</servlet-name>
+		<servlet-class>com.vaavud.server.api.ping.DatabasePingService</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>JVMPingService</servlet-name>
+		<servlet-class>com.vaavud.server.api.ping.JVMPingService</servlet-class>
+	</servlet>
+
+	<!-- Web Servlets -->
+
+	<servlet>
+		<servlet-name>MapServlet</servlet-name>
+		<servlet-class>com.vaavud.server.web.map.MapServlet</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>StatsServlet</servlet-name>
+		<servlet-class>com.vaavud.server.web.admin.StatsServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>HelloServlet</servlet-name>
+		<servlet-class>com.vaavud.server.web.hello.HelloServlet</servlet-class>
+	</servlet>
+
+	<!-- Mobile API Mappings -->
+
+	<servlet-mapping>
+		<servlet-name>DeleteMeasurementService</servlet-name>
+		<url-pattern>/api/measurement/delete</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>HistoryService</servlet-name>
+		<url-pattern>/api/history</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>MagneticMeasureService</servlet-name>
+		<url-pattern>/api/magnetic/measure</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>MeasureService</servlet-name>
+		<url-pattern>/api/measure</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>MeasurementsService</servlet-name>
+		<url-pattern>/api/measurements</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>RegisterDeviceService</servlet-name>
+		<url-pattern>/api/device/register</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>RegisterUserService</servlet-name>
+		<url-pattern>/api/user/register</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>ProductionQualityControlService</servlet-name>
+		<url-pattern>/api/production/qc</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>PasswordService</servlet-name>
+		<url-pattern>/api/password</url-pattern>
+	</servlet-mapping>
+
+
+	<!-- Ping API Mappings -->
+
+	<servlet-mapping>
+		<servlet-name>DatabasePingService</servlet-name>
+		<url-pattern>/ping/database</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>JVMPingService</servlet-name>
+		<url-pattern>/ping/jvm</url-pattern>
+	</servlet-mapping>
+
+	<!-- Web Mappings -->
+
+	<servlet-mapping>
+		<servlet-name>MapServlet</servlet-name>
+		<url-pattern>/map</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>StatsServlet</servlet-name>
+		<url-pattern>/admin/stats</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>HelloServlet</servlet-name>
+		<url-pattern>/hello</url-pattern>
+	</servlet-mapping>
 
 </web-app>
