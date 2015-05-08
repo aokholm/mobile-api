@@ -2,34 +2,40 @@ package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.mail.Message;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Store;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
-import org.hibernate.loader.custom.Return;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.restfb.types.Url;
 import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
-import com.vaavud.server.api.mobile.DeleteMeasurementService.RequestParameters;
 import com.vaavud.server.api.util.PasswordUtil;
-import com.vaavud.server.api.util.ServiceUtil;
 import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.User;
-import com.vaavud.server.model.phone.PhoneModel;
-import com.vaavud.util.UUIDUtil;
 
 public class PasswordService extends AbstractJSONService<PasswordService.RequestParameters> {
-
+    
+    // password reset method inspired by http://stackoverflow.com/questions/2755708/password-reset-by-email-without-a-database-table
+    
+    private static final String URL = "https://mobile-api.vaavud.com/api/password";
+    
     private static final Logger logger = Logger.getLogger(PasswordService.class);
 
     public static class RequestParameters implements Serializable {
@@ -147,19 +153,66 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
             json.put("action", "SendEmail hash(hash(pass)): " + generateKey(user.getPasswordHash()));
             json.put("key", generateKey(user.getPasswordHash()));
             
+            
+            
+            
+            try {
+//                Context initCtx = new InitialContext();
+//                Context envCtx = (Context) initCtx.lookup("java:comp/env");
+//                javax.mail.Session session = (javax.mail.Session) envCtx.lookup("mail/Session");
+                
+                // Recipient's email ID needs to be mentioned.
+                String toAddress = "aokholm@gmail.com";//change accordingly
 
-//            String host = "smtp.gmail.com";
-//            String username = "user";
-//            String password = "passwd";
-//            Properties props = new Properties();
-//            props.setProperty("mail.smtp.ssl.enable", "true");
-//            // set any other needed mail.smtp.* properties here
-//            Session session = Session.getInstance(props);
-//            MimeMessage msg = new MimeMessage(session);
-//            // set the message content here
-//            Transport.send(msg, username, password);
-            
-            
+                // Sender's email ID needs to be mentioned
+                String fromAddress = "andreas@vaavud.com";//change accordingly
+
+                final String username = "andreas@vaavud.com";
+                final String password = "Ikju..v..00";
+                Properties props = new Properties();
+                // Assuming you are sending email through relay.jangosmtp.net
+                String host = "smtp.gmail.com";
+
+                props.put("mail.smtp.auth", "true");
+                props.put("mail.smtp.starttls.enable", "true");
+                props.put("mail.smtp.host", host);
+                props.put("mail.smtp.port", "587");
+                // set any other needed mail.imap.* properties here
+                
+             // Get the Session object.
+                javax.mail.Session session = javax.mail.Session.getInstance(props,
+                new javax.mail.Authenticator() {
+                   protected PasswordAuthentication getPasswordAuthentication() {
+                      return new PasswordAuthentication(username, password);
+                   }
+                });
+
+                
+                Message message = new MimeMessage(session);
+                message.setFrom(new InternetAddress(fromAddress));
+
+                InternetAddress to[] = new InternetAddress[1];
+                to[0] = new InternetAddress(toAddress);
+                message.setRecipients(Message.RecipientType.TO, to);
+           
+                message.setSubject("Vaavud reset password");
+                StringBuilder sb = new StringBuilder();
+                sb.append("Press this link: ");
+                sb.append(PasswordService.URL);
+                sb.append("?action=" + "SetPassword");
+                sb.append("&email=" + email);
+                sb.append("&key=" + generateKey(user.getPasswordHash()));
+                message.setContent(sb.toString(), "text/plain");
+                
+                Transport.send(message);
+                
+                logger.info("Sent email to " + toAddress + " successfully....");
+                
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+                    
         } else {
             logger.info("User with email does not exist");
             json.put("action", "no Action - user does not exist");
