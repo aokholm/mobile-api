@@ -8,13 +8,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import javax.mail.Message;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -22,7 +18,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.restfb.types.Url;
 import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
@@ -34,7 +29,7 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
     
     // password reset method inspired by http://stackoverflow.com/questions/2755708/password-reset-by-email-without-a-database-table
     
-    private static final String URL = "https://mobile-api.vaavud.com/api/password";
+    private static final String URL = "http://vaavud.com/password";
     
     private static final Logger logger = Logger.getLogger(PasswordService.class);
 
@@ -119,7 +114,7 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
         }
         if (object.getAction() == null) {
             logger.info("Process password with no action");
-            return;
+            throw new ProtocolException("Process password with no action");
         }
         
         logger.info("Process object " + object);
@@ -128,7 +123,7 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
         case "sendMail":
             writeJSONResponse(resp, mapper, sendMail(object, hibernateSession));
             break;
-        case "SetPassword":
+        case "setPassword":
             writeJSONResponse(resp, mapper, setPassword(object, hibernateSession));
         default:
             break;
@@ -150,25 +145,20 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
         Map<String, Object> json = new HashMap<String, Object>();
         
         if (user != null) {
-            json.put("action", "SendEmail hash(hash(pass)): " + generateKey(user.getPasswordHash()));
-            json.put("key", generateKey(user.getPasswordHash()));
-            
-            
-            
-            
             try {
+//                Could not get                
 //                Context initCtx = new InitialContext();
 //                Context envCtx = (Context) initCtx.lookup("java:comp/env");
 //                javax.mail.Session session = (javax.mail.Session) envCtx.lookup("mail/Session");
                 
                 // Recipient's email ID needs to be mentioned.
-                String toAddress = "aokholm@gmail.com";//change accordingly
+                String toAddress = email;//change accordingly
 
                 // Sender's email ID needs to be mentioned
-                String fromAddress = "andreas@vaavud.com";//change accordingly
+                String fromAddress = "hello@vaavud.com";//change accordingly
 
-                final String username = "andreas@vaavud.com";
-                final String password = "Ikju..v..00";
+                final String username = "admin@vaavud.com";
+                final String password = "Eftyoe,;45";
                 Properties props = new Properties();
                 // Assuming you are sending email through relay.jangosmtp.net
                 String host = "smtp.gmail.com";
@@ -179,14 +169,7 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
                 props.put("mail.smtp.port", "587");
                 // set any other needed mail.imap.* properties here
                 
-             // Get the Session object.
-                javax.mail.Session session = javax.mail.Session.getInstance(props,
-                new javax.mail.Authenticator() {
-                   protected PasswordAuthentication getPasswordAuthentication() {
-                      return new PasswordAuthentication(username, password);
-                   }
-                });
-
+                javax.mail.Session session = javax.mail.Session.getInstance(props);
                 
                 Message message = new MimeMessage(session);
                 message.setFrom(new InternetAddress(fromAddress));
@@ -199,15 +182,17 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
                 StringBuilder sb = new StringBuilder();
                 sb.append("Press this link: ");
                 sb.append(PasswordService.URL);
-                sb.append("?action=" + "SetPassword");
-                sb.append("&email=" + email);
+                sb.append("/newPassword");
+                sb.append("?email=" + email);
                 sb.append("&key=" + generateKey(user.getPasswordHash()));
                 message.setContent(sb.toString(), "text/plain");
                 
-                Transport.send(message);
+                Transport.send(message, username, password);
+
+                
                 
                 logger.info("Sent email to " + toAddress + " successfully....");
-                
+                json.put("status", "EMAIL_SEND_SUCCESS");                
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -215,7 +200,7 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
                     
         } else {
             logger.info("User with email does not exist");
-            json.put("action", "no Action - user does not exist");
+            json.put("status", "INVALID_EMAIL");
         }
         return json;
     }
@@ -237,11 +222,11 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
             logger.info("Creating setting password given client hash " + clientPasswordHash);
             user.setPasswordHash(PasswordUtil.createHash(clientPasswordHash));
             
-            json.put("action", "resets password :)");
+            json.put("status", "NEW_PASSWORD_SET");
         }
         else {
             logger.info("key didn't match");
-            json.put("action", "key didn't match");
+            json.put("status", "INVALID_RESET_KEY");
         }
         
         hibernateSession.getTransaction().commit();
