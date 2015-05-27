@@ -3,6 +3,7 @@
 	<name>mobile-api</name>
 	<comment></comment>
 	<projects>
+		<project>Sensor</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

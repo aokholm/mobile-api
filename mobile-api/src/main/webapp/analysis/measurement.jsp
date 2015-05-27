@@ -1,320 +1,363 @@
-<%@page import="com.vaavud.server.analysis.model.CoreMeasurementPoint"%>
-<%@page import="com.vaavud.server.analysis.magnetic.FFTManager"%>
-<%@page import="com.vaavud.server.analysis.model.CoreMagneticPoint"%>
-<%@page import="com.vaavud.server.analysis.magnetic.DataManager"%>
-<%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
-         import="java.lang.reflect.Field,java.util.*,org.hibernate.*,org.hibernate.type.StandardBasicTypes,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
-	
-// Check password     
-String pass = "2gh7yJfJ6H";     
-
-if (!pass.equals(request.getParameter("pass"))) {
-	ServiceUtil.sendUnauthorizedErrorResponse(response);
-	return;
-}
-   
-// Start hibernate Session
-Session hibernateSession = Model.get().getSessionFactory().openSession();
-   
-MeasurementSession measurementSession;
-Device device;
-MagneticSession magneticSession;
-   
-if (request.getParameter("session_id") == null) {
-	measurementSession = (MeasurementSession) hibernateSession
-			.createQuery("from MeasurementSession order by id DESC LIMIT 1").uniqueResult();
-} else {
-	measurementSession = (MeasurementSession) hibernateSession
-			.get(MeasurementSession.class, Long.parseLong(request.getParameter("session_id")));
-}
-   
-device = measurementSession.getDevice();
-Query query = hibernateSession.createQuery("from MagneticSession where measurementSessionUuid = :measurementSessionUuid");
-query = query.setParameter("measurementSessionUuid", measurementSession.getUuid());
-magneticSession = (MagneticSession) query.uniqueResult();
-   
-       
-// create wind time array // MP.time-MS.startTime)/1000
-List<MeasurementPoint> mesPoints = measurementSession.getPoints();
-double[] mpTime = new double[mesPoints.size()];
-
-for (int i=0; i<mesPoints.size(); i++) {
-	mpTime[i] = (mesPoints.get(i).getTime().getTime() - measurementSession.getStartTime().getTime())/1000d;
-}
-
-
-List<MagneticPoint> magPoints = null;
-List<CoreMeasurementPoint> coreMeasurementPoints = null;
-
-if (magneticSession != null){
-	
-	magPoints = magneticSession.getMagneticPoints();
-	
-	//********* GENERATE MAGANALYSIS *********//
-	DataManager dataManager = new DataManager();
-	List<CoreMagneticPoint> coreMagneticPoints = new ArrayList<CoreMagneticPoint>(magPoints.size());
-	
-	// generate list of coreMagneticPoints
-	for (int i = 0; i < magPoints.size(); i++) {
-		coreMagneticPoints.add( new CoreMagneticPoint( magPoints.get(i).getTime(), magPoints.get(i).getX(), magPoints.get(i).getY(), magPoints.get(i).getZ() ));
-	}
-	dataManager.addMagneticFieldReadings(coreMagneticPoints);
-	FFTManager fftManager = new FFTManager(dataManager);
-	coreMeasurementPoints = fftManager.getMeasurementPoints();
-}
-
-
-
-//End timestep shown
-double endTime = mpTime[mpTime.length-1];
-if (magPoints != null) {
-	if (magPoints.get(magPoints.size() -1).getTime() > endTime ) {
-		endTime = magPoints.get(magPoints.size() -1).getTime();
-	}
-}
-
-
-
-//************* START OF WEBPAGE ************/
-%><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%><!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-  <title>Vaavud</title>
-  <style type="text/css">
-      html {height:100%}
-      body {height:100%; margin:0; padding:0}
-      table {min-width:400px;}
-      td {border:1px solid #000000;}
-      
-      .left {text-align:left;}
-      .right {text-align:right;}
-      #map_canvas {
-        width: 500px;
-        height: 400px;
-      }
-      
-      
-  </style>
-  <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-  <script>
-  function initialize() {
-    var mapCanvas = document.getElementById('map_canvas');
-    
-    var measurementLatlng = new google.maps.LatLng(<%=measurementSession.getPosition().getLatitude()%>, <%=measurementSession.getPosition().getLongitude()%>);
-    
-    var mapOptions = {
-      center: measurementLatlng,
-      zoom: 11,
-      mapTypeId: google.maps.MapTypeId.SATELLITE
-    };
-    var map = new google.maps.Map(mapCanvas, mapOptions);
-    
- 	// To add the marker to the map, use the 'map' property
-    var marker = new google.maps.Marker({
-        position: measurementLatlng,
-        map: map,
-        title:"!"
-    });
-  }
-  google.maps.event.addDomListener(window, 'load', initialize);
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>Vaavud</title>
+<style type="text/css">
+html {
+	height: 100%
+}
+
+body {
+	height: 100%;
+	margin: 0;
+	padding: 0
+}
+
+table {
+	min-width: 400px;
+}
+
+td {
+	border: 1px solid #000000;
+}
+
+.left {
+	text-align: left;
+}
+
+.right {
+	text-align: right;
+}
+
+#col1 {
+	width: 1000px;
+	float: left;
+}
+
+#col2 {
+	width: 900px;
+	float: left;
+}
+
+.map_canvas {
+	width: 450px;
+	height: 400px;
+	float: left;
+}
+</style>
+<script type="text/javascript"
+	src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript"
+	src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script>
+	function initialize() {
+
+		<c:if test="${not empty latitude}">
+
+		var measurementLatlng = new google.maps.LatLng(
+				<c:out value="${latitude}"/>, <c:out value="${longitude}"/>);
+
+		var mapCanvas1 = document.getElementById('map_canvas1');
+		var mapOptions1 = {
+			center : measurementLatlng,
+			zoom : 18,
+			mapTypeId : google.maps.MapTypeId.SATELLITE
+		};
+		var map1 = new google.maps.Map(mapCanvas1, mapOptions1);
+
+		var marker1 = new google.maps.Marker({
+			position : measurementLatlng,
+			map : map1,
+			title : "!"
+		});
+
+		var mapCanvas2 = document.getElementById('map_canvas2');
+		var mapOptions2 = {
+			center : measurementLatlng,
+			zoom : 4,
+			mapTypeId : google.maps.MapTypeId.SATELLITE
+		};
+		var map2 = new google.maps.Map(mapCanvas2, mapOptions2);
+		var marker2 = new google.maps.Marker({
+			position : measurementLatlng,
+			map : map2,
+			title : "!"
+		});
+
+		</c:if>
+	}
+
+	google.maps.event.addDomListener(window, 'load', initialize);
 </script>
 </head>
 <body>
-	<div id="dashboard">
-		<div id="chart1"></div>
-		<div id="chart2"></div>
-		<div id="control"></div>
+	<div id="col1">
+	 <div id="jsAnalysis"></div>
+		<div id="dashboard">
+			<c:forEach var="chart" items="${charts}" varStatus="theCount">
+				<div id="<c:out value="${chart.identifier}"/>"></div>
+				<c:if test="${theCount.count == 3}">
+					<div id="control"></div>
+				</c:if>
+			</c:forEach>
+			<button onclick="changeRange();">Set time: 5:25</button>
+		</div>
 	</div>
-	<div id="map_canvas"></div>
-	
-	<br />
-	<h2>Device</h2>
-	<table>	
-			<%
-			for (Field field : device.getClass().getDeclaredFields()) {
-			    field.setAccessible(true);
-			    String name = field.getName();
-			    Object value = field.get(device);
-			    %><tr><td><%=name%></td><td><%=value%></td></tr><%  
-			}
-			%>
-	</table>
-	<h2>Measurement Session</h2>
-	<table>	
-			<%
-			if (measurementSession != null) {
-				for (Field field : measurementSession.getClass().getDeclaredFields()) {
-				    field.setAccessible(true);
-				    String name = field.getName();
-				    Object value = field.get(measurementSession);
-				    if (name == "device") {
-				    	%><tr><td>device</td><td>...</td></tr><%
-				    }
-				    else if (name == "points") {
-				    	%><tr><td>points</td><td>...</td></tr><%
-				    }
-				    else {
-				    	%><tr><td><%=name%></td><td><%=value%></td></tr><%
-				    }   
-				}
-			}
-			%>
-	</table>
-	<h2>Magnetic Session</h2>
-	<table>	
-			<%
-			if (magneticSession != null) {
-				for (Field field : magneticSession.getClass().getDeclaredFields()) {
-				    field.setAccessible(true);
-				    String name = field.getName();
-				    Object value = field.get(magneticSession);
-				    if (name == "magneticPoints") {
-				    	%><tr><td>magneticPoints</td><td>...</td></tr><%
-				    }
-				    else {
-				    	%><tr><td><%=name%></td><td><%=value%></td></tr><%
-				    }  
-				}
-			}
-			%>
-	</table>
-	
+	<div id="col2">
+		<c:forEach var="sensor" items="${sensors}">
+			<c:out value="${sensor}" />
+			<br />
+		</c:forEach>
 
-<script type="text/javascript">
-    // Load the Visualization API and the piechart package.
-    google.load('visualization', '1.1', {
-        'packages' : [ 'corechart', 'controls' ]
-    });
- 
-    // Set a callback to run when the Google Visualization API is loaded.
-    google.setOnLoadCallback(drawCharts);
- 	
-    function drawCharts() {
-    	drawVisualization();
-    }
-    
-    
-	
-	function drawVisualization() {
-		
-		var chartAreaLeft = 80;
-		var chartAreaHeight = '80%';
-		var chartAreaWidth = 680;
-		var chartWidth = 900;
-		var chartHeight = 300;
-		var controlChartHeight = 70;
-		
-		var dashboard = new google.visualization.Dashboard(
-		     document.getElementById('dashboard'));
-		
-		var control = new google.visualization.ControlWrapper({
-		  'controlType': 'ChartRangeFilter',
-		  'containerId': 'control',
-		  'options': {
-		    // Filter by the time axis.
-		    'filterColumnIndex': 0,
-		    'ui': {
-		      'chartType': 'LineChart',
-		      'chartOptions': {
-		        'chartArea': {'left':chartAreaLeft, 'width': chartAreaWidth},
-		        'hAxis': {'baselineColor': 'none', 'minValue': 0, 'maxValue': <%=endTime%>},
-			    'width': chartWidth,
-			    'height': controlChartHeight
-		      },
-		      // Display a single series that shows the closing value of the stock.
-		      // Thus, this view has two columns: the date (axis) and the stock value (line series).
-		      'chartView': {
-		        'columns': [0, 1, 2]
-		      },
-		      // 2 seconds
-		      'minRangeSize': 1
-		    }
-		  },
-		  'state': {'range': {'start': 0, 'end': 30}}
+		<c:out value="${deviceTable}" escapeXml="false" />
+		<div id="map_canvas1" class="map_canvas"></div>
+		<div id="map_canvas2" class="map_canvas"></div>
+		<c:out value="${measurementSessionTable}" escapeXml="false" />
+		<c:out value="${magneticSessionTable}" escapeXml="false" />
+
+		<!-- Data table -->
+		<button onclick="table.draw(dataView);">Show Table</button>
+		<div id="table"></div>
+
+	</div>
+
+
+
+	<script type="text/javascript">
+		// Load the Visualization API and the piechart package.
+		google.load('visualization', '1.1', {
+			'packages' : [ 'corechart', 'controls', 'table' ]
 		});
-		
-		var chart1 = new google.visualization.ChartWrapper({
-		  'chartType': 'LineChart',
-		  'containerId': 'chart1',
-		  'options': {
-		    // Use the same chart area width as the control for axis alignment.
-		    'chartArea': {'left': chartAreaLeft,'height': chartAreaHeight, 'width': chartAreaWidth},
-		    'series' : [{"lineWidth": 1, "pointSize": 2}],
-		    'vAxis': {'title': "windspeed (m/s)"},
-		    //'legend': {'position': 'none'},
-		    'width': chartWidth,
-		    'height': chartHeight
-		  },
-		  // Convert the first column from 'date' to 'string'.
-		  'view': {
-		    'columns': [0, 1, 2]
-		  }
-		});
-		
-		var chart2 = new google.visualization.ChartWrapper({
-			  'chartType': 'LineChart',
-			  'containerId': 'chart2',
-			  'options': {
-			    // Use the same chart area width as the control for axis alignment.
-			    'chartArea': {'left': chartAreaLeft, 'height': chartAreaHeight, 'width': chartAreaWidth},
-			    'series' : [{"lineWidth": 1, "pointSize": 0}, 
-				            {"lineWidth": 1, "pointSize": 0}, 
-				            {"lineWidth": 1, "pointSize": 0}],
-			    'vAxis': {'title': "magneticField (mu-Tesla)"},
-			    //'legend': {'position': 'none'},
-			    'width': chartWidth,
-			    'height': chartHeight
-			  },
-			  // Convert the first column from 'date' to 'string'.
-			  'view': {
-			    'columns': [0, 3,4,5]
-			  }
+
+		// Set a callback to run when the Google Visualization API is loaded.
+		google.setOnLoadCallback(drawCharts);
+
+		function drawCharts() {
+			drawVisualization();
+		}
+
+		function changeRange() {
+			control.setState({
+				'range' : {
+					'start' : 5,
+					'end' : 25
+				}
 			});
-		
-		
-		var data = new google.visualization.DataTable();
-		data.addColumn('number', 'time');
-		data.addColumn('number', 'windspeed');
-		data.addColumn('number', 'frequency');
-		data.addColumn('number', 'x');
-		data.addColumn('number', 'y');
-		data.addColumn('number', 'z');
-		 
-		<% 
-		for (int i = 0; i < mesPoints.size() ; i++) {
-			%>data.addRow([<%=mpTime[i]%>, <%=mesPoints.get(i).getWindSpeed()%>, null, null, null, null]);
-			<%
+			control.draw();
 		}
-		if (coreMeasurementPoints != null) {
-			for (int i = 0; i < coreMeasurementPoints.size() ; i++) {
-				%>data.addRow([<%=coreMeasurementPoints.get(i).getTime()%>, null, <%=coreMeasurementPoints.get(i).getFrequency()%>, null, null, null]);
-				<%
-			}
-			
-			for (int i = 0; i < magPoints.size() ; i++) {
-				%>data.addRow([<%=magPoints.get(i).getTime()%>, null, null, <%=magPoints.get(i).getX()%>, <%=magPoints.get(i).getY()%>, <%=magPoints.get(i).getZ()%>]);
-				<%
+		
+		var ms = {};
+		
+		ms.startTime = 0;
+		<c:if test="${not empty startTime}">
+		  ms.startTime = <c:out value="${startTime}"/>;
+    </c:if>
+    
+    ms.sampleId = null;
+    ms.windSpeed = null;
+    ms.testDescription = null;
+    ms.id = <c:out value="${measurementSession.id}"/>;
+    
+    source = "<c:out value="${measurementSession.source}"/>";
+    <c:if test="${not empty measurementSession.source}">
+    splitStr = source.split(", ");
+    if (splitStr.length == 3) {
+    	ms.sampleId = splitStr[0];
+    	ms.windSpeed = splitStr[1];
+    	ms.testDescription = splitStr[2];
+    }
+    </c:if> 
+
+
+		var table;
+		var dataView;
+		var control;
+
+		function drawVisualization() {
+			//
+			// Chart settings
+			//
+			var chartAreaLeft = 80;
+			var chartAreaHeight = '80%';
+			var chartAreaWidth = 680;
+			var chartWidth = 980;
+			var chartHeight = 300;
+			var controlChartHeight = 70;
+
+			var dashboard = new google.visualization.Dashboard(document
+					.getElementById('dashboard'));
+
+			//
+			// Control chart
+			// 
+			control = new google.visualization.ControlWrapper(
+					{
+						'controlType' : 'ChartRangeFilter',
+						'containerId' : 'control',
+						'options' : {
+							// Filter by the time axis.
+							'filterColumnIndex' : 0,
+							'ui' : {
+								'chartType' : 'LineChart',
+								'chartOptions' : {
+									'chartArea' : {
+										'left' : chartAreaLeft,
+										'width' : chartAreaWidth
+									},
+									'hAxis' : {
+										'baselineColor' : 'none',
+										'minValue' : 0
+									},
+									'width' : chartWidth,
+									'height' : controlChartHeight
+								},
+								// Display a single series that shows the closing value of the stock.
+								// Thus, this view has two columns: the date (axis) and the stock value (line series).
+								'chartView' : {
+									'columns' : [
+	<%=request.getAttribute("controlChartColumn")%>
+		]
+								},
+								// 2 seconds
+								'minRangeSize' : 0.1
+							}
+						},
+						'state' : {
+							'range' : {
+								'start' : 5,
+								'end' : 25
+							}
+						}
+					});
+
+			//
+			// Settings for each chart 
+			// 
+			<c:forEach var="chart" items="${charts}">
+			var <c:out value="${chart.identifier}"/> = new google.visualization.ChartWrapper(
+					<c:out value="${chart.chartJSON}" escapeXml="false"/>);
+			<c:out value="${chart.identifier}"/>.setOption('chartArea', {
+				'left' : chartAreaLeft,
+				'height' : chartAreaHeight,
+				'width' : chartAreaWidth
+			});
+			<c:out value="${chart.identifier}"/>.setOption('width', chartWidth);
+			<c:out value="${chart.identifier}"/>.setOption('height',
+					chartHeight);
+			</c:forEach>
+
+			//
+			// Data for the charts
+			//
+			var data = <c:out value="${dataTable}" escapeXml="false"/>;
+			var dataTable = new google.visualization.DataTable(data, 0.6);
+
+			//
+			// Add charts to the dashboard
+			//
+			<c:forEach var="chart" items="${charts}">
+			dashboard.bind(control, <c:out value="${chart.identifier}"/>);
+			</c:forEach>
+
+			dataView = new google.visualization.DataView(dataTable);
+			table = new google.visualization.Table(document
+					.getElementById('table'));
+
+			dashboard.draw(dataTable);
+
+			google.visualization.events.addListener(dashboard, 'ready',
+					function() {
+						jsFreqAnalysis();
+					});
+
+			function jsFreqAnalysis() {
+				controlCols = control.getOption('ui.chartView').columns;
+
+				freqCols = controlCols.slice(1);
+				rows = [];
+
+				for (var i = 0; i < freqCols.length; i++) {
+					rows[i] = dataView.getFilteredRows([ {
+						column : 0,
+						minValue : control.getState().range.start,
+						maxValue : control.getState().range.end
+					}, {
+						column : freqCols[i],
+						minValue : 0
+					} // remove null
+					]);
+				}
+				 
+				means = [];
+				maxs = [];
+				mins = [];
+				stds = [];
+				time = [];
+
+				for (var i = 0; i < freqCols.length; i++) {
+					sum = 0;
+					max = 0;
+					min = dataView.getValue(rows[i][0], freqCols[i]);
+					SS = 0;
+					timeView = Math.floor(ms.startTime + dataView.getValue(rows[i][0], 0)*1000);
+					date = new Date(timeView);
+					timeStr = date.getFullYear() + "-" + ('0' + date.getMonth()).slice(-2)  + "-" + ('0' + date.getDay()).slice(-2) + " "
+					  + ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2) + ":" + ('0' + date.getSeconds()).slice(-2) 
+					  + "," + ('0000' + timeView%1000).slice(-3);
+					
+
+					for (var j = 0; j < rows[i].length; j++) {
+						val = dataView.getValue(rows[i][j], freqCols[i]);
+						// sum
+						sum += val;
+						// max
+						if (val > max) {
+							max = val;
+						}
+
+						if (val < min) {
+							min = val;
+						}
+
+						SS += Math.pow(val, 2);
+
+					}
+
+					means[i] = sum / rows[i].length;
+					maxs[i] = max;
+					mins[i] = min;
+					stds[i] = Math.sqrt(1 / rows[i].length * SS
+							- Math.pow(means[i], 2));
+					time[i] = timeStr; 
+				}
+				  
+				analysis = "<table><tr><th>name</th><th>time</th><th>mean</th><th>max</th><th>min</th><th>std</th>";
+				analysis += "<th>sampleId</th><th>WindSpeed</th><th>testDescrip</th><th>id</td></tr>";
+
+				for (var i = 0; i < freqCols.length; i++) {
+					name = dataView.getColumnLabel(freqCols[i]);
+					analysis += "<tr><td>" + name 
+					    + "</td><td>" + time[i] 
+					    + "</td><td>" + means[i].toPrecision(5)
+							+ "</td><td>" + maxs[i].toPrecision(4) 
+							+ "</td><td>" + mins[i].toPrecision(4)
+							+ "</td><td>" + stds[i].toPrecision(4)
+							+ "</td><td>" + ms.sampleId
+							+ "</td><td>" + ms.windSpeed
+							+ "</td><td>" + ms.testDescription
+							+ "</td><td>" + ms.id + "</td></tr>";
+				}
+
+				analysis += "</table>";
+
+				$("#jsAnalysis").html(analysis);
 			}
 		}
-		%>
-		
- 		dashboard.bind(control, chart1);
- 		dashboard.bind(control, chart2);
- 		
-		dashboard.draw(data);
-		
-	}	
- 	
-</script>
+	</script>
 
 </body>
 </html>
-<%
-if (hibernateSession.getTransaction() != null && hibernateSession.getTransaction().isActive()) {
-    hibernateSession.getTransaction().rollback();
-}
-hibernateSession.close();
-%>

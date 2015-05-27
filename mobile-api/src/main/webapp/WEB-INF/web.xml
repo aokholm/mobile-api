@@ -81,10 +81,10 @@
 		<servlet-class>com.vaavud.server.web.admin.StatsServlet</servlet-class>
 	</servlet>
 
-	<servlet>
-		<servlet-name>HelloServlet</servlet-name>
-		<servlet-class>com.vaavud.server.web.hello.HelloServlet</servlet-class>
-	</servlet>
+  <servlet>
+    <servlet-name>MeasurementServlet</servlet-name>
+    <servlet-class>com.vaavud.server.web.analysis.MeasurementServlet</servlet-class>
+  </servlet>
 
 	<!-- Mobile API Mappings -->
 
@@ -147,12 +147,11 @@
 		<servlet-name>StatsServlet</servlet-name>
 		<url-pattern>/admin/stats</url-pattern>
 	</servlet-mapping>
-
-	<servlet-mapping>
-		<servlet-name>HelloServlet</servlet-name>
-		<url-pattern>/hello</url-pattern>
-	</servlet-mapping>
-	
+    <servlet-mapping>
+    <servlet-name>MeasurementServlet</servlet-name>
+    <url-pattern>/analysis/measurement</url-pattern>
+  </servlet-mapping>
+  
 	<filter>
 	  <filter-name>CorsFilter</filter-name>
 	  <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
