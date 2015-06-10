@@ -1,8 +1,9 @@
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
-         import="java.util.*,java.text.DecimalFormat,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*"%><%
+         import="java.util.*,java.text.DecimalFormat,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.vaavud.server.api.util.*,com.fasterxml.jackson.databind.*,org.apache.log4j.Logger"%><%
 
     String pass = "2gh7yJfJ6H";     
-    
+   	Logger logger = Logger.getLogger("SESSIONS.JSP");
+         
     if (!"2gh7yJfJ6H".equals(request.getParameter("pass"))) {
         ServiceUtil.sendUnauthorizedErrorResponse(response);
         return;
@@ -10,13 +11,21 @@
          
     Session hibernateSession = Model.get().getSessionFactory().openSession();
          
-    String[] queryParams = {"D.vendor", "D.model", "D.id"};
+    String[] queryParams = {"D.vendor", "D.model", "D.id", "D.os", "MS.windMeter"};
     
     String whereClause = "";
-    
+    boolean isFirst = true;
     for (String param : queryParams) {
-    	if (request.getParameter(param) != null && request.getParameter(param) != "")
-    		whereClause = "where " + param + " like '" + request.getParameter(param) + "' ";
+    	if (request.getParameter(param) != null && request.getParameter(param) != ""){
+    		if (isFirst){
+    			whereClause += " where ";
+    			isFirst = false;
+    		}else{
+    			whereClause += " AND ";
+    		}
+    		whereClause +=  param + " like '" + request.getParameter(param) + "' ";
+    		
+    	}
     }
     
     String limit = "1000";
@@ -46,10 +55,12 @@
     	"    MeasurementPoint AS MP ON MS.id = MP.session_id                             " +
     	whereClause +                                                                    
     	"GROUP BY MS.id                                                                  " +
-    	"order by MS.id                                                                 " +
+    	"order by MS.id  																" +
     	"DESC                                                                            " +
     	"LIMIT 0 , " + limit;                                                                
-
+	
+    logger.info("Sessions SQL: "+ sql);
+    
     List<Object[]> session_ids = hibernateSession.createSQLQuery(sql).list();
     
     DecimalFormat dfd = new DecimalFormat("0.00");
