@@ -69,6 +69,13 @@
 		<servlet-name>JVMPingService</servlet-name>
 		<servlet-class>com.vaavud.server.api.ping.JVMPingService</servlet-class>
 	</servlet>
+	
+	<!-- External API Servlets -->
+
+  <servlet>
+    <servlet-name>MeasurementsExternalService</servlet-name>
+    <servlet-class>com.vaavud.server.api.external.MeasurementsExternalService</servlet-class>
+  </servlet>
 
 	<!-- Web Servlets -->
 
@@ -125,6 +132,11 @@
 		<url-pattern>/api/password</url-pattern>
 	</servlet-mapping>
 
+  <!-- External API Mappings -->
+  <servlet-mapping>
+    <servlet-name>MeasurementsExternalService</servlet-name>
+    <url-pattern>/api/external/measurements</url-pattern>
+  </servlet-mapping>
 
 	<!-- Ping API Mappings -->
 
