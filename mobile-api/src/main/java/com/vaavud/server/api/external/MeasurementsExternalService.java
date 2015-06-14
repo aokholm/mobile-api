@@ -34,8 +34,9 @@ public class MeasurementsExternalService extends AbstractJSONService<Measurement
 	static
     {
 	    AUTH_TOKENS = new HashMap<String, String>();
-	    AUTH_TOKENS.put("abcd", "vaavud.com");
-	    AUTH_TOKENS.put("123", "gmail.com");
+	    AUTH_TOKENS.put("YBp1d9aEsaP4Ww44DO3UJLGR75m9u3lN", "gmail.com");
+	    AUTH_TOKENS.put("Xx05Y2iObG8beertEOq7X7lgOMpJ6Yq8", "vaavud.com");
+	    AUTH_TOKENS.put("4zh6nl55236PeG3qJPHv4t0vfx8U1sbV", "tractrac.dk");
     }
 	
 	public static class RequestParameters implements Serializable {
