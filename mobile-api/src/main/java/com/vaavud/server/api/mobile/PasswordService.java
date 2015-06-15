@@ -23,7 +23,7 @@ import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
 import com.vaavud.server.api.util.PasswordUtil;
 import com.vaavud.server.model.entity.Device;
-import com.vaavud.server.model.entity.User;
+import com.vaavud.server.model.entity.UserProfile;
 
 public class PasswordService extends AbstractJSONService<PasswordService.RequestParameters> {
     
@@ -137,7 +137,7 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
         
         hibernateSession.beginTransaction();
 
-        final User user = (User) hibernateSession.createQuery("from User where email=:email")
+        final UserProfile user = (UserProfile) hibernateSession.createQuery("from User where email=:email")
                 .setString("email", email).uniqueResult();
 
         hibernateSession.getTransaction().commit();
@@ -213,7 +213,7 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
         
         hibernateSession.beginTransaction();
 
-        User user = (User) hibernateSession.createQuery("from User where email=:email")
+        UserProfile user = (UserProfile) hibernateSession.createQuery("from User where email=:email")
                 .setString("email", email).uniqueResult();
 
         Map<String, Object> json = new HashMap<String, Object>();

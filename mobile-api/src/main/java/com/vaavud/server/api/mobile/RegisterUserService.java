@@ -27,7 +27,7 @@ import com.vaavud.server.api.util.PasswordUtil;
 import com.vaavud.server.api.mobile.RegisterUserService.Input;
 import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.Gender;
-import com.vaavud.server.model.entity.User;
+import com.vaavud.server.model.entity.UserProfile;
 
 public class RegisterUserService extends AbstractJSONService<Input> {
 
@@ -87,18 +87,18 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 
 			String authToken;
 
-			final User authenticatedUser;
-			User existingUser = null;
+			final UserProfile authenticatedUser;
+			UserProfile existingUser = null;
 
 			if (isFacebookRegistering) {
-				existingUser = (User) hibernateSession
+				existingUser = (UserProfile) hibernateSession
 						.createQuery("from User where facebookId=:facebookId")
 						.setString("facebookId", object.getFacebookId())
 						.uniqueResult();
 			}
 
 			if (existingUser == null) {
-				existingUser = (User) hibernateSession
+				existingUser = (UserProfile) hibernateSession
 						.createQuery("from User where email=:email")
 						.setString("email", object.getEmail())
 						.uniqueResult();
@@ -186,7 +186,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 					return;
 				}
 				
-				User user = new User();
+				UserProfile user = new UserProfile();
 				user.setEmail(object.getEmail());
 				user.setFirstName(object.getFirstName());
 				user.setLastName(object.getLastName());

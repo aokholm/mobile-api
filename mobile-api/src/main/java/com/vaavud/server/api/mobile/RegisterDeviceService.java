@@ -17,7 +17,7 @@ import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
 import com.vaavud.server.api.util.ServiceUtil;
 import com.vaavud.server.model.entity.Device;
-import com.vaavud.server.model.entity.User;
+import com.vaavud.server.model.entity.UserProfile;
 import com.vaavud.server.model.phone.PhoneModel;
 import com.vaavud.util.UUIDUtil;
 
@@ -119,7 +119,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			
 			boolean validAgricultureSubscription = false;
 			if (device.getUser() != null) {
-				User deviceUser = device.getUser();
+				UserProfile deviceUser = device.getUser();
 				if (deviceUser.isValidAgricultureSubscription()) {
 					validAgricultureSubscription = true;
 				}

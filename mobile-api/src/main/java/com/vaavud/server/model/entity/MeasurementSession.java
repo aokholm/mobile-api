@@ -149,7 +149,7 @@ public class MeasurementSession extends IdEntity {
 	}
 
 	@Enumerated(EnumType.ORDINAL)
-	@Column(columnDefinition = "tinyint unsigned", nullable = false)
+	@Column(columnDefinition = "integer", nullable = false)
 	public WindMeter getWindMeter() {
 		return windMeter;
 	}
@@ -297,7 +297,7 @@ public class MeasurementSession extends IdEntity {
 	}
 	
 	@Enumerated(EnumType.ORDINAL)
-	@Column(columnDefinition = "tinyint unsigned")
+	@Column(columnDefinition = "integer")
 	public ReduceEquipment getReduceEquipment() {
 		return reduceEquipment;
 	}
@@ -325,7 +325,7 @@ public class MeasurementSession extends IdEntity {
 	}
 
 	@Enumerated(EnumType.ORDINAL)
-	@Column(columnDefinition = "tinyint unsigned")
+	@Column(columnDefinition = "integer")
 	public SprayQuality getSprayQuality() {
 		return sprayQuality;
 	}
@@ -353,7 +353,7 @@ public class MeasurementSession extends IdEntity {
 	}
 	
 	@Enumerated(EnumType.ORDINAL)
-	@Column(columnDefinition = "tinyint unsigned")
+	@Column(columnDefinition = "integer")
 	public Privacy getPrivacy() {
 		return privacy;
 	}

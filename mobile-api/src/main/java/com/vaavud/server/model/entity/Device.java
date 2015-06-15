@@ -27,37 +27,43 @@ public class Device extends IdEntity {
 
 	public static final String OS_IOS = "iPhone OS";
 	public static final String OS_ANDROID = "Android";
-	
-	private static final boolean isAppVersionGreatherThanEq(String appVersion1, String appVersion2) {
-		int v1 = (appVersion1 == null) ? -1 : computeComparableVersion(appVersion1);
-		int v2 = (appVersion2 == null) ? -1 : computeComparableVersion(appVersion2);
+
+	private static final boolean isAppVersionGreatherThanEq(String appVersion1,
+			String appVersion2) {
+		int v1 = (appVersion1 == null) ? -1
+				: computeComparableVersion(appVersion1);
+		int v2 = (appVersion2 == null) ? -1
+				: computeComparableVersion(appVersion2);
 		return v1 == -1 || v2 == -1 ? false : v1 >= v2;
 	}
-	
-	private static final boolean isAppVersionLessThan(String appVersion1, String appVersion2) {
-		int v1 = (appVersion1 == null) ? -1 : computeComparableVersion(appVersion1);
-		int v2 = (appVersion2 == null) ? -1 : computeComparableVersion(appVersion2);
+
+	private static final boolean isAppVersionLessThan(String appVersion1,
+			String appVersion2) {
+		int v1 = (appVersion1 == null) ? -1
+				: computeComparableVersion(appVersion1);
+		int v2 = (appVersion2 == null) ? -1
+				: computeComparableVersion(appVersion2);
 		return v1 == -1 || v2 == -1 ? false : v1 < v2;
 	}
-	
+
 	private static final int computeComparableVersion(String appVersion) {
-		Matcher matcher = Pattern.compile("(\\d+)\\.(\\d+).(\\d+)").matcher(appVersion);
+		Matcher matcher = Pattern.compile("(\\d+)\\.(\\d+).(\\d+)").matcher(
+				appVersion);
 		if (matcher.find()) {
 			try {
 				int major = Integer.parseInt(matcher.group(1));
 				int minor = Integer.parseInt(matcher.group(2));
 				int sub = Integer.parseInt(matcher.group(3));
 				return major * 10000 + minor * 100 + sub;
-			}
-			catch (NumberFormatException e) {
+			} catch (NumberFormatException e) {
 				return -1;
 			}
 		}
 		return -1;
 	}
-	
+
 	private Long id;
-	private User user;
+	private UserProfile user;
 	private String uuid;
 	private String authToken;
 	private Date creationTime = new Date();
@@ -75,7 +81,6 @@ public class Device extends IdEntity {
 	private Boolean uploadMagneticData;
 	private Float sleipnirVolume;
 	private List<Float> sleipnirEncoderCoefficients = new ArrayList<Float>();
-	
 
 	public void setFrom(Device other) {
 		setVendor(other.getVendor());
@@ -91,7 +96,8 @@ public class Device extends IdEntity {
 		setMagneticFieldSensor(other.getMagneticFieldSensor());
 		setSleipnirVolume(other.getSleipnirVolume());
 		setSleipnirEncoderCoefficients(other.getSleipnirEncoderCoefficients());
-		// note: explicitly do not copy uploadMagneticData property to make sure it is only set from server
+		// note: explicitly do not copy uploadMagneticData property to make sure
+		// it is only set from server
 	}
 
 	@Id
@@ -104,16 +110,13 @@ public class Device extends IdEntity {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
-	@ManyToOne(
-		optional = true,
-		fetch = FetchType.LAZY
-	)
-	public User getUser() {
+
+	@ManyToOne(optional = true, fetch = FetchType.LAZY)
+	public UserProfile getUser() {
 		return user;
 	}
 
-	public void setUser(User user) {
+	public void setUser(UserProfile user) {
 		this.user = user;
 	}
 
@@ -229,7 +232,7 @@ public class Device extends IdEntity {
 	}
 
 	@Enumerated(EnumType.ORDINAL)
-	@Column(columnDefinition = "tinyint unsigned")
+	@Column(columnDefinition = "integer")
 	public WindSpeedUnit getWindSpeedUnit() {
 		return windSpeedUnit;
 	}
@@ -246,8 +249,8 @@ public class Device extends IdEntity {
 	public void setMagneticFieldSensor(String magneticFieldSensor) {
 		this.magneticFieldSensor = magneticFieldSensor;
 	}
-	
-	@Column(columnDefinition = "bit", length = 1)
+
+	@Column(columnDefinition = "Boolean", length = 1)
 	public Boolean getUploadMagneticData() {
 		return uploadMagneticData;
 	}
@@ -255,41 +258,42 @@ public class Device extends IdEntity {
 	public void setUploadMagneticData(Boolean uploadMagneticData) {
 		this.uploadMagneticData = uploadMagneticData;
 	}
-	
+
 	@Basic
 	public Float getSleipnirVolume() {
-        return sleipnirVolume;
-    }
+		return sleipnirVolume;
+	}
 
-    public void setSleipnirVolume(Float sleipnirVolume) {
-        this.sleipnirVolume = sleipnirVolume;
-    }
+	public void setSleipnirVolume(Float sleipnirVolume) {
+		this.sleipnirVolume = sleipnirVolume;
+	}
 
-    @ElementCollection
-    @CollectionTable(name ="SleipnirEncoderCoefficients")
-    public List<Float> getSleipnirEncoderCoefficients() {
-        return sleipnirEncoderCoefficients;
-    }
+	@ElementCollection
+	@CollectionTable(name = "SleipnirEncoderCoefficients")
+	public List<Float> getSleipnirEncoderCoefficients() {
+		return sleipnirEncoderCoefficients;
+	}
 
-    public void setSleipnirEncoderCoefficients(List<Float> sleipnirEncoderCoefficients) {
-        this.sleipnirEncoderCoefficients = sleipnirEncoderCoefficients;
-    }
-    
-    @Transient
+	public void setSleipnirEncoderCoefficients(
+			List<Float> sleipnirEncoderCoefficients) {
+		this.sleipnirEncoderCoefficients = sleipnirEncoderCoefficients;
+	}
+
+	@Transient
 	public boolean isIOS() {
 		return OS_IOS.equals(this.os);
 	}
-	
+
 	@Transient
 	public boolean isAndroid() {
 		return OS_ANDROID.equals(this.os);
 	}
-	
+
 	@Transient
 	public boolean isAppVersionGreatherThanOrEq(String version) {
 		return isAppVersionGreatherThanEq(this.appVersion, version);
 	}
-	
+
 	@Transient
 	public boolean isAppVersionLessThan(String version) {
 		return isAppVersionLessThan(this.appVersion, version);
@@ -373,23 +377,28 @@ public class Device extends IdEntity {
 			return false;
 		}
 		if (sleipnirVolume != other.sleipnirVolume) {
-            return false;
-        }
-		if (!sleipnirEncoderCoefficients.equals(other.sleipnirEncoderCoefficients)) {
-            return false;
-        }
-		
+			return false;
+		}
+		if (!sleipnirEncoderCoefficients
+				.equals(other.sleipnirEncoderCoefficients)) {
+			return false;
+		}
+
 		return true;
 	}
 
 	@Override
-    public String toString() {
-        return "Device [id=" + id + ", user=" + user + ", uuid=" + uuid + ", authToken=" + authToken
-                + ", creationTime=" + creationTime + ", vendor=" + vendor + ", model=" + model + ", os=" + os
-                + ", osVersion=" + osVersion + ", app=" + app + ", appVersion=" + appVersion + ", country=" + country
-                + ", language=" + language + ", timezoneOffset=" + timezoneOffset + ", windSpeedUnit=" + windSpeedUnit
-                + ", magneticFieldSensor=" + magneticFieldSensor + ", uploadMagneticData=" + uploadMagneticData
-                + ", sleipnirVolume=" + sleipnirVolume + ", sleipnirEncoderCoefficients=" + sleipnirEncoderCoefficients
-                + "]";
-    }
+	public String toString() {
+		return "Device [id=" + id + ", user=" + user + ", uuid=" + uuid
+				+ ", authToken=" + authToken + ", creationTime=" + creationTime
+				+ ", vendor=" + vendor + ", model=" + model + ", os=" + os
+				+ ", osVersion=" + osVersion + ", app=" + app + ", appVersion="
+				+ appVersion + ", country=" + country + ", language="
+				+ language + ", timezoneOffset=" + timezoneOffset
+				+ ", windSpeedUnit=" + windSpeedUnit + ", magneticFieldSensor="
+				+ magneticFieldSensor + ", uploadMagneticData="
+				+ uploadMagneticData + ", sleipnirVolume=" + sleipnirVolume
+				+ ", sleipnirEncoderCoefficients="
+				+ sleipnirEncoderCoefficients + "]";
+	}
 }

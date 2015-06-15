@@ -21,7 +21,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
 
 @Entity
-public class User extends IdEntity {
+public class UserProfile extends IdEntity {
 
 	private Long id;
 	private Date creationTime = new Date();
@@ -124,7 +124,7 @@ public class User extends IdEntity {
 	}
 
 	@Enumerated(EnumType.ORDINAL)
-	@Column(columnDefinition = "tinyint unsigned", nullable = false)
+	@Column(columnDefinition = "integer", nullable = false)
 	public Gender getGender() {
 		return gender;
 	}
@@ -184,7 +184,7 @@ public class User extends IdEntity {
 
 	@Override
 	public String toString() {
-		return "User [id=" + id + ", creationTime=" + creationTime + ", email="
+		return "UserProfile [id=" + id + ", creationTime=" + creationTime + ", email="
 				+ email + ", passwordHash=" + passwordHash + ", facebookId="
 				+ facebookId + ", facebookAccessToken=" + facebookAccessToken
 				+ ", activationCode=" + activationCode + ", firstName="
