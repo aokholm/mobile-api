@@ -5,8 +5,9 @@
 
 <hibernate-configuration>
     <session-factory>
+      <!-- Database Connection -->
 
-        <!-- Database Connection -->
+        
 <!--         <property name="connection.driver_class">com.mysql.jdbc.Driver</property> -->
 <!--         <property name="connection.url">jdbc:mysql://localhost/vaavud?characterEncoding=utf8</property> -->
 <!--         <property name="connection.username">root</property> -->
@@ -14,9 +15,7 @@
 <!--         <property name="hbm2ddl.auto">validate</property> -->
 <!--         <property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property> -->
 <!--         <property name="show_sql">false</property> -->
-
-
-
+      
         <!-- Connection Pooling -->
 		<property name="hibernate.connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</property>
 		<property name="hibernate.c3p0.acquire_increment">10</property>
@@ -34,14 +33,13 @@
 
 		<!-- Entity Mapping -->
         
-        <mapping class="com.vaavud.server.model.entity.AccPoint" />
+        <mapping class="com.vaavud.server.model.entity.User" />
         <mapping class="com.vaavud.server.model.entity.Device" />
         <mapping class="com.vaavud.server.model.entity.MagneticPoint" />
+        <mapping class="com.vaavud.server.model.entity.AccPoint" />
         <mapping class="com.vaavud.server.model.entity.MagneticSession" />
         <mapping class="com.vaavud.server.model.entity.MeasurementPoint" />
         <mapping class="com.vaavud.server.model.entity.MeasurementSession" />
-        <mapping class="com.vaavud.server.model.entity.User" />
-        <mapping class="com.vaavud.server.model.entity.ProductionQCSession" />
 
     </session-factory>
 </hibernate-configuration>
