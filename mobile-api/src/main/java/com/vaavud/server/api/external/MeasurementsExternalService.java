@@ -107,7 +107,7 @@ public class MeasurementsExternalService extends AbstractJSONService<Measurement
         }
         
         @SuppressWarnings("unchecked")
-        public ResponseSessionObject(MeasurementSession measurementSession, Session hibernateSession) {
+        public ResponseSessionObject(MeasurementSession measurementSession, Session hibernateSession, Date startTime, Date endTime) {
             this.uuid = measurementSession.getUuid();
 //            this.deviceUuid = measurementSession.getDevice().getUuid();
             this.windMeter = (measurementSession.getWindMeter() != null) ? measurementSession.getWindMeter().ordinal() : 1;
@@ -146,17 +146,33 @@ public class MeasurementsExternalService extends AbstractJSONService<Measurement
 //            this.testMode = measurementSession.getTestMode() == null ? null: measurementSession.getTestMode();
             
             List<MeasurementPoint> originalPoints;
-            Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId").setLong("sessionId", measurementSession.getId()).uniqueResult();
+            Number numberOfPoints = (Number) hibernateSession.createSQLQuery("select count(*) from MeasurementPoint p where p.session_id=:sessionId and p.time>=:startTime and p.time<=:endTime")
+                    .setLong("sessionId", measurementSession.getId())
+                    .setLong("startTime", startTime.getTime())
+                    .setLong("endTime", endTime.getTime())
+                    .uniqueResult();
             if (numberOfPoints.intValue() > MAX_NUMBER_OF_RETURNED_POINTS) {
-                SQLQuery query = hibernateSession.createSQLQuery("select * from MeasurementPoint where session_id=:sessionId and id mod :modulo = 0 order by id");
+                SQLQuery query = hibernateSession.createSQLQuery("select * from MeasurementPoint where session_id=:sessionId and p.time>=:startTime and p.time<=:endTime and id mod :modulo = 0 order by id");
                 query.setLong("sessionId", measurementSession.getId());
+                query.setLong("startTime", startTime.getTime());
+                query.setLong("endTime", endTime.getTime());
                 query.setLong("modulo", (long) Math.ceil(numberOfPoints.doubleValue() / (double) MAX_NUMBER_OF_RETURNED_POINTS));
                 query.addEntity(MeasurementPoint.class);
                 originalPoints = query.list();
                 logger.warn("History service requesting session with more than " + MAX_NUMBER_OF_RETURNED_POINTS + " points (" + numberOfPoints + "), returning " + originalPoints.size() + " instead");
             }
             else {
-                originalPoints = measurementSession.getPoints();
+                
+                List<MeasurementPoint> points = (List<MeasurementPoint>) hibernateSession.createQuery(
+                        "select p from MeasurementPoint p " +
+                        "where p.session=:session_id " +
+                        "and p.time>=:startTime and p.time<=:endTime") //and s.endTime>:endTime
+                        .setLong("session_id", measurementSession.getId())
+                        .setLong("startTime", startTime.getTime())
+                        .setLong("endTime", endTime.getTime())
+                        .list();
+                
+                originalPoints = points;
             }
 
             List<ResponsePointObject> points = new ArrayList<ResponsePointObject>(originalPoints.size());
@@ -503,8 +519,8 @@ public class MeasurementsExternalService extends AbstractJSONService<Measurement
             List<MeasurementSession> measurements = (List<MeasurementSession>) hibernateSession.createQuery(
 	                "select s from MeasurementSession s " +
                     "where s.deleted=0 and s.device.user.email=:userEmail "+
-                    "and s.endTime>:startTime and s.startTime<:endTime " +
-                    "order by s.id desc") //and s.endTime>:endTime
+                    "and s.endTime>=:startTime and s.startTime<=:endTime " ) // +
+                    //"order by s.id desc") //and s.endTime>:endTime
 	                .setString("userEmail", object.getUserEmail())
 	                .setLong("startTime", object.getStartTime().getTime())
 	                .setLong("endTime", object.getEndTime().getTime())
@@ -516,7 +532,7 @@ public class MeasurementsExternalService extends AbstractJSONService<Measurement
 	        
 	        List<ResponseSessionObject> responseList = new ArrayList<ResponseSessionObject>(measurements.size());
 	        for (MeasurementSession measurementSession : measurements) {
-	            responseList.add(new ResponseSessionObject(measurementSession, hibernateSession));
+	            responseList.add(new ResponseSessionObject(measurementSession, hibernateSession, object.getStartTime(), object.getEndTime()));
 	        }
 	        
 	        Map<String,Object> responseMap = new HashMap<String,Object>();
