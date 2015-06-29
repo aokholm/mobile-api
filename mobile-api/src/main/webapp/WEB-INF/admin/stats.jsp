@@ -34,29 +34,32 @@
     
     Long actualTime = new Date().getTime();
     String maxSpeedLocationSql =
-    		"SELECT																		"+
-    		"	max(windSpeedAvg),														"+
-			"	windDirection,															"+
-    		"	from_unixtime(creationTime/1000),															"+
-  			"	geoLocationNameLocalized,												"+
-    		"	latitude,																"+
-			"	longitude																"+
-    		"FROM																		"+
-			"	MeasurementSession														"+
-    		"WHERE																		"+
-    		"	deleted != '1'															"+
-    		"AND																		"+
-   			"	longitude is not null													"+		
- 			"AND																		"+
-			"	startTime > " + (actualTime-604800000) +" 								"+
-			"AND																		"+
- 			"	endTime < " + actualTime +"												"+
- 			"AND																		"+
-			"	endIndex > 20															";
+			"SELECT "+
+				"windSpeedAvg, "+
+				"windDirection, "+
+				"from_unixtime(creationTime/1000), "+
+				"geoLocationNameLocalized, "+
+				"latitude, "+
+				"longitude, "+
+				"id, "+
+				"endIndex "+
+			"FROM "+
+			 "MeasurementSession "+
+			"WHERE "+
+				"deleted != '1' "+
+				"AND "+
+				"longitude is not null "+
+				"AND "+
+				"startTime > " + (actualTime-604800000) +" "+
+				"AND "+
+				"endTime < " + actualTime +" "+
+				"AND "+
+				"endIndex > 30 " +
+			"ORDER BY windSpeedAvg DESC LIMIT 0,10";
 			
 	List<Object[]> highestWindSpeed = hibernateSession.createSQLQuery(maxSpeedLocationSql).list();
 	
-    List<Object[]> usersPerDay = hibernateSession.createSQLQuery(
+  List<Object[]> usersPerDay = hibernateSession.createSQLQuery(
     	    "select date(from_unixtime(creationTime/1000)) as day, " + 
     	           "count(*) as countPerDay, " +
     	           "sum(if(passwordHash,1,0)) as password, " +
@@ -130,7 +133,21 @@
 </head>
 <body>
   <table>
-  	<tr><td> Max Speed (within last 7 days) </td><td><%=highestWindSpeed.get(0)[0]  %></td> <td><%=MathUtil.toCardinal((Float)highestWindSpeed.get(0)[1]) %></td> <td><%=highestWindSpeed.get(0)[2] %></td> <td><%=highestWindSpeed.get(0)[3] %></td><td><%=highestWindSpeed.get(0)[4] %></td><td><%=highestWindSpeed.get(0)[5] %></td></tr>
+    <%
+    int i = 1;
+    for (Object[] values: highestWindSpeed) {
+        %><tr><td> Max Speed (within last 7 days) #<%=i %> </td>
+          <td><%=values[0]  %></td>
+          <td><%=MathUtil.toCardinal((Float)values[1]) %></td>
+          <td><%=values[2] %></td>
+          <td><%=values[3] %></td>
+          <td><%=values[4] %></td>
+          <td><%=values[5] %></td>
+          <td><a href="http://maps.google.com/maps?z=12&t=h&q=loc:<%=values[4] %>+<%=values[5]%>">map</a></td>
+          <td><a href="/analysis/measurement?pass=2gh7yJfJ6H&session_id=<%=values[6] %>">details</a></td></tr> <% 
+    i++;
+    }
+    %>
     <tr><td># of measurements:</td><td><%=numberOfMeasurements%></td></tr>
     <tr><td>Avg # of measurements per day:</td><td><%=Math.round(allTimeAvgMeasurementsPerDay.doubleValue())%></td></tr>
     <tr><td># of countries with measurements:</td><td><%=countriesWithMeasurements%></td></tr>
