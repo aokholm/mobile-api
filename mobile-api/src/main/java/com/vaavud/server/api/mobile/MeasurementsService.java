@@ -65,7 +65,7 @@ public class MeasurementsService extends AbstractJSONService<MeasurementsService
 					"from MeasurementSession " + 
 					"where deleted=0 and privacy=1 and startTime>:startTime and " + 
 					"latitude is not null and longitude is not null and " +
-					"windSpeedAvg is not null")
+					"windSpeedAvg is not null and windSpeedAvg>0.5")
 					.setLong("startTime", startTime.getTime()).list();
 			
 			writeJSONResponse(resp, mapper, measurements);
