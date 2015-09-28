@@ -56,7 +56,6 @@ public class FireBasePushIdGenerator {
 			if (objectId != null) {
 				for (int i = 11; i >= 0; i--) {
 					final long module = objectId % 64;
-					logger.info("mod " + Long.valueOf(module).toString() );
 					lastRandChars[i] = (char) Long.valueOf(module).intValue();
 					objectId = (long) Math.floor(objectId / 64);
 				}
@@ -78,8 +77,6 @@ public class FireBasePushIdGenerator {
 			lastRandChars[lastValueOfInt]++;
 		}
 		for (int i = 0; i < 12; i++) {
-			logger.info("mod " + Integer.valueOf(lastRandChars[i]).toString());
-
 			id += PUSH_CHARS.charAt(lastRandChars[i]);
 		}
 		if (id.length() != 20)

@@ -1,6 +1,8 @@
 package com.vaavud.server.migration;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -16,10 +19,13 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
 import org.apache.log4j.Logger;
+import org.apache.maven.surefire.shade.org.apache.commons.io.IOUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
+//import com.fasterxml.jackson.databind.JsonNode;
 import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.vaavud.server.model.Model;
 import com.vaavud.server.model.entity.Device;
@@ -44,37 +50,56 @@ public class EchoServer {
 
 	@OnMessage
 	public void onMessage(String message, Session session) throws IOException {
+		processDevice(message);
+	}
+	
+	@OnOpen
+	public void onOpen(Session session) throws IOException {
+		// Add session to the connected sessions set
+		clients.add(session);
+		session.getBasicRemote().sendText("Welcome");
+//		session.getBasicRemote().sendText(getDevice("5"));
+	}
 
-		
+	@OnClose
+	public void onClose(Session session) {
+		// Remove session from the connected sessions set
+		clients.remove(session);
+	}
+	
+	public void processDevice(String id) {
 		org.hibernate.Session hibernateSession = Model.get().getSessionFactory().openSession();
 		
-		String deviceID = message;
-		Device device = null;
-		User user = null;
-		List<MeasurementSession> measurements = new ArrayList<MeasurementSession>();
-		String deviceText = null;
-		String userText = null;
-		
+		String deviceID = id;		
 		try {
 			
-			device = (Device) hibernateSession.createQuery("from Device where id=:id")
+			Device device = (Device) hibernateSession.createQuery("from Device where id=:id")
 					.setString("id", deviceID).uniqueResult();
 			
-			user = device.getUser();
+			if (device != null) {
+				patchDevice(device);
+			}
+			
+			
+			User user = device.getUser();
+			if (user != null) {
+				patchUser(user);
+			}
+			
 			
 //			@SuppressWarnings("unchecked")
-			measurements = (List<MeasurementSession>) hibernateSession.createQuery(
+			List<MeasurementSession> measurements = (List<MeasurementSession>) hibernateSession.createQuery(
 					"select s from MeasurementSession s where s.deleted=0 and s.device.id=:deviceId")
 					.setLong("deviceId", device.getId()).list();
+			
+			patchMeasurements(measurements);
+			
+//			patchPoints
 			
 //			measurements = measurementsX;
 			
 			logger.info("Found " + measurements.size() + " measurements !");
-			
-			deviceText = device != null ? device2json(device) : "no device";
-			userText = user != null ? user2json(user) : "no user";
-			
-			
+				
 		} catch (Exception e) {
 			logger.error("Error processing service " + getClass().getName(), e);
 			
@@ -84,37 +109,96 @@ public class EchoServer {
 			}
 			hibernateSession.close();
 		}
-		
-//		try {
-//			HttpResponse<com.mashape.unirest.http.JsonNode> jsonResponse = Unirest.post("https://vaavud-migration.firebaseio.com/users/x.json")
-//					  .header("accept", "application/json")
-//					  .body("{\"parameter\":\"value\", \"foo\":\"bar\"}")
-//					  .asJson();
-//			
-//			logger.info(jsonResponse.toString());
-//			
-//		} catch (UnirestException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
-		
-		synchronized (clients) {
-			// Iterate over the connected sessions
-			// and broadcast the received message
-			
-			for (Session client : clients) {
-				client.getBasicRemote().sendText("Device id: " + deviceText + " and user " + userText + " and number of measurements: "+ measurements.size() + " measurements !");
-			}
-		}
-
 	}
+		
+	public void patchDevice(Device device) {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put(device.getDeviceKey(), device2json(device).toString());
+		JSONObject json = new JSONObject();
+	    json.putAll( map );
+		
+		patch("devices.json", json.toString());
+	}
+	
+	public void patchUser(User user) {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put(user.getUserKey(), user2json(user).toString());
+		JSONObject json = new JSONObject();
+	    json.putAll( map );
+		
+		patch("users.json", json.toString());
+	}
+	
+	public void patchMeasurements(List<MeasurementSession> measurements) {
+		Map<String, String> map = new HashMap<String, String>();
+		
+		for (MeasurementSession measurement : measurements) {
+			map.put(measurement.getSessionKey(), measurement2json(measurement));
+		}
+		
+		JSONObject json = new JSONObject();
+	    json.putAll( map );
+		
+		patch("measurements.json", json.toString());
+	}
+	
+	
+	public void patch(String uri, String jsonBody) {
+		Future<HttpResponse<JsonNode>> future = Unirest.patch("https://vaavud-migration.firebaseio.com/" + uri)
+				  .header("accept", "application/json")
+				  .body(jsonBody)
+				  .asJsonAsync(new Callback<JsonNode>() {
+
+					    public void failed(UnirestException e) {
+					        System.out.println("The request has failed");
+					    }
+
+					    public void completed(HttpResponse<JsonNode> response) {
+					         int code = response.getStatus();
+//					         Map<String, List<String>> headers = response.getHeaders();
+					         JsonNode body = response.getBody();
+					         InputStream rawBody = response.getRawBody();
+					         
+					         StringWriter writer = new StringWriter();
+					         try {
+								IOUtils.copy(rawBody, writer, "UTF-8");
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+					         String theString = writer.toString();
+					         
+					         synchronized (clients) {
+					 			// Iterate over the connected sessions
+					 			// and broadcast the received message
+					 			
+					 			for (Session client : clients) {
+					 				
+					 				try {
+										client.getBasicRemote().sendText("Http response code: " + String.valueOf(code) + "for " + theString);
+									} catch (IOException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+					 			}
+					 		}
+					         
+					    }
+
+					    public void cancelled() {
+					        System.out.println("The request has been cancelled");
+					    }
+
+					});
+			
+	}
+	
 
 	public String user2json(User user) {
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("created", String.valueOf(user.getCreationTime().getTime()) );
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("created", user.getCreationTime().getTime() );
 		map.put("email", user.getEmail());
-		map.put("deleted", String.valueOf(user.isDeleted()));
+		map.put("deleted", user.isDeleted());
 				
 		JSONObject json = new JSONObject();
 	    json.putAll( map );
@@ -123,8 +207,8 @@ public class EchoServer {
 	}
 	
 	public String device2json(Device device) {
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("created", String.valueOf(device.getCreationTime().getTime()) );
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("created", device.getCreationTime().getTime() );
 		map.put("vendor", device.getVendor());
 		map.put("model", converModelNames(device.getModel()));
 		map.put("version", device.getAppVersion());
@@ -132,13 +216,23 @@ public class EchoServer {
 		if (device.getUser() != null) {
 			map.put("userKey", device.getUser().getUserKey());
 		}
+	
+		JSONObject json = new JSONObject();
+	    json.putAll( map );
 		
+	    return json.toString();
+	}
+	
+	public String measurement2json(MeasurementSession measurement) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("timeStart", measurement.getStartTime().getTime() );
+		map.put("windMean", measurement.getWindSpeedAvg() );
+
 		
 		JSONObject json = new JSONObject();
 	    json.putAll( map );
 		
 	    return json.toString();
-//		map.put(key, value)
 	}
 	
 	public String converModelNames(String model) {
@@ -174,20 +268,5 @@ public class EchoServer {
 		if (model.equals("iPadMini1GGSM+CDMA")) {return "iPad2,7";}
 		
 		return model;
-	}
-	
-	
-	@OnOpen
-	public void onOpen(Session session) throws IOException {
-		// Add session to the connected sessions set
-		clients.add(session);
-		session.getBasicRemote().sendText("Welcome");
-//		session.getBasicRemote().sendText(getDevice("5"));
-	}
-
-	@OnClose
-	public void onClose(Session session) {
-		// Remove session from the connected sessions set
-		clients.remove(session);
 	}
 }
