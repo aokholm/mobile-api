@@ -161,9 +161,23 @@
 	</servlet-mapping>
     <servlet-mapping>
     <servlet-name>MeasurementServlet</servlet-name>
-    <url-pattern>/analysis/measurement</url-pattern>
-  </servlet-mapping>
+    	<url-pattern>/analysis/measurement</url-pattern>
+  	</servlet-mapping>
   
+  	<!--  Migration -->
+  	
+  	 <servlet>
+        <servlet-name>WsChatServlet</servlet-name>
+        <servlet-class>com.vaavud.server.migration.WsChatServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>WsChatServlet</servlet-name>
+        <url-pattern>/wschat/WsChatServlet</url-pattern>
+    </servlet-mapping>
+  
+  	
+  	<!-- Allow AXAJ for password -->
 	<filter>
 	  <filter-name>CorsFilter</filter-name>
 	  <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>

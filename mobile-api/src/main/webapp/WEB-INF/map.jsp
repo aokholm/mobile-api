@@ -1,14 +1,14 @@
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"
          import="java.util.*,org.hibernate.*,com.vaavud.server.model.*,com.vaavud.server.model.entity.*,com.vaavud.server.web.map.*,com.fasterxml.jackson.databind.*"%><%
 
-    Long hours = null;
+    Long hours = 24L;
     
     if (request.getParameter("hours") != null) {
     	try {
     		hours = Long.parseLong(request.getParameter("hours"));
     	}
     	catch (RuntimeException e) {
-    		hours = null;
+    		//hours = null;
     	}
     }
         
