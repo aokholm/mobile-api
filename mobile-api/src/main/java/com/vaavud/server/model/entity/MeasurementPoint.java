@@ -10,8 +10,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
+
+import com.vaavud.server.migration.FireBasePushIdGenerator;
 
 @Entity
 public class MeasurementPoint extends IdEntity {
@@ -71,6 +74,11 @@ public class MeasurementPoint extends IdEntity {
 
 	public void setWindDirection(Float windDirection) {
 		this.windDirection = windDirection;
+	}
+	
+	@Transient
+	public String getWindKey() {
+		return FireBasePushIdGenerator.generatePushId(getTime(), getId());
 	}
 	
 	@Override

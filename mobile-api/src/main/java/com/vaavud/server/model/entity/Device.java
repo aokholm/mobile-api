@@ -22,6 +22,8 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
+import com.vaavud.server.migration.FireBasePushIdGenerator;
+
 @Entity
 public class Device extends IdEntity {
 
@@ -380,6 +382,11 @@ public class Device extends IdEntity {
         }
 		
 		return true;
+	}
+	
+	@Transient
+	public String getDeviceKey() {
+		return FireBasePushIdGenerator.generatePushId(getCreationTime(), getId());
 	}
 
 	@Override

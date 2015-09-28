@@ -26,6 +26,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
 
+import com.vaavud.server.migration.FireBasePushIdGenerator;
 import com.vaavud.server.model.Model;
 
 @Entity
@@ -485,6 +486,11 @@ public class MeasurementSession extends IdEntity {
 		this.points = points;
 	}
 	
+	@Transient
+	public String getSessionKey() {
+		return FireBasePushIdGenerator.generatePushId(getStartTime(), getId());
+	}
+	
     @Override
     public String toString() {
         return "MeasurementSession [id=" + id + ", uuid=" + uuid + ", device=" + device + ", windMeter=" + windMeter
@@ -502,6 +508,5 @@ public class MeasurementSession extends IdEntity {
                 + ", specialConsideration=" + specialConsideration + ", privacy=" + privacy + ", testMode=" + testMode
                 + ", geoLocation= " + geoLocationNameLocalized + "]";
     }
-
 
 }

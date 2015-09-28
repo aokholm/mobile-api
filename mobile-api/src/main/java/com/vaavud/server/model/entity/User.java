@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -15,10 +14,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
+
+import com.vaavud.server.migration.FireBasePushIdGenerator;
 
 @Entity
 public class User extends IdEntity {
@@ -180,6 +180,11 @@ public class User extends IdEntity {
 	@SuppressWarnings("unused")
 	private void setDevices(List<Device> devices) {
 		this.devices = devices;
+	}
+	
+	@Transient
+	public String getUserKey() {
+		return FireBasePushIdGenerator.generatePushId(getCreationTime(), getId());
 	}
 
 	@Override
