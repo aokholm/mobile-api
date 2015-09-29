@@ -3,7 +3,6 @@ package com.vaavud.server.migration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +28,7 @@ import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.vaavud.server.model.Model;
 import com.vaavud.server.model.entity.Device;
+import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
 import com.vaavud.server.model.entity.User;
 
@@ -50,7 +50,22 @@ public class EchoServer {
 
 	@OnMessage
 	public void onMessage(String message, Session session) throws IOException {
-		processDevice(message);
+		if (message.substring(0, 1).equals("p")) {
+			String[] strings = message.substring(1).split(":");
+			
+			writeToClient(message.substring(1));
+			writeToClient(String.valueOf(strings.length));
+			
+			if (strings.length == 2) {
+				processPoints(Long.valueOf(strings[0]), Long.valueOf(strings[1]));
+			}
+			else {
+				writeToClient("wrong format");
+			}
+			
+		} else {
+			processDevice(message);
+		}
 	}
 	
 	@OnOpen
@@ -65,6 +80,47 @@ public class EchoServer {
 	public void onClose(Session session) {
 		// Remove session from the connected sessions set
 		clients.remove(session);
+	}
+	
+	
+	public void writeToClient(String text) {
+		synchronized (clients) {
+ 			// Iterate over the connected sessions
+ 			// and broadcast the received message
+ 			
+ 			for (Session client : clients) {
+ 				
+ 				try {
+					client.getBasicRemote().sendText(text);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+ 			}
+ 		}
+	}
+	
+	public void processPoints(long idLower, long idUpper) {
+		org.hibernate.Session hibernateSession = Model.get().getSessionFactory().openSession();
+		try {
+			
+			@SuppressWarnings("unchecked")
+			List<MeasurementPoint> points = (List<MeasurementPoint>) hibernateSession.createQuery("from MeasurementPoint where id>=:id_lower and id<:id_upper")
+					.setLong("id_lower", idLower).setLong("id_upper", idUpper).list();
+			
+			patchPoints(points);
+			
+			logger.info("Found " + points.size() + " wind Points !");
+				
+		} catch (Exception e) {
+			logger.error("Error processing service " + getClass().getName(), e);
+			
+		} finally {
+			if (hibernateSession.getTransaction() != null && hibernateSession.getTransaction().isActive()) {
+				hibernateSession.getTransaction().rollback();
+			}
+			hibernateSession.close();
+		}
 	}
 	
 	public void processDevice(String id) {
@@ -87,7 +143,7 @@ public class EchoServer {
 			}
 			
 			
-//			@SuppressWarnings("unchecked")
+			@SuppressWarnings("unchecked")
 			List<MeasurementSession> measurements = (List<MeasurementSession>) hibernateSession.createQuery(
 					"select s from MeasurementSession s where s.deleted=0 and s.device.id=:deviceId")
 					.setLong("deviceId", device.getId()).list();
@@ -140,6 +196,19 @@ public class EchoServer {
 	    json.putAll( map );
 		
 		patch("measurements.json", json.toString());
+	}
+	
+	public void patchPoints(List<MeasurementPoint> points) {
+		Map<String, String> map = new HashMap<String, String>();
+		
+		for (MeasurementPoint point : points) {
+			map.put(point.getWindKey(), point2json(point));
+		}
+		
+		JSONObject json = new JSONObject();
+	    json.putAll( map );
+		
+		patch("winds.json", json.toString());
 	}
 	
 	
@@ -227,6 +296,20 @@ public class EchoServer {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("timeStart", measurement.getStartTime().getTime() );
 		map.put("windMean", measurement.getWindSpeedAvg() );
+		map.put("deviceKey", measurement.getDevice().getDeviceKey());
+		
+		JSONObject json = new JSONObject();
+	    json.putAll( map );
+		
+	    return json.toString();
+	}
+	
+	public String point2json(MeasurementPoint point) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("time", point.getTime().getTime() );
+		map.put("speed", point.getWindSpeed() );
+		map.put("direction", point.getWindDirection() );
+		map.put("sessionKey", point.getSession().getSessionKey());
 
 		
 		JSONObject json = new JSONObject();
@@ -234,6 +317,7 @@ public class EchoServer {
 		
 	    return json.toString();
 	}
+	
 	
 	public String converModelNames(String model) {
 		if (model.equals("Simulator")) {return "i386";}
