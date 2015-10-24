@@ -25,6 +25,7 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_USER = "user/";
 	public static final String FIREBASE_DEVICE = "device/";
 	public static final String FIREBASE_SESSION = "session/";
+	public static final String FIREBASE_SESSION_DELETED = "session_deleted/";
 	public static final String FIREBASE_USERID = "tomcatIds/";
 	public static final String FIREBASE_GEO = "session_geo/";
 	public static final String FIREBASE_WIND = "wind/";
@@ -125,6 +126,20 @@ public class FirebaseMigrator {
 		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
 		GeoFire geoFireSessionClient = new GeoFire(new Firebase(FIREBASE_BASE_URL+FIREBASE_GEO));
 		
+		Map<String, Object> data = sessionToDict(session);
+		
+		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+		
+		logger.info("sesion UID" + sessionUid + "session.getId() " + session.getId());
+		
+		ref.child(sessionUid).setValue(data);
+		
+		if (session.getPosition() != null) {
+			geoFireSessionClient.setLocation(sessionUid, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
+		}
+	}
+	
+	public static Map<String,Object> sessionToDict(MeasurementSession session) {
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("timeStart", session.getStartTime().getTime());
 		data.put("deviceKey", session.getDevice().getUuid());
@@ -144,16 +159,23 @@ public class FirebaseMigrator {
 			data.put("location", location);
 		}
 		
+		return data;
+	}
+	
+		
+	public static void deleteSession(MeasurementSession session) {
+		Map<String, Object> data = sessionToDict(session);
+		Firebase ref_session = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
+		Firebase ref_session_deleted = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION_DELETED);
+		Firebase ref_geo = new Firebase(FIREBASE_BASE_URL + FIREBASE_GEO);
+		
 		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 		
-		logger.info("sesion UID" + sessionUid + "session.getId() " + session.getId());
-		
-		ref.child(sessionUid).setValue(data);
-		
-		if (session.getPosition() != null) {
-			geoFireSessionClient.setLocation(sessionUid, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
-		}
+		ref_session.child(sessionUid).setValue(null);
+		ref_geo.child(sessionUid).setValue(null);
+		ref_session_deleted.child(sessionUid).setValue(data);
 	}
+	
 	
 	public static void setPoint(MeasurementPoint point, MeasurementSession session) {
 

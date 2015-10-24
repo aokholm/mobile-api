@@ -2,11 +2,6 @@ package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,11 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
-import com.vaavud.server.api.util.json.DeviceByUUIDModule;
 import com.vaavud.server.model.entity.Device;
-import com.vaavud.server.model.entity.LatLng;
-import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
+import com.vaavud.server.model.migration.FirebaseMigrator;
 
 public class DeleteMeasurementService extends AbstractJSONService<DeleteMeasurementService.RequestParameters> {
 
@@ -83,6 +76,8 @@ public class DeleteMeasurementService extends AbstractJSONService<DeleteMeasurem
 				measurementSession.setDeleted(true);
 			}
 			hibernateSession.getTransaction().commit();					
+			
+			FirebaseMigrator.deleteSession(measurementSession);
 			
 			writeJSONResponse(resp, mapper);
 		}
