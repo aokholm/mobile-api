@@ -1,12 +1,9 @@
 package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,13 +18,14 @@ import com.restfb.exception.FacebookNetworkException;
 import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
+import com.vaavud.server.api.mobile.RegisterUserService.Input;
 import com.vaavud.server.api.util.EmailUtil;
 import com.vaavud.server.api.util.FacebookUtil;
 import com.vaavud.server.api.util.PasswordUtil;
-import com.vaavud.server.api.mobile.RegisterUserService.Input;
 import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.Gender;
 import com.vaavud.server.model.entity.User;
+import com.vaavud.server.model.migration.FirebaseMigrator;
 
 public class RegisterUserService extends AbstractJSONService<Input> {
 
@@ -222,7 +220,6 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 				}
 		
 				hibernateSession.save(user);
-
 				authenticatedUser = user;
 			}
 
@@ -267,6 +264,9 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			// commit
 			hibernateSession.getTransaction().commit();
 			hibernateSession.beginTransaction();
+			
+			FirebaseMigrator.setUser(authenticatedUser, authenticatedDevice);
+			FirebaseMigrator.setDevice(authenticatedDevice);
 
 			// validate authToken
 			if (authToken == null || authToken.trim().isEmpty()) {
@@ -314,7 +314,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			return false;
 		}
 	}
-	
+			
 	public static class Input {
 		
 		private String action;

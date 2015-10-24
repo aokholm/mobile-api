@@ -1,7 +1,6 @@
 package com.vaavud.server.api.mobile;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,14 +11,12 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.firebase.client.Firebase;
 import com.vaavud.server.api.AbstractJSONService;
 import com.vaavud.server.api.ProtocolException;
 import com.vaavud.server.api.UnauthorizedException;
-import com.vaavud.server.api.util.ServiceUtil;
 import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.User;
-import com.vaavud.server.model.migration.FirebasePushIdGenerator;
+import com.vaavud.server.model.migration.FirebaseMigrator;
 import com.vaavud.server.model.phone.PhoneModel;
 import com.vaavud.util.UUIDUtil;
 
@@ -31,9 +28,6 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 	private static final boolean ENABLE_MIXPANEL = true;
 	private static final boolean ENABLE_MIXPANEL_PEOPLE = true;
 	
-	public static final String FIREBASE_BASE_URL = "https://vaavud-migration.firebaseio.com/";
-	public static final String FIREBASE_DEVICE = "devices/";
-
 	
 	@Override
 	protected Class<Device> type() {
@@ -88,7 +82,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 				
 				device = object;
 				
-				insertDeviceToFirebase(device); // FIREBASE
+				FirebaseMigrator.setDevice(device); // FIREBASE
 			}
 			else {
 				
@@ -113,7 +107,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 					logger.info("Received Device already stored and values have changed");
 					storedDevice.setFrom(object);
 					hibernateSession.getTransaction().commit();
-					insertDeviceToFirebase(storedDevice); // FIREBASE
+					FirebaseMigrator.setDevice(storedDevice); // FIREBASE
 				}
 				else {
 					logger.info("Received Device already stored and no changes in values");
@@ -163,22 +157,7 @@ public class RegisterDeviceService extends AbstractJSONService<Device> {
 			writeJSONResponse(resp, mapper, json);
 		}
 	}
-	
-	private void insertDeviceToFirebase(Device device) {
-		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_DEVICE);
-				
-		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("appVersion", device.getAppVersion());
-		data.put("created", device.getCreationTime());
-		data.put("model", device.getModel());
-		data.put("osVersion", device.getOsVersion());
-		data.put("vendor", device.getVendor());
-		ref.child(FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId())).setValue(data);
-		
-		logger.info("Insert to firebase!");
-	}
-	
-	
+
 	
 	@Override
 	protected Logger getLogger() {
