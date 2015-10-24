@@ -13,6 +13,7 @@ import com.firebase.client.ValueEventListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.vaavud.server.model.entity.Device;
+import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
 import com.vaavud.server.model.entity.User;
 
@@ -25,7 +26,8 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_DEVICE = "device/";
 	public static final String FIREBASE_SESSION = "session/";
 	public static final String FIREBASE_USERID = "tomcatIds/";
-	public static final String FIREBASE_GEO = "session_geo";
+	public static final String FIREBASE_GEO = "session_geo/";
+	public static final String FIREBASE_WIND = "wind/";
 	
 	
 	public static void createUser(final User user, final Device device) {
@@ -117,9 +119,11 @@ public class FirebaseMigrator {
 	}
 	
 	public static void setSession(MeasurementSession session) {
-
+		
+		updateFirebaseDataSession(session); // SEND TO LEGACY SUBSCRIPTION DATABASE
+		
 		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
-		GeoFire geoFireSessionClient = new GeoFire(new Firebase(FIREBASE_BASE_URL+FIREBASE_GEO+FIREBASE_SESSION));
+		GeoFire geoFireSessionClient = new GeoFire(new Firebase(FIREBASE_BASE_URL+FIREBASE_GEO));
 		
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("timeStart", session.getStartTime().getTime());
@@ -134,11 +138,15 @@ public class FirebaseMigrator {
 			data.put("windDirection", session.getWindDirection());
 		}
 		if (session.getPosition() != null) {
-			data.put("locLat", session.getPosition().getLatitude());
-			data.put("locLon", session.getPosition().getLongitude());
+			Map<String, Object> location = new HashMap<String, Object>();
+			location.put("lat", session.getPosition().getLatitude());
+			location.put("lon", session.getPosition().getLongitude());
+			data.put("location", location);
 		}
 		
 		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+		
+		logger.info("sesion UID" + sessionUid + "session.getId() " + session.getId());
 		
 		ref.child(sessionUid).setValue(data);
 		
@@ -146,4 +154,59 @@ public class FirebaseMigrator {
 			geoFireSessionClient.setLocation(sessionUid, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
 		}
 	}
+	
+	public static void setPoint(MeasurementPoint point, MeasurementSession session) {
+
+		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_WIND);
+		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+		
+		Map<String, Object> data = new HashMap<String, Object>();
+		data.put("sessionKey", sessionUid);
+		data.put("time", point.getTime().getTime());
+		data.put("speed",point.getWindSpeed());
+		if (point.getWindDirection() != null) {
+			data.put("direction", point.getWindSpeed());
+		}
+		
+		String pointUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), point.getId()); // NOTE: we use the session creation time
+		
+		ref.child(pointUid).setValue(data);
+	}
+	
+	// LEGACY FOR SUBSCRIPTIONS IN ANDROID 0.5.3
+	public static void updateFirebaseDataSession(MeasurementSession session) {
+		
+		String FIREBASE_BASE_URL = "https://vaavud-tomcat.firebaseio.com/";
+		String FIREBASE_SESSION = "session/";
+		String FIREBASE_GEO = "geo/";
+		
+		Firebase firebaseSessionClient = new Firebase(FIREBASE_BASE_URL+FIREBASE_SESSION);
+		GeoFire geoFireSessionClient = new GeoFire(new Firebase(FIREBASE_BASE_URL+FIREBASE_GEO+FIREBASE_SESSION));
+		
+		
+		Map<String, Object> data = new HashMap<String, Object>();
+		String firebaseSessionKey = session.getUuid();
+		//				Log.d(TAG, "FirebaseSessionKey: " + firebaseSessionKey);
+		data.put("timeStart", session.getStartTime().getTime());
+		data.put("deviceKey", session.getDevice().getUuid());
+		data.put("timeStop", session.getEndTime().getTime());
+		data.put("timeUploaded", new Date().getTime());
+		if (session.getWindSpeedAvg()!=null && session.getWindSpeedMax()!=null) {
+			data.put("windMean",session.getWindSpeedAvg());
+			data.put("windMax", session.getWindSpeedMax());
+		}
+		if (session.getWindDirection() != null) {
+			data.put("windDirection", session.getWindDirection());
+		}
+		if (session.getPosition() != null) {
+			data.put("locLat", session.getPosition().getLatitude());
+			data.put("locLon", session.getPosition().getLongitude());
+			geoFireSessionClient.setLocation(firebaseSessionKey, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
+		}
+		if (!firebaseSessionKey.isEmpty()){
+			firebaseSessionClient.child(firebaseSessionKey).setValue(data);
+		}
+	}
+	
+	
 }
