@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -16,6 +17,7 @@ import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
 import com.vaavud.server.model.entity.User;
+import com.vaavud.server.model.entity.WindMeter;
 
 public class FirebaseMigrator {
 	
@@ -26,37 +28,61 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_DEVICE = "device/";
 	public static final String FIREBASE_SESSION = "session/";
 	public static final String FIREBASE_SESSION_DELETED = "session_deleted/";
-	public static final String FIREBASE_USERID = "tomcatIds/";
+	public static final String FIREBASE_USERID = "tomcat_id/";
+	public static final String FIREBASE_USERID_FAILED = "tomcat_id_failed/";
 	public static final String FIREBASE_GEO = "session_geo/";
 	public static final String FIREBASE_WIND = "wind/";
 	
 	
 	public static void createUser(final User user, final Device device) {
 		final Firebase ref = new Firebase(FIREBASE_BASE_URL);
-		String newPassword = user.getEmail() + user.getId().toString();
+		final String newPassword = user.getEmail() + user.getId().toString();
 		
 		ref.createUser(user.getEmail(), newPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
 		    @Override
 		    public void onSuccess(Map<String, Object> result) {
 		    	String userId = (String) result.get("uid");
 		    	logger.info("Successfully firebase user account with uid: " + userId);
-		    	ref.child("tomcatIds/" + user.getId().toString()).setValue(userId);
+		    	ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userId);
 		    	insertUser(user, device, userId);
 		 
 		    }
 		    @Override
 		    public void onError(FirebaseError firebaseError) {
 		        // there was an error
-		    	logger.info(FirebaseError.fromCode(firebaseError.getCode()) + " " + firebaseError.getMessage());
-		    	ref.child("tomcatIdsFailed/" + user.getId().toString()).setValue(FirebaseError.fromCode(firebaseError.getCode()));
+		    	
+		    	if (firebaseError.getCode() == FirebaseError.EMAIL_TAKEN) {
+		    		ref.authWithPassword(user.getEmail(), newPassword, new Firebase.AuthResultHandler() {
+		    		    @Override
+		    		    public void onAuthenticated(AuthData authData) {
+		    		    	insertUser(user, device, authData.getUid());
+		    		    }
+		    		    @Override
+		    		    public void onAuthenticationError(FirebaseError firebaseError) {
+		    		    	logger.info(FirebaseError.fromCode(firebaseError.getCode()) + " " + firebaseError.getMessage());
+		    		    	ref.child(FIREBASE_USERID_FAILED + user.getId().toString()).setValue(firebaseError);
+		    		    }
+		    		});
+		    	} else {
+		    		logger.info(FirebaseError.fromCode(firebaseError.getCode()) + " " + firebaseError.getMessage());
+			    	ref.child(FIREBASE_USERID_FAILED + user.getId().toString()).setValue(firebaseError);
+		    	}	
 		    }
 		});
 	}
+	
+	
+	
+	
+	interface CallbackFireUserUID{
+		void result(String userUid);
+		void doesNotExist();
+	}
 		
-	public static void setUser(final User user, final Device device) {
+	
+	public static void getFirebaseUserID(User user, final CallbackFireUserUID callback) {
 		
-		if ( user.getFacebookId() == null ) { // if is using email + password
-			// first check if we already have a firebase UserID
+		if ( user.getFacebookId() == null ) {
 			Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_USERID + user.getId().toString());
 			
 			ref.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -64,10 +90,10 @@ public class FirebaseMigrator {
 			    public void onDataChange(DataSnapshot snapshot) {
 			    	
 			    	if (snapshot.getValue() == null) { // user does not exist in firebase
-			    		createUser(user, device);
+			    		callback.doesNotExist();
 			    	} else {
 				    	String userId = (String) snapshot.getValue();
-				    	insertUser(user, device, userId);
+				    	callback.result(userId);
 			    	}
 			    }
 			    @Override
@@ -75,9 +101,29 @@ public class FirebaseMigrator {
 			    	
 			    }
 			});
-		} else { // if using facebook
-			insertUser(user, device, "facebook:" + user.getFacebookId());
-		}	
+		} else {
+			callback.result("facebook:" + user.getFacebookId());
+		}		
+	}
+	
+	
+	
+	
+	public static void setUser(final User user, final Device device) {
+		
+		getFirebaseUserID(user, new CallbackFireUserUID() {
+
+			@Override
+			public void result(String userUid) {
+				insertUser(user, device, userUid);
+			}
+
+			@Override
+			public void doesNotExist() {
+				createUser(user, device);
+			}
+			
+		});	
 	}
 	
 	private static void insertUser(User user, Device device, String firebaseID) {
@@ -88,6 +134,9 @@ public class FirebaseMigrator {
 		data.put("email", user.getEmail());
 		data.put("firstName", user.getFirstName());
 		data.put("lastName", user.getLastName());
+		data.put("language", device.getLanguage());
+		data.put("country", device.getCountry());
+
 		ref.child(firebaseID).setValue(data);
 		
 		logger.info("Insert user " + firebaseID + " to firebase!");
@@ -110,52 +159,81 @@ public class FirebaseMigrator {
 		data.put("osVersion", device.getOsVersion());
 		data.put("vendor", device.getVendor());
 		
-		// data.put("user_id", fireUserID(device.getUser())); user id is set by user function
+		if (device.getUser() == null) {
+			data.put("userKey", "tomcat");
+		}
 		
-		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
-		
+		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());		
 		ref.child(deviceUid).updateChildren(data);
 		
-		logger.info("Insert device " + deviceUid + " to firebase!");
+		logger.info("updateChildren device " + deviceUid + " to firebase!");
 	}
 	
-	public static void setSession(MeasurementSession session) {
+	public static void setSession(final MeasurementSession session) {
 		
 		updateFirebaseDataSession(session); // SEND TO LEGACY SUBSCRIPTION DATABASE
 		
-		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
-		GeoFire geoFireSessionClient = new GeoFire(new Firebase(FIREBASE_BASE_URL+FIREBASE_GEO));
-		
-		Map<String, Object> data = sessionToDict(session);
-		
-		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
-		
-		logger.info("sesion UID" + sessionUid + "session.getId() " + session.getId());
-		
-		ref.child(sessionUid).setValue(data);
-		
-		if (session.getPosition() != null) {
-			geoFireSessionClient.setLocation(sessionUid, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
-		}
+		getFirebaseUserID(session.getDevice().getUser(), new CallbackFireUserUID() {
+
+			@Override
+			public void result(String userUid) {
+				set(userUid);
+			}
+
+			@Override
+			public void doesNotExist() {
+				set("anonymous");
+			}
+			
+			public void set(String userUid) {
+				Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
+				GeoFire geoFireSessionClient = new GeoFire(new Firebase(FIREBASE_BASE_URL+FIREBASE_GEO));
+				
+				Map<String, Object> data = sessionToDict(session, userUid);
+				
+				String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+				
+				logger.info("sesion UID" + sessionUid + "session.getId() " + session.getId());
+				
+				ref.child(sessionUid).setValue(data);
+				
+				if (session.getPosition() != null) {
+					geoFireSessionClient.setLocation(sessionUid, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
+				}
+			}
+		});	
 	}
 	
-	public static Map<String,Object> sessionToDict(MeasurementSession session) {
+	public static Map<String,Object> sessionToDict(MeasurementSession session, String userUid) {
 		Map<String, Object> data = new HashMap<String, Object>();
+		data.put("deviceKey", FirebasePushIdGenerator.generatePushId(session.getDevice().getCreationTime(), session.getDevice().getId()));
+		data.put("timeEnd", session.getEndTime().getTime());
 		data.put("timeStart", session.getStartTime().getTime());
-		data.put("deviceKey", session.getDevice().getUuid());
-		data.put("timeStop", session.getEndTime().getTime());
-		data.put("timeUploaded", new Date().getTime());
-		if (session.getWindSpeedAvg()!=null && session.getWindSpeedMax()!=null) {
-			data.put("windMean",session.getWindSpeedAvg());
-			data.put("windMax", session.getWindSpeedMax());
+		data.put("userKey", userUid);
+		if (session.getWindSpeedMax() != null) data.put("windMax", session.getWindSpeedMax());
+		if (session.getWindSpeedAvg() != null) data.put("windMean",session.getWindSpeedAvg());
+		if (session.getWindDirection() != null) data.put("windDirection", session.getWindDirection());
+		
+		String windmeter = "";
+		switch (session.getWindMeter()) {
+            case MJOLNIR:  
+            	windmeter = "Mjolnir";
+                break;
+            case SLEIPNIR:
+            	windmeter = "Sleipnir";
+            	break;
+            case UNKNOWN: // DOES NOT EXIST in the db
+            	windmeter = "Unknown"; 
+            	break;
 		}
-		if (session.getWindDirection() != null) {
-			data.put("windDirection", session.getWindDirection());
-		}
+		
+		data.put("windMeter", windmeter);
+		
 		if (session.getPosition() != null) {
 			Map<String, Object> location = new HashMap<String, Object>();
 			location.put("lat", session.getPosition().getLatitude());
 			location.put("lon", session.getPosition().getLongitude());
+			if (session.getGeoLocationNameLocalized() != null) data.put("name",session.getGeoLocationNameLocalized());
 			data.put("location", location);
 		}
 		
@@ -163,17 +241,33 @@ public class FirebaseMigrator {
 	}
 	
 		
-	public static void deleteSession(MeasurementSession session) {
-		Map<String, Object> data = sessionToDict(session);
-		Firebase ref_session = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
-		Firebase ref_session_deleted = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION_DELETED);
-		Firebase ref_geo = new Firebase(FIREBASE_BASE_URL + FIREBASE_GEO);
+	public static void deleteSession(final MeasurementSession session) {
 		
-		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
-		
-		ref_session.child(sessionUid).setValue(null);
-		ref_geo.child(sessionUid).setValue(null);
-		ref_session_deleted.child(sessionUid).setValue(data);
+		getFirebaseUserID(session.getDevice().getUser(), new CallbackFireUserUID() {
+
+			@Override
+			public void result(String userUid) {
+				set(userUid);
+			}
+
+			@Override
+			public void doesNotExist() {
+				set("anonymous");
+			}
+			
+			public void set(String userUid) {
+				Map<String, Object> data = sessionToDict(session, userUid);
+				Firebase ref_session = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
+				Firebase ref_session_deleted = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION_DELETED);
+				Firebase ref_geo = new Firebase(FIREBASE_BASE_URL + FIREBASE_GEO);
+				
+				String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+				
+				ref_session.child(sessionUid).setValue(null);
+				ref_geo.child(sessionUid).setValue(null);
+				ref_session_deleted.child(sessionUid).setValue(data);
+			}
+		});	
 	}
 	
 	
@@ -183,12 +277,13 @@ public class FirebaseMigrator {
 		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 		
 		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("sessionKey", sessionUid);
-		data.put("time", point.getTime().getTime());
-		data.put("speed",point.getWindSpeed());
 		if (point.getWindDirection() != null) {
 			data.put("direction", point.getWindSpeed());
 		}
+		data.put("sessionKey", sessionUid);
+		data.put("speed",point.getWindSpeed());
+		data.put("time", point.getTime().getTime());
+		
 		
 		String pointUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), point.getId()); // NOTE: we use the session creation time
 		
