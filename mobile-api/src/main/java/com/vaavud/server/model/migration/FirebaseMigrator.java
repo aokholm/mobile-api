@@ -2,14 +2,17 @@ package com.vaavud.server.model.migration;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import com.firebase.client.AuthData;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -17,7 +20,6 @@ import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
 import com.vaavud.server.model.entity.User;
-import com.vaavud.server.model.entity.WindMeter;
 
 public class FirebaseMigrator {
 	
@@ -43,7 +45,6 @@ public class FirebaseMigrator {
 		    public void onSuccess(Map<String, Object> result) {
 		    	String userId = (String) result.get("uid");
 		    	logger.info("Successfully firebase user account with uid: " + userId);
-		    	ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userId);
 		    	insertUser(user, device, userId);
 		 
 		    }
@@ -81,6 +82,11 @@ public class FirebaseMigrator {
 		
 	
 	public static void getFirebaseUserID(User user, final CallbackFireUserUID callback) {
+		
+		if (user == null) {
+			callback.doesNotExist();
+			return;
+		}
 		
 		if ( user.getFacebookId() == null ) {
 			Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_USERID + user.getId().toString());
@@ -126,7 +132,7 @@ public class FirebaseMigrator {
 		});	
 	}
 	
-	private static void insertUser(User user, Device device, String firebaseID) {
+	private static void insertUser(User user, Device device, final String userUid) {
 		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_USER);
 		
 		Map<String, Object> data = new HashMap<String, Object>();
@@ -137,15 +143,41 @@ public class FirebaseMigrator {
 		data.put("language", device.getLanguage());
 		data.put("country", device.getCountry());
 
-		ref.child(firebaseID).setValue(data);
+		ref.child(userUid).setValue(data);
 		
-		logger.info("Insert user " + firebaseID + " to firebase!");
+		logger.info("Insert user " + userUid + " to firebase!");
 		
 		// update user id on device
-		
 		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
-		Firebase refDevice = new Firebase(FIREBASE_BASE_URL + FIREBASE_DEVICE + deviceUid + "/user_id");
-		refDevice.setValue(firebaseID);
+		Firebase refDevice = new Firebase(FIREBASE_BASE_URL + FIREBASE_DEVICE + deviceUid + "/userKey");
+		refDevice.setValue(userUid);
+		
+		// set user
+		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userUid);
+		
+//		// update sessions
+//		final Firebase ref_session = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
+//		Query queryRef = ref_session.orderByChild("deviceKey").equalTo(deviceUid);
+//		
+//		queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//		    @Override
+//		    public void onDataChange(DataSnapshot snapshot) {
+//		    	Map<String,Object> sessions = (Map<String, Object>) snapshot.getValue(); 
+//		    	
+//		    	if (sessions != null) {
+//		    		for (String sessionKey: sessions.keySet()) {
+//			    		ref_session.child(sessionKey + "/userKey").setValue(userUid);
+//			    	}
+//			    	
+//			    	logger.info("snap" + snapshot.getValue());
+//		    	}
+//		    	
+//		    	
+//		    }
+//		    @Override
+//		    public void onCancelled(FirebaseError firebaseError) {
+//		    }
+//		});
 	}
 	
 	public static void setDevice(Device device) {
@@ -163,6 +195,7 @@ public class FirebaseMigrator {
 			data.put("userKey", "tomcat");
 		}
 		
+		// update device
 		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());		
 		ref.child(deviceUid).updateChildren(data);
 		
@@ -233,8 +266,23 @@ public class FirebaseMigrator {
 			Map<String, Object> location = new HashMap<String, Object>();
 			location.put("lat", session.getPosition().getLatitude());
 			location.put("lon", session.getPosition().getLongitude());
-			if (session.getGeoLocationNameLocalized() != null) data.put("name",session.getGeoLocationNameLocalized());
+			if (session.getGeoLocationNameLocalized() != null) location.put("name",session.getGeoLocationNameLocalized());
 			data.put("location", location);
+		}
+		
+		Map<String, Object> sourced = new HashMap<String, Object>();
+		if (session.getSourcedHumidity() != null) sourced.put("humidity",session.getSourcedHumidity());
+		if (session.getHumidity() != null) sourced.put("humidity",session.getHumidity());
+		if (session.getSourcedPressureGroundLevel() != null) sourced.put("pressure",session.getSourcedPressureGroundLevel());
+		if (session.getSourcedTemperature() != null) sourced.put("temperature",session.getSourcedTemperature());
+		if (session.getTemperature() != null) sourced.put("temperature",session.getTemperature());
+		
+		if (session.getWindChill() != null) sourced.put("windChill",session.getWindChill());
+		if (session.getSourcedWindDirection()!= null) sourced.put("windDirection",session.getSourcedWindDirection());
+		if (session.getSourcedWindSpeedAvg() != null) sourced.put("windMean",session.getSourcedWindSpeedAvg());
+		
+		if (!sourced.keySet().isEmpty()) {
+			data.put("sourced", sourced);
 		}
 		
 		return data;
