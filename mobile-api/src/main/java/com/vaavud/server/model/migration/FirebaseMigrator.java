@@ -20,6 +20,7 @@ import com.vaavud.server.model.entity.Device;
 import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
 import com.vaavud.server.model.entity.User;
+import com.vaavud.server.model.entity.WindMeter;
 
 public class FirebaseMigrator {
 	
@@ -187,7 +188,7 @@ public class FirebaseMigrator {
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("appVersion", device.getAppVersion());
 		data.put("created", device.getCreationTime().getTime());
-		data.put("model", device.getModel());
+		data.put("model", convertModelName(device.getModel()));
 		data.put("osVersion", device.getOsVersion());
 		data.put("vendor", device.getVendor());
 		
@@ -277,13 +278,13 @@ public class FirebaseMigrator {
 		if (session.getSourcedTemperature() != null) sourced.put("temperature",session.getSourcedTemperature());
 		if (session.getTemperature() != null) sourced.put("temperature",session.getTemperature());
 		
-		if (session.getWindChill() != null) sourced.put("windChill",session.getWindChill());
 		if (session.getSourcedWindDirection()!= null) sourced.put("windDirection",session.getSourcedWindDirection());
 		if (session.getSourcedWindSpeedAvg() != null) sourced.put("windMean",session.getSourcedWindSpeedAvg());
+		data.put("sourced", sourced);
 		
-		if (!sourced.keySet().isEmpty()) {
-			data.put("sourced", sourced);
-		}
+		Map<String, Object> localSourced = new HashMap<String, Object>();
+		if (session.getWindChill() != null) localSourced.put("windChill",session.getWindChill());
+		data.put("localSourced", localSourced);
 		
 		return data;
 	}
@@ -325,15 +326,14 @@ public class FirebaseMigrator {
 		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 		
 		Map<String, Object> data = new HashMap<String, Object>();
-		if (point.getWindDirection() != null) {
+		if (point.getWindDirection() != null && session.getWindMeter() == WindMeter.SLEIPNIR) { // old apps could upload direction on mjolnir
 			data.put("direction", point.getWindSpeed());
 		}
 		data.put("sessionKey", sessionUid);
 		data.put("speed",point.getWindSpeed());
 		data.put("time", point.getTime().getTime());
 		
-		
-		String pointUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), point.getId()); // NOTE: we use the session creation time
+		String pointUid = FirebasePushIdGenerator.generatePushId(point.getTime(), point.getId()); // NOTE: we use the session creation time
 		
 		ref.child(pointUid).setValue(data);
 	}
@@ -371,6 +371,41 @@ public class FirebaseMigrator {
 		if (!firebaseSessionKey.isEmpty()){
 			firebaseSessionClient.child(firebaseSessionKey).setValue(data);
 		}
+	}
+	
+	public static String convertModelName(String model) {
+		if (model.equals("Simulator")) {return "i386";}
+		if (model.equals("iPhone2G")) {return "iPhone1,1";}
+		if (model.equals("iPhone3G")) {return "iPhone1,2";}
+		if (model.equals("iPhone3GS")) {return "iPhone2,1";}
+		if (model.equals("iPhone4GSM")) {return "iPhone3,1";}
+		if (model.equals("iPhone4GSMRevA")) {return "iPhone3,2";}
+		if (model.equals("iPhone4GSM+CDMA")) {return "iPhone3,3";}
+		if (model.equals("iPhone4S")) {return "iPhone4,1";}
+		if (model.equals("iPhone5GSM")) {return "iPhone5,1";}
+		if (model.equals("iPhone5GSM+CDMA")) {return "iPhone5,2";}
+		if (model.equals("iPod1stGen")) {return "iPod1,1";}
+		if (model.equals("iPod2ndGen")) {return "iPod2,1";}
+		if (model.equals("iPod3rdGen")) {return "iPod3,1";}
+		if (model.equals("iPod4thGen")) {return "iPod4,1";}
+		if (model.equals("iPod5thGen")) {return "iPod5,1";}
+		if (model.equals("iPadWiFi")) {return "iPad1,1";}
+		if (model.equals("iPad3G")) {return "iPad1,2";}
+		if (model.equals("iPad2WiFi")) {return "iPad2,1";}
+		if (model.equals("iPad2GSM")) {return "iPad2,2";}
+		if (model.equals("iPad2CDMA")) {return "iPad2,3";}
+		if (model.equals("iPad2WiFiRevA")) {return "iPad2,4";}
+		if (model.equals("ipad3WiFi")) {return "iPad3,1";}
+		if (model.equals("ipad3GSM")) {return "iPad3,2";}
+		if (model.equals("ipad3CDMA")) {return "iPad3,3";}
+		if (model.equals("iPad4WiFi")) {return "iPad3,4";}
+		if (model.equals("iPad4GSM")) {return "iPad3,5";}
+		if (model.equals("iPad4GSM+CDMA")) {return "iPad3,6";}
+		if (model.equals("iPadMini1GWiFi")) {return "iPad2,5";}
+		if (model.equals("iPadMini1GGSM")) {return "iPad2,6";}
+		if (model.equals("iPadMini1GGSM+CDMA")) {return "iPad2,7";}
+		
+		return model;
 	}
 	
 	
