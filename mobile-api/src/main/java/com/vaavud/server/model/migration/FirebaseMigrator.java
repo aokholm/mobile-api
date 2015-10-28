@@ -35,6 +35,7 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_USERID_FAILED = "tomcat_id_failed/";
 	public static final String FIREBASE_GEO = "session_geo/";
 	public static final String FIREBASE_WIND = "wind/";
+	public static final String FIRE_NO_USER = "anonymous";
 	
 	
 	public static void createUser(final User user, final Device device) {
@@ -134,7 +135,7 @@ public class FirebaseMigrator {
 	}
 	
 	private static void insertUser(User user, Device device, final String userUid) {
-		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_USER);
+		Firebase ref = new Firebase(FIREBASE_BASE_URL);
 		
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("created", user.getCreationTime());
@@ -144,17 +145,17 @@ public class FirebaseMigrator {
 		data.put("language", device.getLanguage());
 		data.put("country", device.getCountry());
 
-		ref.child(userUid).setValue(data);
-		
-		logger.info("Insert user " + userUid + " to firebase!");
+		ref.child(FIREBASE_USER + userUid).setValue(data);
 		
 		// update user id on device
 		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
-		Firebase refDevice = new Firebase(FIREBASE_BASE_URL + FIREBASE_DEVICE + deviceUid + "/userKey");
-		refDevice.setValue(userUid);
+		ref.child(FIREBASE_DEVICE + deviceUid + "/userKey").setValue(userUid);
 		
 		// set user
 		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userUid);
+		
+		logger.info("Insert user " + userUid + " to firebase!");
+		
 		
 //		// update sessions
 //		final Firebase ref_session = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
@@ -193,7 +194,7 @@ public class FirebaseMigrator {
 		data.put("vendor", device.getVendor());
 		
 		if (device.getUser() == null) {
-			data.put("userKey", "tomcat");
+			data.put("userKey", FIRE_NO_USER);
 		}
 		
 		// update device
@@ -216,7 +217,7 @@ public class FirebaseMigrator {
 
 			@Override
 			public void doesNotExist() {
-				set("anonymous");
+				set(FIRE_NO_USER);
 			}
 			
 			public void set(String userUid) {
@@ -301,7 +302,7 @@ public class FirebaseMigrator {
 
 			@Override
 			public void doesNotExist() {
-				set("anonymous");
+				set(FIRE_NO_USER);
 			}
 			
 			public void set(String userUid) {
