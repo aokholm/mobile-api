@@ -26,7 +26,7 @@ public class FirebaseMigrator {
 	
 	private static final Logger logger = Logger.getLogger(FirebaseMigrator.class);
 	
-	public static final String FIREBASE_BASE_URL = "https://vaavud-migration.firebaseio.com/";
+	public static final String FIREBASE_BASE_URL = "https://vaavud-core.firebaseio.com/";
 	public static final String FIREBASE_USER = "user/";
 	public static final String FIREBASE_DEVICE = "device/";
 	public static final String FIREBASE_SESSION = "session/";
