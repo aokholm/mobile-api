@@ -36,10 +36,34 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_GEO = "session_geo/";
 	public static final String FIREBASE_WIND = "wind/";
 	public static final String FIRE_NO_USER = "anonymous";
+	public static final String FIRE_TOKEN = "Yo1FV2XlVQJpyMs4QbG71hwyjRu7YVLDx67JoXDe";
+	
+	public static Firebase authRef;
+	
+	public static Firebase getFirebase() {
+		if (authRef  == null) {
+			final Firebase ref = new Firebase(FIREBASE_BASE_URL);
+			ref.authWithCustomToken(FIRE_TOKEN, new Firebase.AuthResultHandler() {
+			    @Override
+			    public void onAuthenticated(AuthData authData) {
+			    	authRef = ref;
+			    }
+			    @Override
+			    public void onAuthenticationError(FirebaseError firebaseError) {
+			    	logger.info(FirebaseError.fromCode(firebaseError.getCode()) + " " + firebaseError.getMessage());
+			    }
+			});
+			return null;
+		}
+		return authRef;
+	}
 	
 	
 	public static void createUser(final User user, final Device device) {
-		final Firebase ref = new Firebase(FIREBASE_BASE_URL);
+		
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+		
 		final String newPassword = user.getEmail() + user.getId().toString();
 		
 		ref.createUser(user.getEmail(), newPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
@@ -74,9 +98,7 @@ public class FirebaseMigrator {
 		});
 	}
 	
-	
-	
-	
+		
 	interface CallbackFireUserUID{
 		void result(String userUid);
 		void doesNotExist();
@@ -85,15 +107,18 @@ public class FirebaseMigrator {
 	
 	public static void getFirebaseUserID(User user, final CallbackFireUserUID callback) {
 		
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+		
 		if (user == null) {
 			callback.doesNotExist();
 			return;
 		}
 		
 		if ( user.getFacebookId() == null ) {
-			Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_USERID + user.getId().toString());
+			Firebase refUser = ref.child(FIREBASE_USERID + user.getId().toString());
 			
-			ref.addListenerForSingleValueEvent(new ValueEventListener() {
+			refUser.addListenerForSingleValueEvent(new ValueEventListener() {
 			    @Override
 			    public void onDataChange(DataSnapshot snapshot) {
 			    	
@@ -135,8 +160,10 @@ public class FirebaseMigrator {
 	}
 	
 	private static void insertUser(User user, Device device, final String userUid) {
-		Firebase ref = new Firebase(FIREBASE_BASE_URL);
 		
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+				
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("created", user.getCreationTime());
 		data.put("email", user.getEmail());
@@ -155,31 +182,6 @@ public class FirebaseMigrator {
 		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userUid);
 		
 		logger.info("Insert user " + userUid + " to firebase!");
-		
-		
-//		// update sessions
-//		final Firebase ref_session = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
-//		Query queryRef = ref_session.orderByChild("deviceKey").equalTo(deviceUid);
-//		
-//		queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//		    @Override
-//		    public void onDataChange(DataSnapshot snapshot) {
-//		    	Map<String,Object> sessions = (Map<String, Object>) snapshot.getValue(); 
-//		    	
-//		    	if (sessions != null) {
-//		    		for (String sessionKey: sessions.keySet()) {
-//			    		ref_session.child(sessionKey + "/userKey").setValue(userUid);
-//			    	}
-//			    	
-//			    	logger.info("snap" + snapshot.getValue());
-//		    	}
-//		    	
-//		    	
-//		    }
-//		    @Override
-//		    public void onCancelled(FirebaseError firebaseError) {
-//		    }
-//		});
 	}
 	
 	public static void setDevice(Device device) {
@@ -208,6 +210,9 @@ public class FirebaseMigrator {
 		
 		updateFirebaseDataSession(session); // SEND TO LEGACY SUBSCRIPTION DATABASE
 		
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+		
 		getFirebaseUserID(session.getDevice().getUser(), new CallbackFireUserUID() {
 
 			@Override
@@ -221,8 +226,8 @@ public class FirebaseMigrator {
 			}
 			
 			public void set(String userUid) {
-				Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
-				GeoFire geoFireSessionClient = new GeoFire(new Firebase(FIREBASE_BASE_URL+FIREBASE_GEO));
+				Firebase refSession = ref.child(FIREBASE_SESSION);
+				GeoFire geoFireSessionClient = new GeoFire(ref.child(FIREBASE_GEO));
 				
 				Map<String, Object> data = sessionToDict(session, userUid);
 				
@@ -230,7 +235,7 @@ public class FirebaseMigrator {
 				
 				logger.info("sesion UID" + sessionUid + "session.getId() " + session.getId());
 				
-				ref.child(sessionUid).setValue(data);
+				refSession.child(sessionUid).setValue(data);
 				
 				if (session.getPosition() != null) {
 					geoFireSessionClient.setLocation(sessionUid, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
@@ -245,9 +250,10 @@ public class FirebaseMigrator {
 		data.put("timeEnd", session.getEndTime().getTime());
 		data.put("timeStart", session.getStartTime().getTime());
 		data.put("userKey", userUid);
-		if (session.getWindSpeedMax() != null) data.put("windMax", session.getWindSpeedMax());
-		if (session.getWindSpeedAvg() != null) data.put("windMean",session.getWindSpeedAvg());
-		if (session.getWindDirection() != null) data.put("windDirection", session.getWindDirection());
+		data.put("windMax", session.getWindSpeedMax());
+		data.put("windMean",session.getWindSpeedAvg());
+		data.put("windDirection", session.getWindDirection());
+		data.put("turbulence", session.getGustiness());
 		
 		String windmeter = "";
 		switch (session.getWindMeter()) {
@@ -268,23 +274,23 @@ public class FirebaseMigrator {
 			Map<String, Object> location = new HashMap<String, Object>();
 			location.put("lat", session.getPosition().getLatitude());
 			location.put("lon", session.getPosition().getLongitude());
-			if (session.getGeoLocationNameLocalized() != null) location.put("name",session.getGeoLocationNameLocalized());
+			location.put("name",session.getGeoLocationNameLocalized());
 			data.put("location", location);
 		}
 		
 		Map<String, Object> sourced = new HashMap<String, Object>();
-		if (session.getSourcedHumidity() != null) sourced.put("humidity",session.getSourcedHumidity());
-		if (session.getHumidity() != null) sourced.put("humidity",session.getHumidity());
-		if (session.getSourcedPressureGroundLevel() != null) sourced.put("pressure",session.getSourcedPressureGroundLevel());
-		if (session.getSourcedTemperature() != null) sourced.put("temperature",session.getSourcedTemperature());
-		if (session.getTemperature() != null) sourced.put("temperature",session.getTemperature());
+		sourced.put("humidity",session.getSourcedHumidity());
+		sourced.put("humidity",session.getHumidity());
+		sourced.put("pressure",session.getSourcedPressureGroundLevel());
+		sourced.put("temperature",session.getSourcedTemperature());
+		sourced.put("temperature",session.getTemperature());
 		
-		if (session.getSourcedWindDirection()!= null) sourced.put("windDirection",session.getSourcedWindDirection());
-		if (session.getSourcedWindSpeedAvg() != null) sourced.put("windMean",session.getSourcedWindSpeedAvg());
+		sourced.put("windDirection",session.getSourcedWindDirection());
+		sourced.put("windMean",session.getSourcedWindSpeedAvg());
 		data.put("sourced", sourced);
 		
 		Map<String, Object> localSourced = new HashMap<String, Object>();
-		if (session.getWindChill() != null) localSourced.put("windChill",session.getWindChill());
+		localSourced.put("windChill",session.getWindChill());
 		data.put("localSourced", localSourced);
 		
 		return data;
@@ -292,6 +298,8 @@ public class FirebaseMigrator {
 	
 		
 	public static void deleteSession(final MeasurementSession session) {
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
 		
 		getFirebaseUserID(session.getDevice().getUser(), new CallbackFireUserUID() {
 
@@ -307,9 +315,9 @@ public class FirebaseMigrator {
 			
 			public void set(String userUid) {
 				Map<String, Object> data = sessionToDict(session, userUid);
-				Firebase ref_session = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION);
-				Firebase ref_session_deleted = new Firebase(FIREBASE_BASE_URL + FIREBASE_SESSION_DELETED);
-				Firebase ref_geo = new Firebase(FIREBASE_BASE_URL + FIREBASE_GEO);
+				Firebase ref_session = ref.child(FIREBASE_SESSION);
+				Firebase ref_session_deleted = ref.child(FIREBASE_SESSION_DELETED);
+				Firebase ref_geo = ref.child(FIREBASE_GEO);
 				
 				String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 				
@@ -322,8 +330,9 @@ public class FirebaseMigrator {
 	
 	
 	public static void setPoint(MeasurementPoint point, MeasurementSession session) {
-
-		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_WIND);
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+		
 		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 		
 		Map<String, Object> data = new HashMap<String, Object>();
@@ -336,7 +345,7 @@ public class FirebaseMigrator {
 		
 		String pointUid = FirebasePushIdGenerator.generatePushId(point.getTime(), point.getId()); // NOTE: we use the session creation time
 		
-		ref.child(pointUid).setValue(data);
+		ref.child(FIREBASE_WIND + pointUid).setValue(data);
 	}
 	
 	// LEGACY FOR SUBSCRIPTIONS IN ANDROID 0.5.3
