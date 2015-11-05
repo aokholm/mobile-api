@@ -125,6 +125,8 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
             break;
         case "setPassword":
             writeJSONResponse(resp, mapper, setPassword(object, hibernateSession));
+        case "checkPassword":
+            writeJSONResponse(resp, mapper, checkPassword(object, hibernateSession));
         default:
             break;
         }
@@ -232,6 +234,34 @@ public class PasswordService extends AbstractJSONService<PasswordService.Request
         hibernateSession.getTransaction().commit();
         return json;
     }
+    
+    public Map<String, Object> checkPassword(RequestParameters parameters, Session hibernateSession) throws ProtocolException {
+        // make sure we have the required parameters
+        String email = parameters.getEmail();
+        String clientPasswordHash = parameters.getClientPasswordHash();
+        
+        hibernateSession.beginTransaction();
+
+        User user = (User) hibernateSession.createQuery("from User where email=:email")
+                .setString("email", email).uniqueResult();
+        
+        Map<String, Object> json = new HashMap<String, Object>();
+        
+        if (user == null) {
+        	json.put("status", "EMAIL_DOES_NOT_EXIST");
+        } 
+        else if (PasswordUtil.validatePassword(clientPasswordHash, user.getPasswordHash())) {
+        	json.put("status", "CORRECT_PASSWORD");
+        	json.put("user_id", user.getId());
+        }
+        else {
+            json.put("status", "WRONG_PASSWORD");
+        }
+
+        hibernateSession.getTransaction().commit();
+        return json;
+    }
+    
     
     private boolean checkKey(String passwordHash, String key) {
         // check that the key was generated within the last hour or the hour before that. 
