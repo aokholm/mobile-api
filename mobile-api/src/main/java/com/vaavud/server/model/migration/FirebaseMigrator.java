@@ -176,7 +176,7 @@ public class FirebaseMigrator {
 		
 		// update user id on device
 		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
-		ref.child(FIREBASE_DEVICE + deviceUid + "/userKey").setValue(userUid);
+		ref.child(FIREBASE_DEVICE + deviceUid + "/uid").setValue(userUid);
 		
 		// set user
 		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userUid);
@@ -196,7 +196,7 @@ public class FirebaseMigrator {
 		data.put("vendor", device.getVendor());
 		
 		if (device.getUser() == null) {
-			data.put("userKey", FIRE_NO_USER);
+			data.put("uid", FIRE_NO_USER);
 		}
 		
 		// update device
@@ -249,7 +249,7 @@ public class FirebaseMigrator {
 		data.put("deviceKey", FirebasePushIdGenerator.generatePushId(session.getDevice().getCreationTime(), session.getDevice().getId()));
 		data.put("timeEnd", session.getEndTime().getTime());
 		data.put("timeStart", session.getStartTime().getTime());
-		data.put("userKey", userUid);
+		data.put("uid", userUid);
 		data.put("windMax", session.getWindSpeedMax());
 		data.put("windMean",session.getWindSpeedAvg());
 		data.put("windDirection", session.getWindDirection());
