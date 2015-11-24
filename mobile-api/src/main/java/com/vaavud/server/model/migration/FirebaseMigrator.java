@@ -2,17 +2,14 @@ package com.vaavud.server.model.migration;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import com.firebase.client.AuthData;
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -30,10 +27,10 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_USER = "user/";
 	public static final String FIREBASE_DEVICE = "device/";
 	public static final String FIREBASE_SESSION = "session/";
-	public static final String FIREBASE_SESSION_DELETED = "session_deleted/";
-	public static final String FIREBASE_USERID = "tomcat_id/";
-	public static final String FIREBASE_USERID_FAILED = "tomcat_id_failed/";
-	public static final String FIREBASE_GEO = "session_geo/";
+	public static final String FIREBASE_SESSION_DELETED = "sessionDeleted/";
+	public static final String FIREBASE_USERID = "tomcat/userId/success/";
+	public static final String FIREBASE_USERID_FAILED = "tomcat/userId/fail/";
+	public static final String FIREBASE_GEO = "sessionGeo/";;
 	public static final String FIREBASE_WIND = "wind/";
 	public static final String FIRE_NO_USER = "anonymous";
 	public static final String FIRE_TOKEN = "Yo1FV2XlVQJpyMs4QbG71hwyjRu7YVLDx67JoXDe";
@@ -77,19 +74,10 @@ public class FirebaseMigrator {
 		    @Override
 		    public void onError(FirebaseError firebaseError) {
 		        // there was an error
-		    	
-		    	if (firebaseError.getCode() == FirebaseError.EMAIL_TAKEN) {
-		    		ref.authWithPassword(user.getEmail(), newPassword, new Firebase.AuthResultHandler() {
-		    		    @Override
-		    		    public void onAuthenticated(AuthData authData) {
-		    		    	insertUser(user, device, authData.getUid());
-		    		    }
-		    		    @Override
-		    		    public void onAuthenticationError(FirebaseError firebaseError) {
-		    		    	logger.info(FirebaseError.fromCode(firebaseError.getCode()) + " " + firebaseError.getMessage());
-		    		    	ref.child(FIREBASE_USERID_FAILED + user.getId().toString()).setValue(firebaseError);
-		    		    }
-		    		});
+		    	if (firebaseError.getCode() == FirebaseError.INVALID_EMAIL) {
+		    		String userId = FIRE_NO_USER;
+			    	logger.info("(Invalid email) Successfully firebase user account with uid: " + userId);
+			    	insertUser(user, device, userId);
 		    	} else {
 		    		logger.info(FirebaseError.fromCode(firebaseError.getCode()) + " " + firebaseError.getMessage());
 			    	ref.child(FIREBASE_USERID_FAILED + user.getId().toString()).setValue(firebaseError);
@@ -163,16 +151,18 @@ public class FirebaseMigrator {
 		
 		final Firebase ref = getFirebase();
 		if (getFirebase() == null) {return;}
-				
-		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("created", user.getCreationTime());
-		data.put("email", user.getEmail());
-		data.put("firstName", user.getFirstName());
-		data.put("lastName", user.getLastName());
-		data.put("language", device.getLanguage());
-		data.put("country", device.getCountry());
+		
+		if (!userUid.equals(FIRE_NO_USER)) {
+			Map<String, Object> data = new HashMap<String, Object>();
+			data.put("created", user.getCreationTime());
+			data.put("email", user.getEmail());
+			data.put("firstName", user.getFirstName());
+			data.put("lastName", user.getLastName());
+			data.put("language", device.getLanguage());
+			data.put("country", device.getCountry());
 
-		ref.child(FIREBASE_USER + userUid).setValue(data);
+			ref.child(FIREBASE_USER + userUid).setValue(data);
+		}
 		
 		// update user id on device
 		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
@@ -182,6 +172,10 @@ public class FirebaseMigrator {
 		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userUid);
 		
 		logger.info("Insert user " + userUid + " to firebase!");
+	}
+	
+	public static void updateUserReferences() {
+		
 	}
 	
 	public static void setDevice(Device device) {
