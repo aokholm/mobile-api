@@ -2,6 +2,7 @@ package com.vaavud.server.model.migration;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -33,8 +34,8 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_GEO = "sessionGeo/";;
 	public static final String FIREBASE_WIND = "wind/";
 	public static final String FIRE_NO_USER = "anonymous";
-	public static final String FIRE_TOKEN = "Yo1FV2XlVQJpyMs4QbG71hwyjRu7YVLDx67JoXDe";
-	
+	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTM3NjcuNzM5LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0ODUzNDU2N30.asIEJ08ju3gWADh6gAfXL467EM3N8aSs_TC_TBUoRII"; // uid: migrator, expieces in 2025
+//	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTc0NTIuMDg1LCJkZWJ1ZyI6dHJ1ZSwidiI6MCwiZCI6eyJ1aWQiOiJtaWdyYXRvciJ9LCJpYXQiOjE0NDg1MzgyNTJ9.OVGkmQNcl1NK4WmGu0h2w-ZyUkh-c-0jO3xCoycubdk"; // uid: migrator, expieces in 2025 debug = true
 	public static Firebase authRef;
 	
 	public static Firebase getFirebase() {
@@ -163,41 +164,60 @@ public class FirebaseMigrator {
 
 			ref.child(FIREBASE_USER + userUid).setValue(data);
 		}
-		
-		// update user id on device
-		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
-		ref.child(FIREBASE_DEVICE + deviceUid + "/uid").setValue(userUid);
-		
+				
 		// set user
 		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userUid);
 		
 		logger.info("Insert user " + userUid + " to firebase!");
-	}
-	
-	public static void updateUserReferences() {
+		
+		// update user id on device
+		setDevice (device);
+//		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
+//		ref.child(FIREBASE_DEVICE + deviceUid + "/uid").setValue(userUid);
 		
 	}
 	
-	public static void setDevice(Device device) {
+	public static void setDevice(final Device device) {
 		
-		Firebase ref = new Firebase(FIREBASE_BASE_URL + FIREBASE_DEVICE);
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+		
+		getFirebaseUserID(device.getUser(), new CallbackFireUserUID() {
+
+			@Override
+			public void result(String userUid) {
+				set(userUid);
+			}
+
+			@Override
+			public void doesNotExist() {
+				set(FIRE_NO_USER);
+			}
+			
+			public void set(String userUid) {
+				Firebase refDevice = ref.child(FIREBASE_DEVICE);
 				
-		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("appVersion", device.getAppVersion());
-		data.put("created", device.getCreationTime().getTime());
-		data.put("model", convertModelName(device.getModel()));
-		data.put("osVersion", device.getOsVersion());
-		data.put("vendor", device.getVendor());
-		
-		if (device.getUser() == null) {
-			data.put("uid", FIRE_NO_USER);
-		}
-		
-		// update device
-		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());		
-		ref.child(deviceUid).updateChildren(data);
-		
-		logger.info("updateChildren device " + deviceUid + " to firebase!");
+				Map<String, Object> data = new HashMap<String, Object>();
+				data.put("appVersion", device.getAppVersion());
+				data.put("created", device.getCreationTime().getTime());
+				data.put("model", convertModelName(device.getModel()));
+				data.put("osVersion", device.getOsVersion());
+				data.put("vendor", device.getVendor());
+				data.put("uid", userUid);
+								
+				// update device
+				String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());		
+				refDevice.child(deviceUid).updateChildren(data);
+				
+				logger.info("updateChildren device " + deviceUid + " to firebase!");
+				Iterator it = data.entrySet().iterator();
+				while (it.hasNext()) {
+					Map.Entry pair = (Map.Entry)it.next();
+					logger.info(pair.getKey() + " = " + pair.getValue());
+					it.remove(); // avoids a ConcurrentModificationException
+				}
+			}
+		});	
 	}
 	
 	public static void setSession(final MeasurementSession session) {
@@ -244,21 +264,21 @@ public class FirebaseMigrator {
 		data.put("timeEnd", session.getEndTime().getTime());
 		data.put("timeStart", session.getStartTime().getTime());
 		data.put("uid", userUid);
-		data.put("windMax", session.getWindSpeedMax());
-		data.put("windMean",session.getWindSpeedAvg());
-		data.put("windDirection", session.getWindDirection());
-		data.put("turbulence", session.getGustiness());
+		if (session.getWindSpeedMax() != null && session.getWindSpeedMax() < 200) data.put("windMax", session.getWindSpeedMax());
+		if (session.getWindSpeedAvg() != null && session.getWindSpeedAvg() < 200) data.put("windMean",session.getWindSpeedAvg());
+		if (session.getWindMeter() == WindMeter.SLEIPNIR) data.put("windDirection", session.getWindDirection());
+		if (session.getGustiness() != null && session.getGustiness() < 100) data.put("turbulence", session.getGustiness());
 		
 		String windmeter = "";
 		switch (session.getWindMeter()) {
             case MJOLNIR:  
-            	windmeter = "Mjolnir";
+            	windmeter = "mjolnir";
                 break;
             case SLEIPNIR:
-            	windmeter = "Sleipnir";
+            	windmeter = "sleipnir";
             	break;
             case UNKNOWN: // DOES NOT EXIST in the db
-            	windmeter = "Unknown"; 
+            	windmeter = "Unknown";  // WILL FAIL
             	break;
 		}
 		
@@ -268,24 +288,20 @@ public class FirebaseMigrator {
 			Map<String, Object> location = new HashMap<String, Object>();
 			location.put("lat", session.getPosition().getLatitude());
 			location.put("lon", session.getPosition().getLongitude());
-			location.put("name",session.getGeoLocationNameLocalized());
+			if (session.getGeoLocationNameLocalized() != null && !session.getGeoLocationNameLocalized().equals("") && session.getPosition().getLatitude() != null) location.put("name",session.getGeoLocationNameLocalized());
 			data.put("location", location);
 		}
 		
 		Map<String, Object> sourced = new HashMap<String, Object>();
 		sourced.put("humidity",session.getSourcedHumidity());
 		sourced.put("humidity",session.getHumidity());
-		sourced.put("pressure",session.getSourcedPressureGroundLevel());
-		sourced.put("temperature",session.getSourcedTemperature());
-		sourced.put("temperature",session.getTemperature());
+		if (session.getSourcedPressureGroundLevel() != null && session.getSourcedPressureGroundLevel() > 800 && session.getSourcedPressureGroundLevel() < 1200) sourced.put("pressure",session.getSourcedPressureGroundLevel()*100);
+		if (session.getSourcedTemperature() != null && session.getSourcedTemperature() > 200) sourced.put("temperature",session.getSourcedTemperature());
+		if (session.getTemperature() != null && session.getTemperature() > 200) sourced.put("temperature",session.getTemperature());
 		
 		sourced.put("windDirection",session.getSourcedWindDirection());
 		sourced.put("windMean",session.getSourcedWindSpeedAvg());
 		data.put("sourced", sourced);
-		
-		Map<String, Object> localSourced = new HashMap<String, Object>();
-		localSourced.put("windChill",session.getWindChill());
-		data.put("localSourced", localSourced);
 		
 		return data;
 	}
