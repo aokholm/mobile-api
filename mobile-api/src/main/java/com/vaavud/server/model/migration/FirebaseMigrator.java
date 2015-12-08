@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -67,18 +69,20 @@ public class FirebaseMigrator {
 		ref.createUser(user.getEmail(), newPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
 		    @Override
 		    public void onSuccess(Map<String, Object> result) {
-		    	String userId = (String) result.get("uid");
-		    	logger.info("Successfully firebase user account with uid: " + userId);
-		    	insertUser(user, device, userId);
+		    	String uid = (String) result.get("uid");
+		    	logger.info("Successfully firebase user account with uid: " + uid);
+		    	insertUser(user, device, uid);
+		    	FirebaseMigrator.setDevice(device, uid);
 		 
 		    }
 		    @Override
 		    public void onError(FirebaseError firebaseError) {
 		        // there was an error
-		    	if (firebaseError.getCode() == FirebaseError.INVALID_EMAIL) {
-		    		String userId = FIRE_NO_USER;
-			    	logger.info("(Invalid email) Successfully firebase user account with uid: " + userId);
-			    	insertUser(user, device, userId);
+		    	if (firebaseError.getCode() == FirebaseError.EMAIL_TAKEN) {
+		    		String uid = FIRE_NO_USER;
+			    	logger.info("(email taken) Successfully firebase user account with uid: " + uid);
+			    	insertUser(user, device, uid);
+			    	FirebaseMigrator.setDevice(device, uid);
 		    	} else {
 		    		logger.info(FirebaseError.fromCode(firebaseError.getCode()) + " " + firebaseError.getMessage());
 			    	ref.child(FIREBASE_USERID_FAILED + user.getId().toString()).setValue(firebaseError);
@@ -89,7 +93,7 @@ public class FirebaseMigrator {
 	
 		
 	interface CallbackFireUserUID{
-		void result(String userUid);
+		void result(String uid);
 		void doesNotExist();
 	}
 		
@@ -136,8 +140,9 @@ public class FirebaseMigrator {
 		getFirebaseUserID(user, new CallbackFireUserUID() {
 
 			@Override
-			public void result(String userUid) {
-				insertUser(user, device, userUid);
+			public void result(String uid) {
+				insertUser(user, device, uid);
+				FirebaseMigrator.setDevice(device, uid);
 			}
 
 			@Override
@@ -148,12 +153,12 @@ public class FirebaseMigrator {
 		});	
 	}
 	
-	private static void insertUser(User user, Device device, final String userUid) {
+	private static void insertUser(User user, Device device, final String uid) {
 		
 		final Firebase ref = getFirebase();
 		if (getFirebase() == null) {return;}
 		
-		if (!userUid.equals(FIRE_NO_USER)) {
+		if (!uid.equals(FIRE_NO_USER)) {
 			Map<String, Object> data = new HashMap<String, Object>();
 			data.put("created", user.getCreationTime());
 			data.put("email", user.getEmail());
@@ -161,64 +166,104 @@ public class FirebaseMigrator {
 			data.put("lastName", user.getLastName());
 			data.put("language", device.getLanguage());
 			data.put("country", device.getCountry());
-
-			ref.child(FIREBASE_USER + userUid).setValue(data);
+			
+			final Map dataFinal = data;
+			ref.child(FIREBASE_USER + uid).setValue(dataFinal, new Firebase.CompletionListener() {
+			    
+				@Override
+			    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+			        if (firebaseError != null) {
+			        	logger.info("User " + uid + " could not be saved. " + firebaseError.getMessage());
+			            ObjectMapper om = new ObjectMapper();
+						try {
+							logger.info(om.writeValueAsString(dataFinal));
+						} catch (JsonProcessingException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+			        } else {
+			        	logger.info("User " + uid + " saved successfully.");
+			        }
+				}
+			});
 		}
 				
 		// set user
-		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(userUid);
-		
-		logger.info("Insert user " + userUid + " to firebase!");
-		
-		// update user id on device
-		setDevice (device);
-//		String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());
-//		ref.child(FIREBASE_DEVICE + deviceUid + "/uid").setValue(userUid);
-		
+		ref.child(FIREBASE_USERID + user.getId().toString()).setValue(uid);
+		logger.info("Insert user " + uid + " to firebase!");	
 	}
 	
 	public static void setDevice(final Device device) {
-		
-		final Firebase ref = getFirebase();
-		if (getFirebase() == null) {return;}
 		
 		getFirebaseUserID(device.getUser(), new CallbackFireUserUID() {
 
 			@Override
 			public void result(String userUid) {
-				set(userUid);
+				FirebaseMigrator.setDevice(device, userUid);
 			}
 
 			@Override
 			public void doesNotExist() {
-				set(FIRE_NO_USER);
-			}
-			
-			public void set(String userUid) {
-				Firebase refDevice = ref.child(FIREBASE_DEVICE);
-				
-				Map<String, Object> data = new HashMap<String, Object>();
-				data.put("appVersion", device.getAppVersion());
-				data.put("created", device.getCreationTime().getTime());
-				data.put("model", convertModelName(device.getModel()));
-				data.put("osVersion", device.getOsVersion());
-				data.put("vendor", device.getVendor());
-				data.put("uid", userUid);
-								
-				// update device
-				String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());		
-				refDevice.child(deviceUid).updateChildren(data);
-				
-				logger.info("updateChildren device " + deviceUid + " to firebase!");
-				Iterator it = data.entrySet().iterator();
-				while (it.hasNext()) {
-					Map.Entry pair = (Map.Entry)it.next();
-					logger.info(pair.getKey() + " = " + pair.getValue());
-					it.remove(); // avoids a ConcurrentModificationException
-				}
+				FirebaseMigrator.setDevice(device, FIRE_NO_USER);
 			}
 		});	
 	}
+	
+	public static void setDevice(final Device device, final String userUid) {
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+		
+		Firebase refDevice = ref.child(FIREBASE_DEVICE);
+		
+		Map<String, Object> data = new HashMap<String, Object>();
+		data.put("appVersion", device.getAppVersion());
+		data.put("created", device.getCreationTime().getTime());
+		data.put("model", convertModelName(device.getModel()));
+		data.put("osVersion", device.getOsVersion());
+		data.put("vendor", device.getVendor());
+		data.put("uid", userUid);
+		
+		final Map<String, Object> dataFinal = data;
+		
+		
+		// update device
+		final String deviceUid = FirebasePushIdGenerator.generatePushId(device.getCreationTime(), device.getId());		
+		refDevice.child(deviceUid).setValue(dataFinal, new Firebase.CompletionListener() {
+		    
+			@Override
+		    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+		        if (firebaseError != null) {
+		        	logger.info("Data " + deviceUid + " could not be saved. " + firebaseError.getMessage());
+		            ObjectMapper om = new ObjectMapper();
+					try {
+						logger.info(om.writeValueAsString(dataFinal));
+					} catch (JsonProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        } else {
+		        	logger.info("Device " + deviceUid + " data saved successfully.");
+		        	ObjectMapper om = new ObjectMapper();
+					try {
+						logger.info(om.writeValueAsString(dataFinal));
+					} catch (JsonProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        }
+			}
+		});
+		
+		
+//		logger.info("set device " + deviceUid + " to firebase!");
+//		Iterator it = data.entrySet().iterator();
+//		while (it.hasNext()) {
+//			Map.Entry pair = (Map.Entry)it.next();
+//			logger.info(pair.getKey() + " = " + pair.getValue());
+//			it.remove(); // avoids a ConcurrentModificationException
+//		}
+	}
+	
 	
 	public static void setSession(final MeasurementSession session) {
 		
@@ -243,13 +288,30 @@ public class FirebaseMigrator {
 				Firebase refSession = ref.child(FIREBASE_SESSION);
 				GeoFire geoFireSessionClient = new GeoFire(ref.child(FIREBASE_GEO));
 				
-				Map<String, Object> data = sessionToDict(session, userUid);
+				final Map<String, Object> dataFinal = sessionToDict(session, userUid);
 				
-				String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+				final String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 				
-				logger.info("sesion UID" + sessionUid + "session.getId() " + session.getId());
+				logger.info("sesion UID " + sessionUid + " session.getId() " + session.getId());
 				
-				refSession.child(sessionUid).setValue(data);
+				refSession.child(sessionUid).setValue(dataFinal, new Firebase.CompletionListener() {
+				    
+					@Override
+				    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+				        if (firebaseError != null) {
+				        	logger.info("Data " + sessionUid + " could not be saved. " + firebaseError.getMessage());
+				            ObjectMapper om = new ObjectMapper();
+							try {
+								logger.info(om.writeValueAsString(dataFinal));
+							} catch (JsonProcessingException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+				        } else {
+				        	logger.info("Session " + sessionUid + " saved successfully.");
+				        }
+					}
+				});
 				
 				if (session.getPosition() != null) {
 					geoFireSessionClient.setLocation(sessionUid, new GeoLocation(session.getPosition().getLatitude(), session.getPosition().getLongitude()));
@@ -352,11 +414,74 @@ public class FirebaseMigrator {
 		data.put("sessionKey", sessionUid);
 		data.put("speed",point.getWindSpeed());
 		data.put("time", point.getTime().getTime());
+		final Map<String, Object> dataFinal = data;
 		
-		String pointUid = FirebasePushIdGenerator.generatePushId(point.getTime(), point.getId()); // NOTE: we use the session creation time
+		final String pointUid = FirebasePushIdGenerator.generatePushId(point.getTime(), point.getId());
 		
-		ref.child(FIREBASE_WIND + pointUid).setValue(data);
+		ref.child(FIREBASE_WIND + pointUid).setValue(dataFinal, new Firebase.CompletionListener() {
+		    
+			@Override
+		    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+		        if (firebaseError != null) {
+		        	logger.info("Data " + pointUid + " could not be saved. " + firebaseError.getMessage());
+		            ObjectMapper om = new ObjectMapper();
+					try {
+						logger.info(om.writeValueAsString(dataFinal));
+					} catch (JsonProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        } else {
+		        	logger.info("Point " + pointUid + " saved successfully.");
+		        }
+			}
+		});
 	}
+	
+	// not tested and used yet
+	public static void deletePoints(MeasurementSession session) {
+		final Firebase ref = getFirebase();
+		if (getFirebase() == null) {return;}
+		
+		final String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+		
+		ref.child(FIREBASE_WIND).orderByChild("sessionKey").equalTo(sessionUid).addListenerForSingleValueEvent(new ValueEventListener() {
+		    @Override
+		    public void onDataChange(DataSnapshot snapshot) {
+		    	Map<String, Object> data = new HashMap<String, Object>();
+			
+				for (DataSnapshot windSnapshot: snapshot.getChildren()) {
+		            String key = windSnapshot.getKey();
+		            System.out.println(" wind Key to be deleted " + key);
+		            data.put(key, null);
+		        }
+				
+				final Map<String, Object> dataFinal = data;
+				
+				ref.child(FIREBASE_WIND).updateChildren(dataFinal, new Firebase.CompletionListener() {
+				    @Override
+				    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+				        if (firebaseError != null) {
+				        	logger.info("Winds for session " + sessionUid + " could not be deleted. " + firebaseError.getMessage());
+				            ObjectMapper om = new ObjectMapper();
+							try {
+								logger.info(om.writeValueAsString(dataFinal));
+							} catch (JsonProcessingException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+				        } else {
+				        	logger.info("Winds for session " + sessionUid + " successfully deleted.");
+				        }
+					}
+				});
+		    }
+		    @Override
+		    public void onCancelled(FirebaseError firebaseError) {
+		    }
+		});
+	}
+	
 	
 	// LEGACY FOR SUBSCRIPTIONS IN ANDROID 0.5.3
 	public static void updateFirebaseDataSession(MeasurementSession session) {
