@@ -152,5 +152,10 @@
         <artifactId>httpclient</artifactId>
         <version>4.5</version>
     </dependency>
+    <dependency>
+        <groupId>net.jodah</groupId>
+        <artifactId>expiringmap</artifactId>
+        <version>0.5.1</version>
+     </dependency>
 	</dependencies>
 </project>

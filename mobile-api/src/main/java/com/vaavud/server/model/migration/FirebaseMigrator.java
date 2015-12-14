@@ -56,6 +56,12 @@ public class FirebaseMigrator {
 		return authRef;
 	}
 	
+	public static void markSessionComplete(String key) {
+		Map<String, String> items = new HashMap<>();
+        items.put("sessionKey", key);
+        Firebase ref = getFirebase().child("sessionComplete/queue/tasks");
+        ref.push().setValue(items);
+	}
 	
 	public static void createUser(final User user, final Device device) {
 		

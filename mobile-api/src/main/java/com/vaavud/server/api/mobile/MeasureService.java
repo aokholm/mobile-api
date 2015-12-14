@@ -19,10 +19,27 @@ import com.vaavud.server.model.entity.MeasurementPoint;
 import com.vaavud.server.model.entity.MeasurementSession;
 import com.vaavud.server.model.entity.WindMeter;
 import com.vaavud.server.model.migration.FirebaseMigrator;
+import net.jodah.expiringmap.*;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class MeasureService extends AbstractJSONService<MeasurementSession> {
 
 	private static final Logger logger = Logger.getLogger(MeasureService.class);
+	// Set up a cache with expiration last access + 5 minutes. We'll use this as a heuristic
+	// to determine when a session is done; if no updates for 5 minutes, we assume that its
+	// done...
+	private static final Map<String, MeasurementSession> activeSessions = ExpiringMap.builder()
+	                   .expiration(30, TimeUnit.SECONDS)
+	                   .expirationPolicy(ExpirationPolicy.ACCESSED)
+                       .expirationListener(new ExpirationListener<String, MeasurementSession>() {
+	                       public void expired(String key, MeasurementSession obj)
+	                       {
+	                    	   logger.warn("Expiration of " + key);
+	                    	   FirebaseMigrator.markSessionComplete(key);
+	                       }
+	                   })
+	                   .build();
 
 	@Override
 	protected Class<MeasurementSession> type() {
@@ -70,7 +87,7 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 					point.setWindDirection(null);
 				}
 			}
-
+			activeSessions.putIfAbsent(object.getUuid(), object);
 			if (object.getStartIndex() > 0 || object.getEndIndex() > 0) {
 				processIncrementalMeasurementSession(hibernateSession, object);
 			}
