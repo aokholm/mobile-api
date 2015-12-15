@@ -266,8 +266,7 @@ public class RegisterUserService extends AbstractJSONService<Input> {
 			hibernateSession.beginTransaction();
 			
 			FirebaseMigrator.setUser(authenticatedUser, authenticatedDevice);
-			FirebaseMigrator.setDevice(authenticatedDevice);
-
+			
 			// validate authToken
 			if (authToken == null || authToken.trim().isEmpty()) {
 				logger.error("AuthToken not supposed to be null or empty here");

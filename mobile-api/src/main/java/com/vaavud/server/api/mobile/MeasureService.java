@@ -118,6 +118,9 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 			
 			hibernateSession.getTransaction().commit();
 			FirebaseMigrator.setSession(object);
+			for (MeasurementPoint point : object.getPoints()) {
+				FirebaseMigrator.setPoint(point, object);
+			}
 		}
 		else {
 			// we've already got this measurement session
@@ -157,8 +160,23 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				storedMeasurementSession.setEndIndex(num);
 				hibernateSession.getTransaction().commit();	
 				FirebaseMigrator.setSession(storedMeasurementSession);
+				
+				// repeat of above logic
+				num = object.getStartIndex();
 				for (MeasurementPoint point : object.getPoints()) {
-					FirebaseMigrator.setPoint(point, storedMeasurementSession);
+					if (num >= storedMeasurementSession.getEndIndex()) {
+						if (point.getSession() != null) {
+							logger.error("MeasurementPoint is already associated with a MeasurementSession");
+						}
+						else {
+							point.setSession(storedMeasurementSession);
+							FirebaseMigrator.setPoint(point, storedMeasurementSession);
+						}
+					}
+					else {
+						logger.warn("Skipping point already received with index=" + num + " < stored endIndex=" + storedMeasurementSession.getEndIndex());
+					}
+					num++;
 				}
 			}
 			else if (storedMeasurementSession.getEndIndex() == object.getEndIndex()) {
@@ -218,6 +236,7 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 				for (MeasurementPoint point : object.getPoints()) {
 					FirebaseMigrator.setPoint(point, storedMeasurementSession);
 				}
+				FirebaseMigrator.deletePoints(storedMeasurementSession);
 				
 			}
 			else if (storedMeasurementSession.getPoints().size() == object.getPoints().size()) {
