@@ -26,7 +26,9 @@ public class FirebaseMigrator {
 	
 	private static final Logger logger = Logger.getLogger(FirebaseMigrator.class);
 	
-	public static final String FIREBASE_BASE_URL = "https://vaavud-core-demo.firebaseio.com/";
+
+//	public static final String FIREBASE_BASE_URL = "https://vaavud-core-demo.firebaseio.com/";
+	public static final String FIREBASE_BASE_URL = "https://vaavud-app.firebaseio.com/";
 	public static final String FIREBASE_USER = "user/";
 	public static final String FIREBASE_DEVICE = "device/";
 	public static final String FIREBASE_SESSION = "session/";
@@ -36,10 +38,15 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_GEO = "sessionGeo/";;
 	public static final String FIREBASE_WIND = "wind/";
 	public static final String FIRE_NO_USER = "anonymous";
-	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjUzNjI1OTYuODA3LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0OTc0MzM5Nn0.KNF0o_fJw9E22sWkEHiI2ZAilt-Uy433RV4rIfzH960"; // uid: migrator, expieces in 2025 for vaavud-core-demo`
+//	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjUzNjI1OTYuODA3LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0OTc0MzM5Nn0.KNF0o_fJw9E22sWkEHiI2ZAilt-Uy433RV4rIfzH960"; // uid: migrator, expieces in 2025 for vaavud-core-demo`
 
 	//public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTM3NjcuNzM5LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0ODUzNDU2N30.asIEJ08ju3gWADh6gAfXL467EM3N8aSs_TC_TBUoRII"; // uid: migrator, expieces in 2025
+//	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTM3NjcuNzM5LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0ODUzNDU2N30.asIEJ08ju3gWADh6gAfXL467EM3N8aSs_TC_TBUoRII"; // uid: migrator, expieces in 2025
+
 //	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTc0NTIuMDg1LCJkZWJ1ZyI6dHJ1ZSwidiI6MCwiZCI6eyJ1aWQiOiJtaWdyYXRvciJ9LCJpYXQiOjE0NDg1MzgyNTJ9.OVGkmQNcl1NK4WmGu0h2w-ZyUkh-c-0jO3xCoycubdk"; // uid: migrator, expieces in 2025 debug = true
+//	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjUzNjI1OTYuODA3LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0OTc0MzM5Nn0.KNF0o_fJw9E22sWkEHiI2ZAilt-Uy433RV4rIfzH960"; // uid: migrator, expieces in 2025 for vaavud-core-demo
+	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjUzNzg1OTYuMDM3LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0OTc1OTM5Nn0.yCxNKA6-5LOHB3mhSuGwowACFqePW4o1bZow7BI_W1c"; // for vaavud-app 2025 migrator
+	
 	public static Firebase authRef;
 	
 	public static Firebase getFirebase() {
@@ -432,29 +439,26 @@ public class FirebaseMigrator {
 	}
 	
 	
-	public static void setPoint(MeasurementPoint point, MeasurementSession session) {
+	public static void setPoint(MeasurementPoint point, MeasurementSession session, final int pointIndex) {
 		final Firebase ref = getFirebase();
 		if (getFirebase() == null) {return;}
 		
-		String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
+		final String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 		
 		Map<String, Object> data = new HashMap<String, Object>();
 		if (point.getWindDirection() != null && session.getWindMeter() == WindMeter.SLEIPNIR) { // old apps could upload direction on mjolnir
-			data.put("direction", point.getWindSpeed());
+			data.put("direction", point.getWindDirection());
 		}
-		data.put("sessionKey", sessionUid);
 		data.put("speed",point.getWindSpeed());
 		data.put("time", point.getTime().getTime());
 		final Map<String, Object> dataFinal = data;
 		
-		final String pointUid = FirebasePushIdGenerator.generatePushId(point.getTime(), point.getId());
-		
-		ref.child(FIREBASE_WIND + pointUid).setValue(dataFinal, new Firebase.CompletionListener() {
+		ref.child(FIREBASE_WIND).child(sessionUid).child(String.valueOf(pointIndex)).setValue(dataFinal, new Firebase.CompletionListener() {
 		    
 			@Override
 		    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
 		        if (firebaseError != null) {
-		        	logger.info("Data " + pointUid + " could not be saved. " + firebaseError.getMessage());
+		        	logger.info("Point " + sessionUid + " index: " + pointIndex + " " + firebaseError.getMessage());
 		            ObjectMapper om = new ObjectMapper();
 					try {
 						logger.info(om.writeValueAsString(dataFinal));
@@ -463,7 +467,7 @@ public class FirebaseMigrator {
 						e.printStackTrace();
 					}
 		        } else {
-		        	logger.info("Point " + pointUid + " saved successfully.");
+		        	logger.info("Point " + sessionUid + " index: " + pointIndex + " saved successfully.");
 		        }
 			}
 		});
@@ -476,41 +480,17 @@ public class FirebaseMigrator {
 		
 		final String sessionUid = FirebasePushIdGenerator.generatePushId(session.getCreationTime(), session.getId());
 		
-		ref.child(FIREBASE_WIND).orderByChild("sessionKey").equalTo(sessionUid).addListenerForSingleValueEvent(new ValueEventListener() {
+		ref.child(FIREBASE_WIND).child(sessionUid).removeValue(new Firebase.CompletionListener() {
 		    @Override
-		    public void onDataChange(DataSnapshot snapshot) {
-		    	Map<String, Object> data = new HashMap<String, Object>();
-			
-				for (DataSnapshot windSnapshot: snapshot.getChildren()) {
-		            String key = windSnapshot.getKey();
-		            System.out.println(" wind Key to be deleted " + key);
-		            data.put(key, null);
+		    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+		        if (firebaseError != null) {
+		        	logger.info("Winds for session " + sessionUid + " could not be deleted. " + firebaseError.getMessage());
+		        } else {
+		        	logger.info("Winds for session " + sessionUid + " successfully deleted.");
 		        }
-				
-				final Map<String, Object> dataFinal = data;
-				
-				ref.child(FIREBASE_WIND).updateChildren(dataFinal, new Firebase.CompletionListener() {
-				    @Override
-				    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-				        if (firebaseError != null) {
-				        	logger.info("Winds for session " + sessionUid + " could not be deleted. " + firebaseError.getMessage());
-				            ObjectMapper om = new ObjectMapper();
-							try {
-								logger.info(om.writeValueAsString(dataFinal));
-							} catch (JsonProcessingException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-				        } else {
-				        	logger.info("Winds for session " + sessionUid + " successfully deleted.");
-				        }
-					}
-				});
-		    }
-		    @Override
-		    public void onCancelled(FirebaseError firebaseError) {
-		    }
+			}
 		});
+		
 	}
 	
 	
