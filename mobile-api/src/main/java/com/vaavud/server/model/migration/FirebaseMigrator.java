@@ -26,7 +26,7 @@ public class FirebaseMigrator {
 	
 	private static final Logger logger = Logger.getLogger(FirebaseMigrator.class);
 	
-	public static final String FIREBASE_BASE_URL = "https://vaavud-core.firebaseio.com/";
+	public static final String FIREBASE_BASE_URL = "https://vaavud-core-demo.firebaseio.com/";
 	public static final String FIREBASE_USER = "user/";
 	public static final String FIREBASE_DEVICE = "device/";
 	public static final String FIREBASE_SESSION = "session/";
@@ -36,7 +36,9 @@ public class FirebaseMigrator {
 	public static final String FIREBASE_GEO = "sessionGeo/";;
 	public static final String FIREBASE_WIND = "wind/";
 	public static final String FIRE_NO_USER = "anonymous";
-	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTM3NjcuNzM5LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0ODUzNDU2N30.asIEJ08ju3gWADh6gAfXL467EM3N8aSs_TC_TBUoRII"; // uid: migrator, expieces in 2025
+	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjUzNjI1OTYuODA3LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0OTc0MzM5Nn0.KNF0o_fJw9E22sWkEHiI2ZAilt-Uy433RV4rIfzH960"; // uid: migrator, expieces in 2025 for vaavud-core-demo`
+
+	//public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTM3NjcuNzM5LCJ2IjowLCJkIjp7InVpZCI6Im1pZ3JhdG9yIn0sImlhdCI6MTQ0ODUzNDU2N30.asIEJ08ju3gWADh6gAfXL467EM3N8aSs_TC_TBUoRII"; // uid: migrator, expieces in 2025
 //	public static final String FIRE_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NjQxNTc0NTIuMDg1LCJkZWJ1ZyI6dHJ1ZSwidiI6MCwiZCI6eyJ1aWQiOiJtaWdyYXRvciJ9LCJpYXQiOjE0NDg1MzgyNTJ9.OVGkmQNcl1NK4WmGu0h2w-ZyUkh-c-0jO3xCoycubdk"; // uid: migrator, expieces in 2025 debug = true
 	public static Firebase authRef;
 	
@@ -58,11 +60,34 @@ public class FirebaseMigrator {
 		return authRef;
 	}
 	
-	public static void markSessionComplete(String key) {
+	public static void markSessionComplete(final String key) {
+		logger.debug("MarkSessionComplete: " + key);
+	
 		Map<String, String> items = new HashMap<>();
         items.put("sessionKey", key);
-        Firebase ref = getFirebase().child("sessionComplete/queue/tasks");
-        ref.push().setValue(items);
+        Firebase ref = getFirebase();
+        if (ref == null) {
+        	logger.info("Ignoring SessionComplete for " + key);
+        	return; // First call will fail, ignore is an acceptable one off action
+        }
+        ref = getFirebase().child("sessionComplete/queue/tasks");
+        
+        ref.push().setValue(items,new Firebase.CompletionListener() {
+		    
+			@Override
+		    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+				
+		        if (firebaseError != null) {
+		        	logger.info("key " + key + " could not be saved. " + firebaseError.getMessage());
+		            
+		        } else {
+		        	logger.info("key " + key + " saved successfully.");
+		        }
+			
+			}
+		});
+   
+        logger.debug("MarkSessionComplete done for " + key);
 	}
 	
 	public static void createUser(final User user, final Device device) {
