@@ -7,12 +7,7 @@
     <session-factory>
       <!-- Database Connection -->
 
-<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
-<property name="connection.url">jdbc:mysql://mysql-core-test.ctpytpqotfkq.eu-west-1.rds.amazonaws.com:3306/vaavud?characterEncoding=utf8</property>
-<property name="connection.username">vaavud</property>
-<property name="connection.password">G$j86)2wCyvY63V</property>
-<property name="hbm2ddl.auto">validate</property>
-<property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>        
+        
 <!--         <property name="connection.driver_class">com.mysql.jdbc.Driver</property> -->
 <!--         <property name="connection.url">jdbc:mysql://localhost/vaavud?characterEncoding=utf8</property> -->
 <!--         <property name="connection.username">root</property> -->
