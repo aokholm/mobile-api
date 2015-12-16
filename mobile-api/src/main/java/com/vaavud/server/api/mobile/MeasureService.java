@@ -99,8 +99,9 @@ public class MeasureService extends AbstractJSONService<MeasurementSession> {
 			else {
 				processFullMeasurementSession(hibernateSession, object);
 			}
-			
-			activeSessions.putIfAbsent(FirebasePushIdGenerator.generatePushId(object.getCreationTime(), object.getId()), object);
+			if ( object.getId() != null ) {
+			    activeSessions.putIfAbsent(FirebasePushIdGenerator.generatePushId(object.getCreationTime(), object.getId()), object);
+			}
 			writeJSONResponse(resp, mapper);
 		}
 	}
